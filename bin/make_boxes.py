@@ -116,16 +116,6 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
     del box
     return box_null
 
-#********************************************************************
-def Power_Spectrum_ln(k):
-    myPln = np.float32(powerspectrum.P_ln("data/PkCamb.dat").P(k))
-    return np.float32( np.sqrt(myPln/Vcell) )
-  
-#********************************************************************
-def Power_Spectrum(k):
-    myP = np.float32(powerspectrum.P_0("data/PkCamb.dat").P(k))
-    return np.float32( np.sqrt(myP/Vcell) )
-  
 
 #********************************************************************
 # if True:
