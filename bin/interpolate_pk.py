@@ -1,29 +1,28 @@
 # interpolates a table of P(k) in a file
 # to compute sqrt(P(K)/Vcell) for each mode
 # store result in fits file
-
+import os
 import numpy as np
 from fitsio import FITS
-#import sys
 import time
-#import json
-#import os
 import argparse
 import cosmolopy.perturbation as pert
-from LyaMocks import powerspectrum
-from LyaMocks import constant 
+from SaclayMocks import powerspectrum
+from SaclayMocks import constant 
 from multiprocessing import Pool
 from memory_profiler import profile
 
 
 #********************************************************************
 def Power_Spectrum_ln(k, growth, bias, Vcell):
-    myPln = np.float32(powerspectrum.P_ln("data/PlanckDR12.fits",G_times_bias=growth*bias).P(k))
+    fileame = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
+    myPln = np.float32(powerspectrum.P_ln(filename,G_times_bias=growth*bias).P(k))
     return np.float32( np.sqrt(myPln/Vcell) )
   
 #********************************************************************
 def Power_Spectrum(k, Vcell):
-    myP = np.float32(powerspectrum.P_0("data/PlanckDR12.fits").P(k))
+    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
+    myP = np.float32(powerspectrum.P_0(filename).P(k))
     return np.float32( np.sqrt(myP/Vcell) )
   
 # @profile

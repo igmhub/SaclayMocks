@@ -1,11 +1,12 @@
 # get P(k) by reading a file and interpolating 
 # P(k) => xi(r) and xi(r) => P(k)
+import os
 import numpy as np
 import scipy as sp
 from scipy import interpolate, integrate
 import matplotlib.pyplot as plt # prov
-from LyaMocks import util
-from LyaMocks import constant
+from SaclayMocks import util
+from SaclayMocks import constant
 import pyfftw.interfaces.numpy_fft as fft
 from fitsio import FITS
 
@@ -51,9 +52,11 @@ class P_1D_RSD() :
 #********************************************************************
 class P_0() :   
     '''Read P(k) from a file and interpolate it'''
-    def __init__(self,filename="data/PlanckDR12.fits",G_times_bias=1):
+    def __init__(self,filename=None,G_times_bias=1):
           #     read filename skiping skiprows lines
           #     k in column colk and p in colp
+        if filename is None:
+            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
         fits = FITS(filename)
         data = fits[1].read()
         k = data['K']
@@ -81,9 +84,11 @@ class P_0() :
 #       if (logNormal) : k_input,P_input = LogNormalP(k_input,P_input)
 class P_ln() :   
     '''Read P(k) from a file, compute the lognormal P(k), interpolate it'''
-    def __init__(self,filename="data/PlanckDR12.fits",G_times_bias=1):
+    def __init__(self,filename=None,G_times_bias=1):
           #     read filename skiping skiprows lines
           #     k in column colk and p in colp
+        if filename is None:
+            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
         fits = FITS(filename)
         data = fits[1].read()
         k_input = data['K']

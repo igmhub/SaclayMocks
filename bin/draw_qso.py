@@ -10,9 +10,9 @@ import os
 import cosmolopy.distance as dist
 import fitsio
 from fitsio import FITS,FITSHDR
-from LyaMocks import box
-from LyaMocks import constant 
-from LyaMocks import util
+from SaclayMocks import box
+from SaclayMocks import constant 
+from SaclayMocks import util
 import argparse
 from time import time
 from memory_profiler import profile
@@ -108,7 +108,7 @@ def main():
     parser.add_argument("-desi", type=str, help="select only objects in desi footprint, default is True", default="True")
     parser.add_argument("-seed", type=int, help="specify a seed", default=None)
     parser.add_argument("-rsd", help="If True, rsd are added, default True", default='True')
-    parser.add_argument("-dgrowthfile", help="dD/dz file, default data/dgrowth.fits", default="data/dgrowth.fits")
+    parser.add_argument("-dgrowthfile", help="dD/dz file, default etc/dgrowth.fits", default=None)
     args = parser.parse_args()
     zmin = args.zmin
     zmax = args.zmax
@@ -129,11 +129,13 @@ def main():
     OL = constant.omega_lambda_0
     Ok = constant.omega_k_0
     z0 = constant.z0
-    if Om == fitsio.read_header(args.dgrowthfile, ext=1)['OM']:
-        Dgrowth = util.InterpFitsTable(args.dgrowthfile, 'Z', 'dD/dz')
+    if args.dgrowthfile is None:
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/dgrowth.fits")
+    if Om == fitsio.read_header(filename, ext=1)['OM']:
+        Dgrowth = util.InterpFitsTable(filename, 'Z', 'dD/dz')
     else:
-        raise ValueError("Omega_M_0 in LyaMocks.constant ({}) != OM in {}".format(Om,
-                            fitsio.read_header(args.dgrowthfile, ext=1)['OM']))
+        raise ValueError("Omega_M_0 in SaclayMocks.constant ({}) != OM in {}".format(Om,
+                            fitsio.read_header(filename, ext=1)['OM']))
     dgrowth0 = Dgrowth.interp(0)
 
     print("\n\nBegining of DrawQSO.")
@@ -237,7 +239,7 @@ def main():
     print "far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h)
 
     #...............................  read dN/dz assuming constant Delta z
-    filename = "data/nz_qso_desi.dat"
+    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/nz_qso_desi.dat")
     d = np.loadtxt(filename) 
     delta_z = d[1,0]-d[0,0]
     zlow = d[:,0]

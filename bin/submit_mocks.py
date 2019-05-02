@@ -828,8 +828,8 @@ def main():
     parser.add_argument("--mock-dir", type=str, default=None, required=True,
         help="directory where all files are saved")
 
-    parser.add_argument("--python-dir", type=str, default=None, required=True,
-        help="directory where all the python codes are")
+    parser.add_argument("--python-dir", type=str, default=None, required=False,
+        help="directory where all the python codes are. Default is to read in $SACLAYMOCKS_BASE/bin/")
 
     parser.add_argument("--out-dir", type=str, default=None, required=False,
         help="directory where the output in desi format is saved (optional). Default is within the base directory")
@@ -897,9 +897,9 @@ def main():
     mock_args['ny'] = args.box_size
     mock_args['nz'] = 1536  # This one is fixed to get the whole redshift range
     mock_args['pixel_size'] = 2.19  # pixel size in Mpc/h
-    mock_args['a'] = -1  # a parameter in FGPA; -1 is to read a(z) from data/params.fits
+    mock_args['a'] = -1  # a parameter in FGPA; -1 is to read a(z) from etc/params.fits
     mock_args['b'] = 1.58  # b parameter in FGPA; a(z) and c(z) are tuned for b=1.58
-    mock_args['c'] = -1  # c paramter in FGPA; -1 is to read c(z) from data/params.fits
+    mock_args['c'] = -1  # c paramter in FGPA; -1 is to read c(z) from etc/params.fits
     mock_args['zmin'] = 1.8  # minimal redshift to draw QSO
     mock_args['zmax'] = 3.6  # maximal redshift to draw QSO
     mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
@@ -959,7 +959,10 @@ def main():
               +" the run of next realisations.\n The Pk will be produce with"\
               +" the run of the first realisation.")
     mock_dir = args.mock_dir
-    python_dir = args.python_dir
+    if args.python_dir is None:
+        python_dir = os.path.expandvars("$SACLAYMOCKS_BASE/bin/")
+    else:
+        python_dir = args.python_dir
     mock_args['nmocks'] = nmocks
     mock_args['mock_dir'] = mock_dir
     mock_args['python_dir'] = python_dir

@@ -3,7 +3,7 @@ import fitsio
 import numpy as np
 import numpy.ma as ma
 import scipy as sp
-from LyaMocks import util, powerspectrum, fit_az, constant
+from SaclayMocks import util, powerspectrum, fit_az, constant
 import pyfftw.interfaces.numpy_fft as fft
 import matplotlib.pyplot as plt
 
@@ -41,7 +41,7 @@ class P1dmiss(object):
         self.fit_data()
 
         #Compute dD/dz:
-        dgrowthfile = 'data/dgrowth.fits'
+        dgrowthfile = os.path.expandvars("$SACLAYMOCKS_BASE/etc/dgrowth.fits")
         dgrowth = util.InterpFitsTable(dgrowthfile, 'Z', 'dD/dz')
         self.dD_dz = dgrowth.interp
 
@@ -124,83 +124,6 @@ class P1dmiss(object):
         new.beta = beta
         new.dd = dd
         return new
-        # self = object.__new__(Cls)
-        # self.z = z
-        # self.aa = aa
-        # self.bb = bb
-        # self.cc = cc
-        # # self.dd = dd
-        # self.Nhdu = Nhdu
-        # self.cell_size = cell_size
-        # self.k_ny_box = np.pi / cell_size
-        # self.pixel = pixel
-        # self.k_ny_spec = np.pi / pixel
-        # self.Nreg = Nreg
-        # self.kmax = kmax
-        # self.dk = dk
-        # self.ll = ll
-        # self.xx = xx
-        # self.indir = indir
-        # self.niter = 0
-
-        # # Read data fit
-        # self.fit_data()
-
-        # #Compute dD/dz:
-        # dgrowthfile = 'data/dgrowth.fits'
-        # dgrowth = util.InterpFitsTable(dgrowthfile, 'Z', 'dD/dz')
-        # self.dD_dz = dgrowth.interp
-
-        # # Running comp_p1dmiss.py:
-        # # print("Running compute_p1dmiss.py...")
-        # # os.system("python compute_p1dmiss.py -beta {} -cc {} -pixel {} -kmax {} -dk {} -outdir {}"
-        # #           .format(beta, cc, pixel, kmax, dk, indir))
-        # filename = indir + "/" + self.pkmiss_filename()
-        # print("Reading p1dmissing {}".format(filename))
-        # data = fitsio.read(filename, ext=1)
-        # kk = data['k']
-        # pk = data['P1D']
-        # msk = kk >= 0.1
-        # self.k = kk[msk]
-        # self.pkmiss = pk[msk]
-        # print("Done.")
-        # fit_p1d = True
-        # print("Producing spectra...")
-        # os.system("bash minimize_az.sh {} {} {} {} {} {}".format(aa, z, indir, Nhdu, cc, fit_p1d))
-        # print("Done.")
-        # print("Reading spectra...")
-        # self.read_spectra()
-        # print("Done.")
-        # print("Computing sigma...")
-        # sigma_l = 1.186
-        # print("sigma_l = {}".format(sigma_l))
-        # data = fitsio.read(indir+"/p1dmiss.fits", ext=1)
-        # p1dmissing = sp.interpolate.InterpolatedUnivariateSpline(data['k'], data['P1D'])
-        # sigma_s = util.sigma_p1d(p1dmissing, pixel)
-        # print("sigma_s = {}".format(sigma_s))
-        # sigma = np.sqrt(sigma_l**2 + sigma_s**2)
-        # self.sigma_l = sigma_l
-        # self.sigma_s = sigma_s
-        # self.sigma = sigma
-        # print("sigma = {}".format(sigma))
-        # sigma_eta_l = ma.std(self.eta_l)
-        # self.sigma_eta_l = sigma_eta_l
-        # print("sigma eta_l = {}".format(sigma_eta_l))
-        # print("Generating eta_s...")
-        # self.gen_small_scales()
-        # print("Done.")
-        # sigma_eta_s = ma.std(self.eta_s)
-        # self.sigma_eta_s = sigma_eta_s
-        # print("sigma eta_s = {}".format(sigma_eta_s))
-        # tau = util.taubar_over_a(self.sigma, self.growthf, self.bb)
-        # self.taubar_over_a = tau
-        # print("Taubar_over_a = {}".format(tau))
-        # print("Computing P1D...")
-        # self.compute_pkf()
-        # self.smooth_pkf()
-        # self.export_pkf()
-        # print("Done.")
-        # return self
 
     def pkmiss_filename(self, niter=None):
         if niter is None:
@@ -217,29 +140,13 @@ class P1dmiss(object):
         filename = "p1d-{}.fits".format(niter)
         return filename
 
-    # def P_RSD(self, k_par, k_perp,P):
-    #     k = np.sqrt(k_par*k_par + k_perp*k_perp)
-    #     mu = k_par / np.maximum(k, 1E-15)
-    #     return (1 + self.beta*mu**2)**2 * P(k)
-
-    # def PW2cut(self, k):
-    #     W = np.exp(- self.cell_size**2 * k**2 / 2)
-    #     return W*W*self.p_camb(k)*(k < self.k_ny_box)
-
-    # def dgrowth(self, z):
-    #     dgrowthfile = 'data/dgrowth.fits'
-    #     if constant.omega_M_0 == fitsio.read_header(dgrowthfile, ext=1)['OM']:
-    #         dgrowth = util.InterpFitsTable(dgrowthfile, 'Z', 'dD/dz')
-    #     else:
-    #         raise ValueError("Omega_M_0 in LyaMocks.constant ({}) != OM in {}"
-    #             .format(constant.omega_M_0, fitsio.read_header(dgrowthfile, ext=1)['OM']))
-    #     return dgrowth.interp(z)
-
-    def fit_data(self,klim=1.6, filename='data/fit_p1d_mock_z3.4.fits'):
+    def fit_data(self,klim=1.6, filename=None):
         k_fit, p1d_fit = util.read_P1D_fit(self.z)
         k_fit *= self.xx
         p1d_fit /= self.xx
         msk1 = k_fit < klim
+        if filename is None:
+            os.path.expandvars("$SACLAYMOCKS_BASE/etc/fit_p1d_mock_z3.4.fits")
         data = fitsio.read(filename, ext=1)
         k_mock = data['k']
         p1d_mock = data['P1D']

@@ -10,7 +10,7 @@ import sys
 from matplotlib import pyplot as plt
 import fitsio
 from fitsio import FITS
-from LyaMocks import constant
+from SaclayMocks import constant
 
 
 PI = np.pi
@@ -171,7 +171,8 @@ def read_P1D(redshift):
     Format is z, k, pk, pkerr, 0, 0, 0
     k in km/s and pk and pkerr in (km/s)**-1
     """
-    data = np.loadtxt('data/pk_fft35bins_noSi.out')
+    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out")
+    data = np.loadtxt(filename)
     z = np.round(data[:, 0], 3)
     msk = np.where(z == np.round(redshift, 3))[0]
     if len(msk) == 0:
@@ -191,9 +192,9 @@ def read_P1D_fit(redshift):
     output is k in km/s and pk in s/km
     """
     if redshift < 3.9:
-        filename = "data/models_eBOSS_lowz.fits"
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/models_eBOSS_lowz.fits")
     else:
-        filename = "data/models_eBOSS_highz.fits"
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/models_eBOSS_highz.fits")
     data = fitsio.read(filename, ext=1)
     z = np.round(data['z'], 3)
     msk = np.where(z == np.round(redshift, 3))[0]
@@ -314,13 +315,15 @@ def zeff(filename, rmin=80., rmax=120.):
     return np.sum(z[msk]*we[msk]) / np.sum(we[msk])
 
 
-def desi_footprint(ra, dec, filename='data/desi-healpix-weights.fits'):
+def desi_footprint(ra, dec, filename=None):
     '''
     return a mask to select only desi footprint
     from quickquasars script (desisim)
     '''
     desi_nside =256  # same resolution as original map (cf quickquasars)
     healpix = radec2pix(desi_nside, ra, dec)
+    if filename is None:
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/desi-healpix-weights.fits")
     pixmap = fitsio.read(filename, ext=0)
     npix = len(pixmap)
     truenside = hp.npix2nside(npix)
@@ -371,12 +374,14 @@ def pol(x, p):
     return res
 
 
-def read_p1dmiss(z, k, filename="data/pkmiss_fit.fits"):
+def read_p1dmiss(z, k, filename=None):
     '''
     This function reads the coefficients of the polynomial fit on P1Dmissing
     and uses them to interpolate it to the redshift z
     The fit was done on P1D/(1+z)**3.8
     '''
+    if filename is None:
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_fit.fits")
     data = fitsio.read(filename, ext=1)
     f = interpolate.interp1d(data['k'], data['p'], axis=0)
     pkinterp = np.array([pol(z, f(kk)) for kk in k])

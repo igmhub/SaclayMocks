@@ -10,7 +10,7 @@ import time
 import glob
 #import matplotlib.pyplot as plt
 import argparse
-from LyaMocks import constant
+from SaclayMocks import constant
 import cosmolopy.distance as dist
 
 try:
