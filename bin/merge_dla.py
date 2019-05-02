@@ -3,7 +3,7 @@ import time
 import argparse
 import os
 import numpy as np
-from LyaMocks import util
+from SaclayMocks import util
 
 
 def iterfiles(root):

@@ -5,10 +5,10 @@
 #   add small scale power
 #	applies Gunn Peterson to make Lya forest
 from __future__ import division, print_function
-from LyaMocks import box
-from LyaMocks import constant 
-from LyaMocks import powerspectrum
-from LyaMocks import util
+from SaclayMocks import box
+from SaclayMocks import constant 
+from SaclayMocks import powerspectrum
+from SaclayMocks import util
 import fitsio
 from fitsio import FITS
 import sys
@@ -143,7 +143,7 @@ def main():
     parser.add_argument("-NQSO", type=int, help="cut at QNSO, default = -1, no cut", default=-1)
     parser.add_argument("-rsd", help="If True, rsd are added, default True", default='True')
     parser.add_argument("-dla", help="If True, store delta and growth skewers, default False", default='False')
-    parser.add_argument("-dgrowthfile", help="dD/dz file, default data/dgrowth.fits", default="data/dgrowth.fits")
+    parser.add_argument("-dgrowthfile", help="dD/dz file, default etc/dgrowth.fits", default=None)
     args = parser.parse_args()
 
     iSlice = args.i
@@ -156,11 +156,13 @@ def main():
     dla = util.str2bool(args.dla)
 
     Om = constant.omega_M_0
-    if Om == fitsio.read_header(args.dgrowthfile, ext=1)['OM']:
-        Dgrowth = util.InterpFitsTable(args.dgrowthfile, 'Z', 'dD/dz')
+    if args.dgrowthfile is None:
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/dgrowth.fits")
+    if Om == fitsio.read_header(filename, ext=1)['OM']:
+        Dgrowth = util.InterpFitsTable(filename, 'Z', 'dD/dz')
     else:
-        raise ValueError("Omega_M_0 in LyaMocks.constant ({}) != OM in {}".format(Om,
-                            fitsio.read_header(args.dgrowthfile, ext=1)['OM']))
+        raise ValueError("Omega_M_0 in SaclayMocks.constant ({}) != OM in {}".format(Om,
+                            fitsio.read_header(filename, ext=1)['OM']))
     dgrowth0 = Dgrowth.interp(0)
 
     print("Begining of MakeSpectra - {}".format(iSlice))

@@ -6,8 +6,8 @@ import argparse
 import os
 import sys
 from time import time
-from LyaMocks import util
-from LyaMocks import constant
+from SaclayMocks import util
+from SaclayMocks import constant
 from memory_profiler import profile
 
 

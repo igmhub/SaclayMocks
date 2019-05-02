@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 import time
 import os
-from LyaMocks import util, constant
+from SaclayMocks import util, constant
 
 
 def iterfiles(root, random_cond):

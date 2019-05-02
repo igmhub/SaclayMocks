@@ -22,9 +22,9 @@ import pyfftw
 import os
 import argparse
 import cosmolopy.perturbation as pert
-from LyaMocks import powerspectrum
-from LyaMocks import constant
-from LyaMocks import util
+from SaclayMocks import powerspectrum
+from SaclayMocks import constant
+from SaclayMocks import util
 from multiprocessing import Pool
 import gc
 
@@ -136,7 +136,7 @@ def main() :
   parser.add_argument("-PkDir", help="directory of Pk fits file")
   parser.add_argument("-seed", type=int, help="specify a seed", default=None)
   parser.add_argument("-rsd", type=str, help="If True, rsd are added, default True", default='True')
-  parser.add_argument("-dgrowthfile", help="dD/dz file, default data/dgrowth.fits", default="data/dgrowth.fits")
+  parser.add_argument("-dgrowthfile", help="dD/dz file, default etc/dgrowth.fits", default=None)
   parser.add_argument("-outDir", help="directory where the box are saved")
   
   args = parser.parse_args()
@@ -239,11 +239,13 @@ def main() :
     kx = np.float32(kx.reshape(-1, 1, 1))		# (NX,1,1)
     kk = kx*kx + ky*ky + kz*kz  # shape = (NX, NY, NZ/2+1)
     kk[0, 0, 0] = 1  # avoid dividing by 0
-    if Om != fitsio.read_header(args.dgrowthfile, ext=1)['OM']:
-      raise ValueError("Omega_M_0 in LyaMocks.constant ({}) != OM in {}".format(Om,
-                            fitsio.read_header(args.dgrowthfile, ext=1)['OM']))
+    if args.dgrowthfile is None:
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/dgrowth.fits")
+    if Om != fitsio.read_header(filename, ext=1)['OM']:
+      raise ValueError("Omega_M_0 in SaclayMocks.constant ({}) != OM in {}".format(Om,
+                            fitsio.read_header(filename, ext=1)['OM']))
 
-    dgrowth0 = fitsio.read(args.dgrowthfile, ext=1)['dD/dz'][0]  # value for z=0
+    dgrowth0 = fitsio.read(filename, ext=1)['dD/dz'][0]  # value for z=0
 
     # etak_xx
     print("eta_xx...")

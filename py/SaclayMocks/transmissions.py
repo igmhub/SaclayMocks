@@ -1,11 +1,11 @@
-from LyaMocks import powerspectrum, util, constant
 import fitsio
 import os
+import glob
 import numpy as np
 import numpy.ma as ma
-from scipy import stats as stats
 import matplotlib.pyplot as plt
-import glob
+from scipy import stats as stats
+from SaclayMocks import powerspectrum, util, constant
 
 
 class ReadTransmission(object):
@@ -110,8 +110,10 @@ class ReadTransmission(object):
         ax.hist(spec[spec.mask==False], bins=bins)
         plt.show()
 
-    def p1d(self, redshift, Nreg=1, bins=300, title='', filename='data/pk_fft35bins_noSi.out', pixel=0.2):
+    def p1d(self, redshift, Nreg=1, bins=300, title='', filename=None, pixel=0.2):
         # P1D of data
+        if filename is None:
+            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out")
         print("Reading P1D data from: {}".format(filename))
         data = np.loadtxt(filename)
         z = data[:, 0]

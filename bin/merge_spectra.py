@@ -5,7 +5,7 @@ import scipy as sp
 import argparse
 import time
 from memory_profiler import profile
-from LyaMocks import util, constant
+from SaclayMocks import util, constant
 import pyfftw.interfaces.numpy_fft as fft
 import cosmolopy.perturbation as pert
 import glob
@@ -21,11 +21,11 @@ def main():
     parser.add_argument("-inDir", help="dir for spectra fits file")
     parser.add_argument("-outDir", help="dir for merged spectra fits file")
     parser.add_argument("-i", type=int, help="Treated slice")
-    parser.add_argument("-aa", type=float, help="a param in FGPA. Default is to read a(z) from data/params.fits", default=-1)
+    parser.add_argument("-aa", type=float, help="a param in FGPA. Default is to read a(z) from etc/params.fits", default=-1)
     parser.add_argument("-bb", type=float, help="b param in FGPA. Default 1.58", default=1.58)
-    parser.add_argument("-cc", type=float, help="c param in FGPA. Default is to read c(z) from data/params.fits.", default=-1)
-    parser.add_argument("-paramfile", help="fits file for parameters, default is data/params.fits", default='data/params.fits')
-    parser.add_argument("-p1dfile", help="P1Dmissing fits file, default is data/pkmiss_interp.fits", default='data/pkmiss_interp.fits')
+    parser.add_argument("-cc", type=float, help="c param in FGPA. Default is to read c(z) from etc/params.fits.", default=-1)
+    parser.add_argument("-paramfile", help="fits file for parameters, default is etc/params.fits", default=None)
+    parser.add_argument("-p1dfile", help="P1Dmissing fits file, default is etc/pkmiss_interp.fits", default=None)
     parser.add_argument("-pixsize", type=float, help="spectrum pixsize in Mpc/h, default 0.2", default=0.2)
     parser.add_argument("-nside", type=int, help="nside for healpix. Default 16", default=16)
     parser.add_argument("-nest", help="If True, healpix scheme is nest. Default True", default='True')
@@ -51,16 +51,19 @@ def main():
     pixsize = args.pixsize
     k_ny = np.pi / pixsize
     bb = args.bb
+    if args.paramfile is None:
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/params.fits")
+
     if args.aa > 0:
         aa = args.aa
         print("a  parameter has been fixed to {}".format(aa))
     else:
-        a_of_z = util.InterpFitsTable(args.paramfile, 'z', 'a')
+        a_of_z = util.InterpFitsTable(filename, 'z', 'a')
     if args.cc > 0:
         cc = args.cc
         print("c  parameter has been fixed to {}".format(cc))
     else:
-        c_of_z = util.InterpFitsTable(args.paramfile, 'z', 'c')
+        c_of_z = util.InterpFitsTable(filename, 'z', 'c')
 
     seed = args.seed
     if seed is None:
@@ -90,12 +93,14 @@ def main():
         qso_data = np.concatenate(qso_data)
 
     # .......... Load P1D missing
-    print("Reading P1D file {}".format(args.p1dfile))
+    if args.p1dfile is None:
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
+    print("Reading P1D file {}".format(filename))
     if fit_p1d:
-        p1d_data = fitsio.read(args.p1dfile, ext=1)
+        p1d_data = fitsio.read(filename, ext=1)
         p1dmiss = sp.interpolate.InterpolatedUnivariateSpline(p1d_data['k'], p1d_data['P1D'])
     else:
-        p1dmiss = util.InterpP1Dmissing(args.p1dfile)
+        p1dmiss = util.InterpP1Dmissing(filename)
 
     # ........... Open fits files
     print("Opening fits files...")

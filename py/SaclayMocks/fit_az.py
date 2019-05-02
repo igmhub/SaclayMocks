@@ -1,7 +1,7 @@
 import os
 import fitsio
 import numpy as np
-from LyaMocks import util, powerspectrum, constant
+from SaclayMocks import util, powerspectrum, constant
 from iminuit import Minuit
 import time
 import matplotlib.pyplot as plt
@@ -59,12 +59,14 @@ class Chi2(object):
         new.dk = dk
         return new
 
-    def read_data(self, filename='data/pk_fft35bins_noSi.out'):
+    def read_data(self, filename=None):
         """
         Read Pk file from Nathalie. Si III oscillations have been removed.
         Format is z, k, pk, pkerr, 0, 0, 0
         k in km/s and pk and pkerr in (km/s)**-1 translated to Mpc/h
         """
+        if filename is None:
+            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out")
         print("Reading data from: {}".format(filename))
         data = np.loadtxt(filename)
         z = data[:, 0]
