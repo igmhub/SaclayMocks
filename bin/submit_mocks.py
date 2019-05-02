@@ -3,6 +3,7 @@ import argparse
 import subprocess
 import healpy as hp
 import numpy as np
+from SaclayMocks import util
 
 
 """
@@ -828,6 +829,9 @@ def main():
     parser.add_argument("--mock-dir", type=str, default=None, required=True,
         help="directory where all files are saved")
 
+    parser.add_argument("--cori-nodes", type=str, default='True', required=False,
+        help="If True, send the code to cori nodes")
+
     parser.add_argument("--python-dir", type=str, default=None, required=False,
         help="directory where all the python codes are. Default is to read in $SACLAYMOCKS_BASE/bin/")
 
@@ -915,7 +919,7 @@ def main():
     # Run options:
     mock_args['use_time'] = True  # If True, use /usr/bin/time/ to time jobs
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
-    mock_args['sbatch'] = True  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
+    mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
     mock_args['burst_buffer'] = True  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
     mock_args['bb_size'] = "5000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
@@ -1006,6 +1010,8 @@ def main():
     if mock_args['burst_buffer'] and run_args['run_delete']: print("- run_delete")
 
     ### Define chunks parameters :
+    if args.box_size < 2560:
+        mock_args['desifootprint'] = False
     ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size)
     if args.chunk_id is not None:
         m = np.array(args.chunk_id) - 1
@@ -1023,6 +1029,9 @@ def main():
     mock_args['nslice'] = nslice
     print("It will produce {} chunks, with ids: {}".format(len(chunkid), chunkid))
     print("and ra0: {}".format(ra0))
+
+    if not util.str2bool(args.cori_nodes):
+        print("Warning: the jobs will not be sent to cori nodes, they will be executed here.")
 
     # define and create directories for Pk:
     make_pk_dir(mock_args)
