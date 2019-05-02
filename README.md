@@ -2,6 +2,16 @@
 # Simulated Absorption for Cosmology with Lyman-Alpha from the Yvette Mocks
 
 
+# Installation:
+to download, you can simply use git clone:
+git clone https://github.com/igmhub/SaclayMocks.git
+
+then, you need to add to your bashrc:
+export SACLAYMOCKS_BASE=<path to the git repository>
+export PYTHONPATH=$SACLAYMOCKS_BASE/py/:$PYTHONPATH
+
+
+# Running:
 The code runs as follow:
 First it reads and interpolate the powerspectrum from camb (stored in etc/) to create a 3D powerspectrum.
 These steps are done with interpolate_pk.py and merge_pk.py
