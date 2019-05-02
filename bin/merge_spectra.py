@@ -281,7 +281,7 @@ def main():
                         else:
                             zeff = z[mmm].mean()
                             pmis = p1dmiss(zeff, k)
-                        delta_sk *= np.sqrt(pmis/pixsize) 
+                        delta_sk *= np.sqrt(pmis/pixsize)
                         delta_s = fft.irfftn(delta_sk)
                         delta_s = delta_s[0:len(wav_tmp)]
                         delta = delta_l_tmp + delta_s

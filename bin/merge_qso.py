@@ -23,7 +23,7 @@ def iterfiles(root, random_cond):
 if True:
 # def main():
     t_init = time.time()
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-inDir", help="Directory where the QSO files are located")
     parser.add_argument("-outDir", help="Directory where the out file is saved")
@@ -87,7 +87,7 @@ if True:
                 outfits[1].write_key("Z_QSO_RSD", None, comment="redshift with rsd")
             else:
                 outfits[1].write_key("Z", None, comment="redshift")
-            
+
             outfits[1].write_key("HDU", None, comment="Slice index of the QSO")
             outfits[1].write_key("PIXNUM", None, comment="healpix pixel number")
             outfits[1].write_key("Om", constant.omega_M_0, comment="Omega_M_0")
@@ -95,7 +95,7 @@ if True:
             outfits[1].write_key("Ob", constant.omega_b_0, comment="Omega_baryon_0")
             outfits[1].write_key("Ok", constant.omega_k_0, comment="Omega_k_0")
             outfits[1].write_key("h", constant.h, comment="h")
-            outfits[1].write_key("z0", constant.z0, comment="box center redshift")        
+            outfits[1].write_key("z0", constant.z0, comment="box center redshift")
 
         else:
             outfits[1].append(array_list, names=names)

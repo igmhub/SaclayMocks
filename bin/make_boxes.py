@@ -11,7 +11,7 @@ from fitsio import FITS,FITSHDR
 import sys
 import time
 #from scipy import interpolate
-#import matplotlib.pyplot as plt 
+#import matplotlib.pyplot as plt
 from memory_profiler import profile
 #import scipy.fftpack as fft
 #import numpy.fft as fft
@@ -91,7 +91,7 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
     print("sigma = {}".format(sigma))
 
 #...............................      write to fits file
-    for i in np.arange(0, nHDU): 
+    for i in np.arange(0, nHDU):
       fits = FITS(boxfilename+'-{}.fits'.format(i),'rw',clobber=True)
       hdict = {'DX': Dcell, 'DY': Dcell, 'DZ':Dcell, 'NX':NX, 'NY':NY, 'NZ':(NZ-1)*2}
       fits.write(box[i*NX/nHDU:(i+1)*NX/nHDU],header=hdict)
@@ -125,7 +125,7 @@ def main() :
   h = constant.h
   omega_M_0 = constant.omega_M_0
   t_init = time.time()
-  
+
   parser = argparse.ArgumentParser()
   parser.add_argument("-pixel", type=float, help="pixel size (Mpc/h), default 2.19", default=2.19)
   parser.add_argument("-NX", type=int, help="number of pixels along x, default 256", default=256)
@@ -138,7 +138,7 @@ def main() :
   parser.add_argument("-rsd", type=str, help="If True, rsd are added, default True", default='True')
   parser.add_argument("-dgrowthfile", help="dD/dz file, default etc/dgrowth.fits", default=None)
   parser.add_argument("-outDir", help="directory where the box are saved")
-  
+
   args = parser.parse_args()
   rsd = util.str2bool(args.rsd)
   Dcell = args.pixel
@@ -166,15 +166,15 @@ def main() :
   ncpu = args.ncpu
   PkDir = args.PkDir
   outDir = args.outDir
-  
+
   PI = np.pi
   k_ny = PI / Dcell
-  nCell  = NX * NY * NZ 
+  nCell  = NX * NY * NZ
   Vcell = np.float32(Dcell**3)
-  volume = nCell * Vcell 
+  volume = nCell * Vcell
   print "volume = ",volume
-  
-  #...............................    get wisdom to save time on FFT 
+
+  #...............................    get wisdom to save time on FFT
   if (NY==NX and NZ==NX):
     wisdomFile = "wisdom."+str(NX)+"."+str(ncpu)+".npy"
   else :
@@ -200,11 +200,11 @@ def main() :
 
   t1 = time.time()
   boxkfile = outDir + "/boxk.npy"
-  np.save(boxkfile,boxk) 
+  np.save(boxkfile,boxk)
   t2 = time.time()
-    
+
   print "boxk produced and saved:",t1-t0,t2-t1," s "
-  
+
   #............................. multiply by sqrt(P/Vcell), FFT and store
   print("Computing delta boxes...")
   if (NY==NX and NZ==NX):
@@ -221,7 +221,7 @@ def main() :
     boxk *= fitsio.read(Pfilename, ext=0)
     FFTandStore(Dcell, nHDU, outDir+'/boxln', ncpu, wisdomFile, box_null)
   boxk=np.load(boxkfile)
-  nHDU_bis = NX   # we want 1 HDU per ix 
+  nHDU_bis = NX   # we want 1 HDU per ix
   boxk *= fitsio.read(Pfilename, ext=1)
   np.save(boxkfile, boxk)
   FFTandStore(Dcell, nHDU_bis, outDir+'/box', ncpu, wisdomFile)
@@ -254,7 +254,7 @@ def main() :
     boxk *= kx*kx / kk
     FFTandStore(Dcell, nHDU_bis, outDir+'/eta_xx', ncpu, wisdomFile)
     print("Done. {} s".format(time.time() -t0))
-    
+
     # etak_yy
     print("eta_yy...")
     t0 = time.time()
@@ -262,7 +262,7 @@ def main() :
     boxk *= ky*ky / kk
     FFTandStore(Dcell, nHDU_bis, outDir+'/eta_yy', ncpu, wisdomFile)
     print("Done. {} s".format(time.time() -t0))
-    
+
     # etak_zz
     print("eta_zz...")
     t0 = time.time()
@@ -270,7 +270,7 @@ def main() :
     boxk *= kz*kz / kk
     FFTandStore(Dcell, nHDU_bis, outDir+'/eta_zz', ncpu, wisdomFile)
     print("Done. {} s".format(time.time() -t0))
-  
+
     # etak_xy
     print("eta_xy...")
     t0 = time.time()
@@ -278,7 +278,7 @@ def main() :
     boxk *= kx*ky / kk
     FFTandStore(Dcell, nHDU_bis, outDir+'/eta_xy', ncpu, wisdomFile)
     print("Done. {} s".format(time.time() -t0))
-  
+
     # etak_xz
     print("eta_xz...")
     t0 = time.time()
@@ -286,7 +286,7 @@ def main() :
     boxk *= kx*kz / kk
     FFTandStore(Dcell, nHDU_bis, outDir+'/eta_xz', ncpu, wisdomFile)
     print("Done. {} s".format(time.time() -t0))
-  
+
     # etak_yz
     print("eta_yz...")
     t0 = time.time()
@@ -294,8 +294,8 @@ def main() :
     boxk *= ky*kz / kk
     FFTandStore(Dcell, nHDU_bis, outDir+'/eta_yz', ncpu, wisdomFile)
     print("Done. {} s".format(time.time() -t0))
-  
-    print("Computing velocity boxes:")  
+
+    print("Computing velocity boxes:")
     # vx
     print("vx...")
     t0 = time.time()
@@ -303,7 +303,7 @@ def main() :
     boxk *= -1j*kx / kk * H0 * dgrowth0
     FFTandStore(Dcell, nHDU, outDir+'/vx', ncpu, wisdomFile)
     print("Done. {} s".format(time.time() -t0))
-  
+
     # vy
     print("vy...")
     t0 = time.time()
@@ -311,7 +311,7 @@ def main() :
     boxk *= -1j*ky / kk * H0 * dgrowth0
     FFTandStore(Dcell, nHDU, outDir+'/vy', ncpu, wisdomFile)
     print("Done. {} s".format(time.time() -t0))
-  
+
     # vz
     print("vz...")
     t0 = time.time()

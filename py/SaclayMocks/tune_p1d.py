@@ -242,7 +242,7 @@ class P1dmiss(object):
             print("WARNING P1D is extrapolated with a spline outside interpolation range /!\ ")
         Pmis = np.maximum(P1Dmissing(k), 0)
         # # Correct the amplitude:
-        # Pmis *= (self.sigma_eta_l / self.sigma_l)**2 
+        # Pmis *= (self.sigma_eta_l / self.sigma_l)**2
         delta_sk *= np.sqrt(Pmis/self.pixel)
         delta_s = fft.irfft(delta_sk, axis=1)
         self.delta_s = delta_s
@@ -296,7 +296,7 @@ class P1dmiss(object):
         # pkf = np.concatenate((pkf, [self.p1d_fit[-1]]))
         # pkferr = np.concatenate((pkferr, [pkferr[-1]]))
         # continuation with a straight line
-        
+
         pkf_interp = sp.interpolate.UnivariateSpline(kf, pkf, s=s)
         # Chi2 check:
         chi2_red = (((pkf_interp(kf)-pkf)/pkferr)**2).sum() / len(pkf)

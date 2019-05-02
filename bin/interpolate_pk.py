@@ -8,7 +8,7 @@ import time
 import argparse
 import cosmolopy.perturbation as pert
 from SaclayMocks import powerspectrum
-from SaclayMocks import constant 
+from SaclayMocks import constant
 from multiprocessing import Pool
 from memory_profiler import profile
 
@@ -18,13 +18,13 @@ def Power_Spectrum_ln(k, growth, bias, Vcell):
     fileame = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
     myPln = np.float32(powerspectrum.P_ln(filename,G_times_bias=growth*bias).P(k))
     return np.float32( np.sqrt(myPln/Vcell) )
-  
+
 #********************************************************************
 def Power_Spectrum(k, Vcell):
     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
     myP = np.float32(powerspectrum.P_0(filename).P(k))
     return np.float32( np.sqrt(myP/Vcell) )
-  
+
 # @profile
 def main():
     t0 = time.time()
@@ -39,9 +39,9 @@ def main():
     parser.add_argument("-outDir", help="Directory where the out file is saved")
     args = parser.parse_args()
 
-    NX = args.NX 
-    NY = args.NY 
-    NZ = args.NZ 
+    NX = args.NX
+    NY = args.NY
+    NZ = args.NZ
     Dcell = args.pixel
     iSlice = args.i
     NSlice = args.N

@@ -37,7 +37,7 @@ def rebin(a, shape):
 
 #*************************************************************
 def MakeProfileHisto(x,y,bins=50,err=True) :
-    ''' returns the mean value of y and its error in several bins in x 
+    ''' returns the mean value of y and its error in several bins in x
     '''
     if len(np.where(np.isnan(x))[0]) > 0:
         print("x is nan here: {}".format(np.where(np.isnan(x))[0]))
@@ -56,7 +56,7 @@ def MakeProfileHisto(x,y,bins=50,err=True) :
     if (err):   # if err = False, just return rms
         means_result = stats.binned_statistic(x, [y], bins=bins, statistic='count')
         N_in_bin = means_result.statistic  # number of x value in each bin
-        N_in_bin = N_in_bin[0]  #  N_in_bin.shape = (1, bins) 
+        N_in_bin = N_in_bin[0]  #  N_in_bin.shape = (1, bins)
         try:
             erry /= np.sqrt(N_in_bin)    # when N_in_bin = 0, anyway erry = nan already
         except ValueError:
@@ -76,9 +76,9 @@ def ChunkHalfWidth(dec,angle_max):
     ''' minimum half width in RA of a square chunk (+/- angle_max) located at a given dec '''
     a1 = (dec-angle_max)*PI/180
     a2 = (dec+angle_max)*PI/180
-    if (a1*a2 < 0) : 
+    if (a1*a2 < 0) :
         return angle_max # the chunk covers dec=0
-    else : 
+    else :
         cos1 = np.cos(a1)
         cos2 = np.cos(a2)
         return angle_max / np.maximum(cos1,cos2)
@@ -409,7 +409,7 @@ class InterpP1Dmissing():
         iz = np.argsort(np.abs(self.z - redshift))[0]
         z = self.z[iz]
         self.pk_interp[str(z)] = interpolate.interp1d(self.k[iz], self.pk[iz])
-    
+
     def __call__(self, redshift, k):
         iz = np.argsort(np.abs(self.z - redshift))[0]
         z = self.z[iz]
