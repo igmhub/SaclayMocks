@@ -63,7 +63,7 @@ def nu_of_bD(b):
     b_nu[galaxy_mean!=0] = p_nu[galaxy_mean!=0]/galaxy_mean[galaxy_mean!=0]
     # it means that to get a bias of 2, you need a value of the field
     # to be 2 times more probable than the probability to be above this value
-    b_nu[galaxy_mean==0] = nu[galaxy_mean==0] 
+    b_nu[galaxy_mean==0] = nu[galaxy_mean==0]
         # approximation for nu > 37.5, better than 0.027, i.e 0.07%
     y = interp1d(b_nu,nu)
     return y(b)
@@ -124,7 +124,7 @@ def dnHD_dz_cumlgN(z,logN):
 
 def dNdz(z, Nmin=20.0, Nmax=22.5, nsamp=100):
     """ Get the column density distribution as a function of z,
-    for a given range in N""" 
+    for a given range in N"""
     # get incidence rate per path length dX (in comoving coordinates)
     nn = np.linspace(Nmin,Nmax,nsamp)
     aux = fN_default.evaluate(nn, z)
