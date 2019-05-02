@@ -6,7 +6,7 @@ Simulated Absorption for Cosmology with Lyman-Alpha from the Yvette Mocks
 ## Installation:
 to download, you can simply use git clone:
 ```
-git clone https://github.com/igmhub/SaclayMocks.git
+git clone [https://github.com/igmhub/SaclayMocks.git]
 ```
 
 then, you need to add to your bashrc:
@@ -34,7 +34,6 @@ Once all the chunks are done, they are combined to produce the final output. Thi
 `dla_saclay.py` and `merge_dla.py` to produce the `master_DLA.fits` file
 `dla_randoms.py` to produce the `master_DLA_randoms.fits` file
 `make_transmissions.py` to produce all the transmissions files
-
 
 
 You don't need to run all these codes by hand. You just have to run `submit_mocks.py`
