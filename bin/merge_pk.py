@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from fitsio import FITS
 import numpy as np
 import argparse

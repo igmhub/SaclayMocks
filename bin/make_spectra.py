@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#!/usr/bin/env python
 #  MakeSpectra.py
 #	reads QSO list
 # 	reads non parallel l.o.s. through boxes
