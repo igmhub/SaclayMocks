@@ -16,6 +16,9 @@ export PATH=$SACLAYMOCKS_BASE/bin/:$PATH
 export PYTHONPATH=$SACLAYMOCKS_BASE/py/:$PYTHONPATH
 ```
 
+## Dependencies
+The code runs with python2 and is not compatible with python3 at the moment.
+
 ## Running:
 The code runs as follow:
 First it reads and interpolate the powerspectrum from camb (stored in `etc/`) to create a 3D power-spectrum.
