@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import fitsio
 import os, sys
 import numpy as np

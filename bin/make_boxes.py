@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # python DrawGRF -NX= -pixel=
 # Draw GRF in k-space
 # multiply by sqrt{ P(k) }

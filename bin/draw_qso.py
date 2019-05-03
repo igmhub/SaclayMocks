@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # python DrawQSO.py DesiMocks/box1024.fits
 # draw a QSO in each pixel of the box with a proba proportional to exp(delta) and n(z)
 # n(g,z) missing and no Gaussian smearing

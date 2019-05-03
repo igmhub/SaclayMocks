@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # interpolates a table of P(k) in a file
 # to compute sqrt(P(K)/Vcell) for each mode
 # store result in fits file

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import fitsio
 import time
 import argparse
