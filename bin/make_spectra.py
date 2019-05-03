@@ -362,17 +362,6 @@ def main():
     cells = cells.T
     grid = grid.T
     onesline = sp.ones((xx**3,1))	# (343,1)
-    
-    wisdomFile = "wisdom1D" # should depend on #CPU  <==
-    if os.path.isfile(wisdomFile):
-        g = open(wisdomFile, 'r')
-        wisd=json.load(g)
-        pyfftw.import_wisdom(wisd)
-        g.close()
-        save_wisdom = False
-    else :
-        print ("Warning ***** no wisdom file, set save_wisdom = true ******")
-        save_wisdom = True
 
     iqso=0
     pixtot=0
@@ -580,13 +569,7 @@ def main():
         outfits.close()
 
     print("Done. {} s".format(time.time()-t1))
-    
-    if (save_wisdom) :
-        wisd=pyfftw.export_wisdom()
-        f = open(wisdomFile, 'w')
-        json.dump(wisd,f)
-        f.close()
-    
+
     print (iqso, "QSO written")
     if (iqso != 0):
         print (1000*(t1-t0)/iqso, "ms per spectra")
