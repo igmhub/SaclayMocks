@@ -16,7 +16,7 @@ from memory_profiler import profile
 
 #********************************************************************
 def Power_Spectrum_ln(k, growth, bias, Vcell):
-    fileame = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
+    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
     myPln = np.float32(powerspectrum.P_ln(filename,G_times_bias=growth*bias).P(k))
     return np.float32( np.sqrt(myPln/Vcell) )
 
