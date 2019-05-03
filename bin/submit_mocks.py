@@ -214,7 +214,7 @@ def pk(mock_args, sbatch_args):
     for job in range(sbatch_args['threads_pk']):
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "python {loc}/interpolate_pk.py -NX {nx} -NY {ny} -NZ {nz} -i {job} -N {nslice} -outDir {path} -pixel {pixel} ".format(
+        script += "{loc}/interpolate_pk.py -NX {nx} -NY {ny} -NZ {nz} -i {job} -N {nslice} -outDir {path} -pixel {pixel} ".format(
             loc=mock_args['python_dir'], nx=mock_args['nx'], ny=mock_args['ny'], nz=mock_args['nz'], job=job,
             nslice=sbatch_args['threads_pk'], path=mock_args['dir_pk'], pixel=mock_args['pixel_size'])
         script += "&> {logdir}/interpolate_pk-{job}.log &\n".format(logdir=mock_args['dir_pk_logs'], job=job)
@@ -226,7 +226,7 @@ def pk(mock_args, sbatch_args):
     script += """echo -e "*** Running merge_pk ***"\n"""
     if mock_args['use_time']:
         script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-    script += "python {loc}/merge_pk.py -NX {nx} -NY {ny} -NZ {nz} -N {nslice} -outDir {path} -inDir {path} ".format(
+    script += "{loc}/merge_pk.py -NX {nx} -NY {ny} -NZ {nz} -N {nslice} -outDir {path} -inDir {path} ".format(
         loc=mock_args['python_dir'], nx=mock_args['nx'], ny=mock_args['ny'], nz=mock_args['nz'],
         nslice=sbatch_args['threads_pk'], path=mock_args['dir_pk'])
     script += "&> {logdir}/merge_pk.log".format(logdir=mock_args['dir_pk_logs'])
@@ -252,7 +252,7 @@ def boxes(mock_args, sbatch_args):
     '''
     script = get_header(mock_args, sbatch_args, "boxes")
     script += """echo "Running run_boxes.sh"\n"""
-    script += """echo "command: python {loc}/make_boxes.py -NX {nx} -NY {ny} -NZ {nz} -nHDU {nslice} -PkDir {path_pk} -outDir {path_boxes} -ncpu {threads} -pixel {pixel} -rsd {rsd} {seed} "\n""".format(loc=mock_args['python_dir'], nx=mock_args['nx'], ny=mock_args['ny'], nz=mock_args['nz'], nslice=mock_args['nslice'], path_pk=mock_args['dir_pk'], threads=sbatch_args['threads_boxes'], path_boxes=mock_args['dir_boxes-{}'.format(mock_args['i_chunk'])], pixel=mock_args['pixel_size'], rsd=mock_args['rsd'], seed=mock_args['seed'])
+    script += """echo "command: {loc}/make_boxes.py -NX {nx} -NY {ny} -NZ {nz} -nHDU {nslice} -PkDir {path_pk} -outDir {path_boxes} -ncpu {threads} -pixel {pixel} -rsd {rsd} {seed} "\n""".format(loc=mock_args['python_dir'], nx=mock_args['nx'], ny=mock_args['ny'], nz=mock_args['nz'], nslice=mock_args['nslice'], path_pk=mock_args['dir_pk'], threads=sbatch_args['threads_boxes'], path_boxes=mock_args['dir_boxes-{}'.format(mock_args['i_chunk'])], pixel=mock_args['pixel_size'], rsd=mock_args['rsd'], seed=mock_args['seed'])
     if mock_args['use_time']:
         script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
     if mock_args['sbatch']:
@@ -260,7 +260,7 @@ def boxes(mock_args, sbatch_args):
         if mock_args['verbosity'] is not None:
             script += mock_args['verbosity']
         script += " -N 1 -n 1 -c 64 "
-    script += "python {loc}/make_boxes.py -NX {nx} -NY {ny} -NZ {nz} -nHDU {nslice} -PkDir {path_pk} -outDir {path_boxes} -ncpu {threads} -pixel {pixel} -rsd {rsd} {seed} ".format(loc=mock_args['python_dir'], nx=mock_args['nx'], ny=mock_args['ny'], nz=mock_args['nz'], nslice=mock_args['nslice'], path_pk=mock_args['dir_pk'], threads=sbatch_args['threads_boxes'], path_boxes=mock_args['dir_boxes-{}'.format(mock_args['i_chunk'])], pixel=mock_args['pixel_size'], rsd=mock_args['rsd'], seed=mock_args['seed'])
+    script += "{loc}/make_boxes.py -NX {nx} -NY {ny} -NZ {nz} -nHDU {nslice} -PkDir {path_pk} -outDir {path_boxes} -ncpu {threads} -pixel {pixel} -rsd {rsd} {seed} ".format(loc=mock_args['python_dir'], nx=mock_args['nx'], ny=mock_args['ny'], nz=mock_args['nz'], nslice=mock_args['nslice'], path_pk=mock_args['dir_pk'], threads=sbatch_args['threads_boxes'], path_boxes=mock_args['dir_boxes-{}'.format(mock_args['i_chunk'])], pixel=mock_args['pixel_size'], rsd=mock_args['rsd'], seed=mock_args['seed'])
     script += "&> {path}/make_boxes.log \n".format(path=mock_args['logs_dir_chunk-{}'.format(mock_args['i_chunk'])])
     script += """
 if [ $? -ne 0 ]; then
@@ -309,14 +309,14 @@ def mergechunks(todo, mock_args, sbatch_args):
         script += """echo -e "*** Running merge_qso ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "python {loc}/merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} ".format(loc=mock_args['python_dir'], inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'])
+        script += "{loc}/merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} ".format(loc=mock_args['python_dir'], inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'])
         script += "&> {path}/merge_qso.log &\n".format(path=mock_args['logs_dir_mergechunks'])
 
     if "merge_randoms" in todo:
         script += """echo -e "*** Running merge_qso for randoms ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "python {loc}/merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -random True ".format(loc=mock_args['python_dir'], inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'])
+        script += "{loc}/merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -random True ".format(loc=mock_args['python_dir'], inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'])
         script += "&> {path}/merge_randoms.log &\n".format(path=mock_args['logs_dir_mergechunks'])
 
     if "compute_dla" in todo:
@@ -325,7 +325,7 @@ def mergechunks(todo, mock_args, sbatch_args):
         for cid in mock_args['chunkid']:
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-            script += "python {loc}/dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_file {base}/chunk_{i}/dla.fits --fname_sigma {base}/chunk_{i}/boxes/box-0.fits --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} ".format(loc=mock_args['python_dir'], base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'])
+            script += "{loc}/dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_file {base}/chunk_{i}/dla.fits --fname_sigma {base}/chunk_{i}/boxes/box-0.fits --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} ".format(loc=mock_args['python_dir'], base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'])
             script += "&> {path}/dla-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids+=" $!"\n"""
         script += get_errors("dla_saclay", 0)
@@ -335,7 +335,7 @@ def mergechunks(todo, mock_args, sbatch_args):
         script += """echo -e "*** Merging DLA ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "python {loc}/merge_dla.py -indir {base} -outfile {outpath}/master_DLA.fits ".format(loc=mock_args['python_dir'], base=mock_args['base_dir'], outpath=mock_args['out_dir'])
+        script += "{loc}/merge_dla.py -indir {base} -outfile {outpath}/master_DLA.fits ".format(loc=mock_args['python_dir'], base=mock_args['base_dir'], outpath=mock_args['out_dir'])
         script += "&> {path}/merge_dla.log\n".format(path=mock_args['logs_dir_mergechunks'])
         script += """
 if [ $? -ne 0 ]; then
@@ -350,7 +350,7 @@ fi
         script += """echo -e "*** Producing randoms DLA ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "python {loc}/dla_randoms.py -infile {path}/master_DLA.fits -outfile {path}/master_DLA_randoms.fits ".format(loc=mock_args['python_dir'], path=mock_args['out_dir'])
+        script += "{loc}/dla_randoms.py -infile {path}/master_DLA.fits -outfile {path}/master_DLA_randoms.fits ".format(loc=mock_args['python_dir'], path=mock_args['out_dir'])
         script += "&> {path}/dla_randoms.log\n".format(path=mock_args['logs_dir_mergechunks'])
         script += """
 if [ $? -ne 0 ]; then
@@ -368,7 +368,7 @@ fi
         for job in range(sbatch_args['threads_mergechunks']):
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-            script += "python {loc}/make_transmissions.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -job {job} -ncpu {threads} -dla {dla} ".format(loc=mock_args['python_dir'], inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], job=job, threads=sbatch_args['threads_mergechunks'], dla=mock_args['dla'])
+            script += "{loc}/make_transmissions.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -job {job} -ncpu {threads} -dla {dla} ".format(loc=mock_args['python_dir'], inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], job=job, threads=sbatch_args['threads_mergechunks'], dla=mock_args['dla'])
             script += "&> {path}/make_transmissions-{job}.log &\n".format(path=mock_args['logs_dir_mergechunks'], job=job)
             script += """pids+=" $!"\n"""
         script += get_errors("make_transmissions", 0)
@@ -397,7 +397,7 @@ def run_python_script(i_node, i_chunk, codename, mock_args, sbatch_args, name=No
     for job in range(imin, imax):
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "python {loc}/{codename}.py -i {job} ".format(loc=mock_args['python_dir'], codename=codename, job=job)
+        script += "{loc}/{codename}.py -i {job} ".format(loc=mock_args['python_dir'], codename=codename, job=job)
         script += mock_args['args_{}'.format(codename)]
         script += " &> {path}/{name}-{job}.log &\n".format(path=mock_args['logs_dir_chunk-'+i_chunk], name=name, job=job)
         script += """pids+=" $!"\n"""
