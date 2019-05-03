@@ -964,7 +964,7 @@ def main():
         print("WARNING: Make sure that the Pk run is completed before sending"\
               +" the run of next realisations.\n The Pk will be produce with"\
               +" the run of the first realisation.")
-    mock_dir = args.mock_dir
+    mock_dir = os.path.expandvars(args.mock_dir)
     if args.python_dir is None:
         python_dir = os.path.expandvars("$SACLAYMOCKS_BASE/bin/")
     else:
@@ -1002,10 +1002,10 @@ def main():
     print("Writting scripts for {} realisations".format(nmocks))
     print("Mock files will be written in {}".format(mock_dir))
     if args.out_dir is not None:
-        mock_args['special_out'] = args.out_dir
+        mock_args['special_out'] = os.path.expandvars(args.out_dir)
         if args.out_version is not None:
-            mock_args['out_version'] = args.out_version
-        print("Outputs will be written in {}".format(args.out_dir))
+            mock_args['out_version'] = os.path.expandvars(args.out_version)
+        print("Outputs will be written in {}".format(mock_args['special_out']))
     print("It will run:")
     if mock_args['burst_buffer'] and run_args['run_create']: print("- run_create")
     if run_args['run_pk']: print("- Pk")
