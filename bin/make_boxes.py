@@ -174,11 +174,12 @@ def main() :
   volume = nCell * Vcell 
   print "volume = ",volume
   
-  #...............................    get wisdom to save time on FFT 
+  #...............................    get wisdom to save time on FFT
+  wisdom_path = os.path.expandvar("$SACLAYMOCKS_BASE/etc/")
   if (NY==NX and NZ==NX):
-    wisdomFile = "wisdom."+str(NX)+"."+str(ncpu)+".npy"
+    wisdomFile = wisdom_path+"wisdom."+str(NX)+"."+str(ncpu)+".npy"
   else :
-    wisdomFile = "wisdom."+str(NX)+"-"+str(NY)+"-"+str(NZ)+"."+str(ncpu)+".npy"
+    wisdomFile = wisdom_path+"wisdom."+str(NX)+"-"+str(NY)+"-"+str(NZ)+"."+str(ncpu)+".npy"
 
   if os.path.isfile(wisdomFile) :
     pyfftw.import_wisdom(sp.load(wisdomFile))
