@@ -1,0 +1,8 @@
+numpy
+scipy
+iminuit
+healpy
+fitsio
+numba
+future
+setuptools==27.2.0
