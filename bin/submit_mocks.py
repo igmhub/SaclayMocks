@@ -819,7 +819,7 @@ def submit(mock_args, run_args):
     fout = open(filename, 'w')
     fout.write(script)
     fout.close()
-    os.chmod(filename,stat.S_IRWXU | stat.S_IRWXG)
+    os.chmod(filename,os.path.stat.S_IRWXU | os.path.stat.S_IRWXG)
 
 
 def main():
