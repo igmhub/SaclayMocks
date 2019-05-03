@@ -1,6 +1,9 @@
 import unittest
-import scipy as sp
-
+import os
+import tempfile
+import shutil
+from pkg_resources import resource_filename
+import sys
 if (sys.version_info > (3, 0)):
     # Python 3 code in this block
     import configparser as ConfigParser
@@ -40,7 +43,7 @@ class TestCor(unittest.TestCase):
 
         req = {}
 
-        path = resource_filename('picca', '/../../requirements.txt')
+        path = resource_filename('SaclayMocks', '/../../requirements.txt')
         with open(path,'r') as f:
             for l in f:
                 l = l.replace('\n','').replace('==',' ').replace('>=',' ').split()
