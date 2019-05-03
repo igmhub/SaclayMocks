@@ -176,7 +176,7 @@ def main() :
   print "volume = ",volume
 
   #...............................    get wisdom to save time on FFT
-  wisdom_path = os.path.expandvar("$SACLAYMOCKS_BASE/etc/")
+  wisdom_path = os.path.expandvars("$SACLAYMOCKS_BASE/etc/")
   if (NY==NX and NZ==NX):
     wisdomFile = wisdom_path+"wisdom."+str(NX)+"."+str(ncpu)+".npy"
   else :
