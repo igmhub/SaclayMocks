@@ -1,9 +1,8 @@
-
 import scipy as sp
 import numpy as np
 from scipy import random
-from data import qso
 PI = np.pi
+
 
 def ComputeXYZdeg(ra,dec,R,ra0,dec0) :
     return ComputeXYZ(np.radians(ra),np.radians(dec),R,np.radians(ra0),np.radians(dec0))
