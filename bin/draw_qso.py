@@ -178,8 +178,8 @@ def main():
         rho = boxfits[0].read()
         boxfits.close()
         t1=time()
-        print "read box in ",t1-t0,"s ",rho.shape
-        print "sigma(rho)=",rho.std()
+        print("read box in ",t1-t0,"s ",rho.shape)
+        print("sigma(rho)=",rho.std())
         exprho = np.exp(rho)
         del rho  # unassign variable
         gc.collect()  # force memory clearing
@@ -205,7 +205,7 @@ def main():
     dz = z_of_R(z_edges[1:]/h) - z_of_R(z_edges[0:-1]/h)   #  z_of_R[m+1] - z_of_R[m]
 
     # margin of dmax cells
-    print LX,LY,LZ,R0,dmax*DX # prov
+    print(LX,LY,LZ,R0,dmax*DX) # prov
     Rmin,Rmax,tanx_max,tany_max = box.box_limit(LX_fullbox,LY,LZ,R0,dmax*DX)
     # tanx_max and tany_max should be calculated again with new Rmin/Rmax ?
     if zmin > 0:
@@ -218,26 +218,26 @@ def main():
         Rmax = R_of_z(z_max)*h
     else:
         z_max = z_of_R(Rmax/h)
-    print "zmin, z0, zmax:", z_min, z0, z_max
-    print "Rmin, R0, Rmax:", Rmin, R0, Rmax
-    print "theta_max:",tanx_max,tany_max
+    print("zmin, z0, zmax:", z_min, z0, z_max)
+    print("Rmin, R0, Rmax:", Rmin, R0, Rmax)
+    print("theta_max:",tanx_max,tany_max)
     tetax_max = np.arctan(tanx_max)
     tetay_max = np.arctan(tany_max)
     if ((dra>0) & (ddec>0)) :
         Ldec = np.sin(np.radians(dec0+ddec)) - np.sin(np.radians(dec0-ddec))
         Lra = 2*np.radians(dra)	
         surface = Ldec * Lra	# rad^2
-        print ddec,dra,Ldec,Lra,surface
+        print(ddec,dra,Ldec,Lra,surface)
     else :
         surface = 4 * tetax_max * tetay_max     # rad^2
     surfaceDeg = surface * (180/PI)**2
     nQSOexp = constant.n_qso_exp * surfaceDeg
     nQSOexp /= Nslice
     volFrac= (surface/3)*(Rmax**3-Rmin**3)/LX_fullbox/LY/LZ
-    print "Fraction of box volume used",volFrac
-    print "surface: ", surfaceDeg, "deg^2  -> ",int(nQSOexp),"QSOs expected"
+    print("Fraction of box volume used",volFrac)
+    print("surface: ", surfaceDeg, "deg^2  -> ",int(nQSOexp),"QSOs expected")
     xx = np.sqrt(Rmax*Rmax+LY*LY+LZ*LZ)
-    print "far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h)
+    print("far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h))
 
     #...............................  read dN/dz assuming constant Delta z
     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/nz_qso_desi.dat")
@@ -247,7 +247,7 @@ def main():
     zhigh = d[:,1]
     dndz = d[:,2] #number of QSO per sq deg per dz=0.1
     if (z_of_R((R0+LZ/2)/h) > zhigh[-1]) :
-        print "z_max = ",z_of_R((R0+LZ/2)/h)," larger than dNdz upper range ",zhigh[-1]
+        print("z_max = ",z_of_R((R0+LZ/2)/h)," larger than dNdz upper range ",zhigh[-1])
         exit(0)
 
     # smooth dndz
@@ -265,7 +265,7 @@ def main():
     if z_max > 2.1:  # Count only QSO for z > 2.1 to have the right N/deg^2
         N_zmin_zmax = dn_cell[(dz_interp>z_min)*(dz_interp<z_max)].sum()
         N_21_zmax = dn_cell[(dz_interp>2.1)*(dz_interp<z_max)].sum()
-    print "dN per cell max:",density_max,", mean:", density_mean,density_max/density_mean
+    print("dN per cell max:",density_max,", mean:", density_mean,density_max/density_mean)
     dn_cell = np.append(dn_cell, np.zeros(10*NZ))  # artificially increasing dNdz range
 
     if (drawPlot) :
@@ -288,11 +288,11 @@ def main():
         # gives ~4% more QSO than expected
         # this is due to the fact that the 3 cond are not independent
 
-        print "exp(rho) max and sum = ",rho_max,rho_sum
-        print "k exp(rho_max) =",kk*rho_max
+        print("exp(rho) max and sum = ",rho_max,rho_sum)
+        print("k exp(rho_max) =",kk*rho_max)
         if (kk*rho_max>1):
-            print "k exp(rho) > 1 in ", np.size(np.where(kk*exprho>1)[0]),"cells"
-            print "sum min(k exp(rho) , 1) =", np.minimum(kk*exprho,1).sum()
+            print("k exp(rho) > 1 in ", np.size(np.where(kk*exprho>1)[0]),"cells")
+            print("sum min(k exp(rho) , 1) =", np.minimum(kk*exprho,1).sum())
 
     #.........................................................    loop on cells
     nQSO = 0
@@ -406,7 +406,7 @@ def main():
         # YGRID = np.array(iqso[1])
         # ZGRID = un * mz
         #if (len(XGRID)>0):
-        #    print ( np.mean(np.log(exprho[XGRID,YGRID,ZGRID])) )
+        #    print( np.mean(np.log(exprho[XGRID,YGRID,ZGRID])) )
         THING_ID = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO, nQSO+len(zzz)) + 1).astype(int)  # start at 1
         HDU = un * i_slice  # QSOhdu
         plate = THING_ID
@@ -420,7 +420,7 @@ def main():
         nQSO += len(zzz)
         # print(mz)
         # print(len(zzz), len(tanx), len(X))
-        #print (len(zzz),len(ra),len(dec))
+        #print(len(zzz),len(ra),len(dec))
         if not random_cond:
             array_list = [np.float32(zzz), np.float32(zzz_RSD), np.float32(ra), np.float32(dec), np.int32(HDU), THING_ID, plate, np.int32(mjd), np.int32(fiberid), pmf, np.float32(XX), np.float32(YY), np.float32(ZZ)]  # , XGRID, YGRID, ZGRID]
         else:
@@ -465,10 +465,10 @@ def main():
     # qsofits[1].write_key("ZGRID", None, comment="index on Z axis")
 
     qsofits.close()
-    print nQSO, "QSOs drawn"
+    print(nQSO, "QSOs drawn")
     if (not random_cond):
-        print nnQSO, "QSOs in the full box" # prov
-    print out_file, "file written"
+        print(nnQSO, "QSOs in the full box") # prov
+    print(out_file, "file written")
     print("Took {}s".format(time()-t_init))
 
     if drawPlot : plt.show()

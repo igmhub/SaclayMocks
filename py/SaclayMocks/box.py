@@ -15,7 +15,7 @@ def ComputeXYZ(ra,dec,R,ra0,dec0) :
     angles in radians
     tested that ra,dec, R = box.ComputeRaDecR(R0,ra0,dec0,X,Y,Z)
     x,y,z = box.ComputeXYZ(ra[0],dec[0],R,ra0,dec0)
-    print x-X,y-Y,z-R0-Z        prints ~1E-13  for random inputs
+    print(x-X,y-Y,z-R0-Z)#        prints ~1E-13  for random inputs
     '''
 
     theta0 = PI/2 - dec0 # polar angle or colatitude
@@ -35,8 +35,8 @@ def ComputeXYZ(ra,dec,R,ra0,dec0) :
     sintheta = np.sin(theta)
     OP = R * np.array([sintheta*cosra,sintheta*sinra,costheta])
 
-    #print 'op',OP
-    #print xVec,yVec,zVec
+    #print('op',OP)
+    #print(xVec,yVec,zVec)
     X = np.dot(OP,xVec)
     Y = np.dot(OP,yVec)
     Z = np.dot(OP,zVec)
@@ -62,8 +62,8 @@ def ComputeRaDecR(R0,ra0,dec0,X,Y,Z) :
     xVec = np.array([-sinra0, cosra0 ,0])[:, None,None] # (3,1,1)
     yVec = np.array([-costheta0 * cosra0, -costheta0 * sinra0 , sintheta0])[:, None,None]
     zVec = np.array([sintheta0 * cosra0, sintheta0 * sinra0, costheta0])[:, None,None]
-    #print xVec.shape, yVec.shape, zVec.shape
-    #print X.shape, Y.shape, Z.shape
+    #print(xVec.shape, yVec.shape, zVec.shape)
+    #print(X.shape, Y.shape, Z.shape)
                 #......         vector OP
     OPVec = X * xVec + Y * yVec + (R0+Z) * zVec # broadcasting due to [:, None,None] above
                     # allows to run with X and Y that are 1D or 2D arrays
@@ -76,7 +76,7 @@ def ComputeRaDecR(R0,ra0,dec0,X,Y,Z) :
     dec = np.arctan2(W, np.sqrt(U*U + V*V))  # angle relative to (u,V) plane
                                         # in [-pi2/,pi/2] since sqrt(U*U+V*V) > 0
     R = np.sqrt(U*U+V*V+W*W)
-    #print ra.shape[0],ra.shape[1]
+    #print(ra.shape[0],ra.shape[1])
     if (np.isscalar(X+Y+Z)):
         return ra[0,0],dec[0,0],R[0,0]
     #if (np.isscalar((X+Y+Z)[0])) : # X,Y,Z 1D arrays
@@ -119,7 +119,7 @@ def box_limitOld(LX,LY,LZ,R0,margin) :
     sinx_max = (LX/2 -margin) / Rmax
     cosx_min = np.sqrt(1 - sinx_max**2)
     tanx_max = sinx_max / cosx_min
-#    print sinx_max, tanx_max    # prov
+#    print(sinx_max, tanx_max)    # prov
     siny_max = (LY/2 -margin) / Rmax
     cosy_min = np.sqrt(1 - siny_max**2)
     tany_max = siny_max / cosy_min
@@ -128,9 +128,9 @@ def box_limitOld(LX,LY,LZ,R0,margin) :
 #    cos_min = np.sqrt(1 - sin_max**2)
     Rmin = (R0 - LZ/2 + margin) / cos_min
 
-#    print R0-LZ/2, Rmin, Rmax
-    #print 0, Rmin-R0+LZ/2, Rmax-R0+LZ/2
-    #print sin_alpha
+#    print(R0-LZ/2, Rmin, Rmax)
+    #print(0, Rmin-R0+LZ/2, Rmax-R0+LZ/2)
+    #print(sin_alpha)
     return Rmin,Rmax,tanx_max,tany_max
 
 def box_limit(LX,LY,LZ,R0,margin) :
@@ -141,12 +141,12 @@ def box_limit(LX,LY,LZ,R0,margin) :
     Rmax = R0 + LZ/2  - margin
     #  angle for a point at X=Xmax and Rmax from observer
     if (LX != LY) :
-        print ("case LX =",LX,"!= LY=",LY,"not implemented yet")
+        print("case LX =",LX,"!= LY=",LY,"not implemented yet")
         exit(0)
     sinx_max = (LX/2 -margin) / Rmax
     cosx_min = np.sqrt(1 - sinx_max**2)
     tanx_max = sinx_max / cosx_min
-#    print sinx_max, tanx_max    # prov
+#    print(sinx_max, tanx_max)    # prov
     siny_max = (LY/2 -margin) / Rmax
     cosy_min = np.sqrt(1 - siny_max**2)
     tany_max = siny_max / cosy_min
@@ -155,9 +155,9 @@ def box_limit(LX,LY,LZ,R0,margin) :
     cos_min = np.sqrt(1 - sin_max**2)
     Rmin = (R0 - LZ/2 + margin) / cos_min
 
-#    print R0-LZ/2, Rmin, Rmax
-    #print 0, Rmin-R0+LZ/2, Rmax-R0+LZ/2
-    #print sin_alpha
+#    print(R0-LZ/2, Rmin, Rmax)
+    #print(0, Rmin-R0+LZ/2, Rmax-R0+LZ/2)
+    #print(sin_alpha)
     return Rmin,Rmax,tanx_max,tany_max
 
 
@@ -170,7 +170,7 @@ def sample_box(xbox,ybox,zbox,rho,threshold=2.5):
 #.......................	select pixels with rho > threshold*rms
     rms = rho.std()
     iqso = sp.where(rho > threshold*rms)
-#    print "threshold*rms=", threshold*rms
+#    print("threshold*rms=", threshold*rms)
     iqso = sp.array(iqso)		# (3,N_QSO) 3 raws N col
 #.......................   remove QSO at less than dmax cells from the box edges
     imax = xbox.size - dmax
@@ -184,15 +184,15 @@ def sample_box(xbox,ybox,zbox,rho,threshold=2.5):
     jqso = jqso[jqso[:,2]>dmax]
     jqso = jqso[jqso[:,2]<kmax]
     iqso = jqso.T
-#    print iqso
-#    print sp.where(iqso)
+#    print(iqso)
+#    print(sp.where(iqso))
 
 #   needs to implement z distribution
 #   taking into account that z depends not only on Z but also on X and Y
 #   must also select in a cone, not in the full box, this requires to know z0
 #   must randomize the position inside the cell
 
-    print "found: ",len(iqso[0])," quasars"
+    print("found: ",len(iqso[0])," quasars")
 
 #    return [x+y+z for x,y,z in zip(xbox[iqso[0]],ybox[iqso[1]],zbox[iqso[2]])]
     return [qso(x,y,z) for x,y,z in zip(xbox[iqso[0]],ybox[iqso[1]],zbox[iqso[2]])]
