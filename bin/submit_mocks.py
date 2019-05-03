@@ -972,6 +972,10 @@ def main():
     mock_args['python_dir'] = python_dir
 
     ### Define sbatch options
+    if not mock_args['sbatch']:
+        print("Warning: the jobs will not be sent to cori nodes, they will be executed here.")
+        mock_args['burst_buffer'] = False
+
     run_args['todo_chunk'] = ""
     if run_args['draw_qso']: run_args['todo_chunk'] += "qso "
     if run_args['randoms']: run_args['todo_chunk'] += "randoms "
@@ -1029,9 +1033,6 @@ def main():
     mock_args['nslice'] = nslice
     print("It will produce {} chunks, with ids: {}".format(len(chunkid), chunkid))
     print("and ra0: {}".format(ra0))
-
-    if not util.str2bool(args.cori_nodes):
-        print("Warning: the jobs will not be sent to cori nodes, they will be executed here.")
 
     # define and create directories for Pk:
     make_pk_dir(mock_args)
