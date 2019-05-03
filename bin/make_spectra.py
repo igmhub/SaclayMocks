@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#  MakeSpectra.py 
+#  MakeSpectra.py
 #	reads QSO list
 # 	reads non parallel l.o.s. through boxes
 #   add small scale power
 #	applies Gunn Peterson to make Lya forest
 from __future__ import division, print_function
 from SaclayMocks import box
-from SaclayMocks import constant 
+from SaclayMocks import constant
 from SaclayMocks import powerspectrum
 from SaclayMocks import util
 import fitsio
@@ -23,7 +23,7 @@ import pyfftw
 import json
 import argparse
 import scipy.stats as stats
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 import cosmolopy.perturbation as pert
 from scipy import interpolate, integrate
 from memory_profiler import profile
@@ -40,40 +40,40 @@ def main():
     def ComputeWeight(X,Y,Z,grid,cells,onesline, sig2) : # LX,LY,LZ,DX,DY,DZ
         ix = int((X +LX/2)/DX)  # -LX/2 < X < -LX/2 + LX/Nslice so 0 < ix < NX/Nslice
         iy = int((Y +LY/2)/DY)  # -LY/2 < Y < LY/2 so 0 < iy < NY
-        iz = int((Z +LZ/2 -R0)/DZ)  
+        iz = int((Z +LZ/2 -R0)/DZ)
         ixyz = sp.array([ix,iy,iz])  	# (3,)
         cell_center = sp.array([ix*DX-LX/2,iy*DY-LY/2,iz*DZ-LZ/2+R0])
-        XYZ = sp.array([X,Y,Z]) 
-        
+        XYZ = sp.array([X,Y,Z])
+
         lgrid = grid + XYZ	# grid around XYZ
         lcells = cells + ixyz
         cell_center_line = cell_center * onesline	
-        # (3,) * (343,1) => (343,3) 	343= (2*dmax+1)**3 
-        #    if (icell==0): print  
-        
+        # (3,) * (343,1) => (343,3) 	343= (2*dmax+1)**3
+        #    if (icell==0): print
+
         xx = (cell_center_line-lgrid)**2
         Delta_r2 = xx[:,0]+xx[:,1]+xx[:,2]    # Delta_r2 = ((cell_center_line-lgrid)**2).sum(axis=1)
         weight = sp.exp(-Delta_r2 / sig2)
         return lcells, weight
-    
+
     #*************************************************************
     #@jit   # @jit degrades from 22 to 27 ms
     def computeRho(myrho,weight) :
         sumweight = weight.sum(axis=0)
         sumrho = (weight*myrho).sum(axis=0)
         return sumrho / sumweight
-    
+
     #*************************************************************
-    #   @jit + python -m cProfile fails 
+    #   @jit + python -m cProfile fails
     #   @jit degrades from 80 t0 94 for the full treatment of a QSO
-    #@jit      
+    #@jit
     def ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=0, imax=sys.maxint):
-        # LX,LY,LZ,DX,DY,DZ        
+        # LX,LY,LZ,DX,DY,DZ
         # (Xvec, Yvec, Zvec) is the vector along line of sight,
         # XvecSlice is in [-LX/2, -LX/2 + LX/NSlice]
         # cells is the list of indices used for G.S. around (0,0,0),
         # and grid its value in Mpc/h,
-        # imin imax are the indices delimiting the lya forest 
+        # imin imax are the indices delimiting the lya forest
         if rsd:
             eta_par = sp.zeros_like(XvecSlice)  # so that exp(-a(exp(b*g) + taubar_a*eta_par)) = 1
             if dla:
@@ -126,9 +126,9 @@ def main():
 
 
     #************************************************************* main
-    #..................  PARAMETERS 
+    #..................  PARAMETERS
     t_init = time.time()
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-dmax", type=int, help="compute rho over +- dmax cells, default 3", default=3)
     parser.add_argument("-pixel", type=float, help="spectrum pixel in Mpc/h, default 0.2", default=0.2)
@@ -191,15 +191,15 @@ def main():
     LX = DX * nHDU
     LY = DY * NY
     LZ = DZ * NZ
-    
+
     if (NX != 1):
         print ("NX=", NX, " != 1  => abort !")
         exit(1)
-        
+
     if (iSlice >= NSlice):
         print ('iSlice=',iSlice,">= NSlice =" , NSlice , "=> abort !")
         exit(1)
-        
+
     if (nHDU%NSlice != 0):
         print (NSlice, " slices not divider of nHDU:", nHDU, "=> abort !")
         exit(1)
@@ -280,8 +280,8 @@ def main():
     Rmin = h * R_of_z(z_low)
     z_high = args.zmax
     Rmax = h * R_of_z(z_high)
-    
-    npixeltot = int((Rmax - Rmin) /DeltaR +0.5) 
+
+    npixeltot = int((Rmax - Rmin) /DeltaR +0.5)
     R_vec = Rmin + np.arange(npixeltot) * DeltaR
     lambda_vec = lya * (1 + z_of_R(R_vec/h))
     cut = (lambda_vec > lambda_min)  # cut pixel bellow 3530 A
@@ -305,9 +305,9 @@ def main():
         # not optimal, we are trying irrelevant QSOs, but conservative
         ifile1 = NQSOfile   # could be reduced <==
         #Xmin = DX * iSlice -LX/2 # left edge of the slice
-        #ZoverXmin = (R0-LZ/2) / (DX * (iSlice+1) -LX/2)   
+        #ZoverXmin = (R0-LZ/2) / (DX * (iSlice+1) -LX/2)
         # Z/X > Z/X of lower right edge of the slice
-        tanx_slice_max = (DX * (nHDU/NSlice) * (iSlice+1) -LX/2) / (R0-LZ/2)  
+        tanx_slice_max = (DX * (nHDU/NSlice) * (iSlice+1) -LX/2) / (R0-LZ/2)
         # lower right edge of the slice
         #print ((DX * nHDU/NSlice) * (iSlice+1), LX/2, R0-LZ/2, tanx_slice_max)
         #ra_max = np.atan(tanx_slice_max)
@@ -315,18 +315,18 @@ def main():
     else :
         ifile0 = 0 # could be increased <==
         # ifile1 = (iSlice+1) * NQSOfile // NSlice # why +1 ?  <==
-        ifile1 = NSlice//2   
+        ifile1 = NSlice//2
         # not optimal, we are trying irrelevant QSOs, but conservative
         #Xmax = DX * (iSlice+1) * nHDU/NSlice - LX/2 # right edge of the slice
         #ZoverXmax = (R0-LZ/2) / (DX * iSlice -LX/2)
         # |Z/X| > |Z/X| of lower left edge of the slice, but X < 0
-        tanx_slice_min = (DX * (nHDU/NSlice) * iSlice -LX/2) / (R0-LZ/2)  
+        tanx_slice_min = (DX * (nHDU/NSlice) * iSlice -LX/2) / (R0-LZ/2)
         # lower right edge of the slice
         tanx_slice_max = np.abs(tanx_slice_min)
         #print ((DX * nHDU/NSlice) * (iSlice), LX/2, R0-LZ/2, tanx_slice_max)
         #ra_min = np.atan(tan_min)
     print ("use QSO files:",ifile0, "to", ifile1-1)
-    
+
     qsos = []
     first = True
     for ifile in np.arange(ifile0,ifile1) :
@@ -337,13 +337,13 @@ def main():
             print("*Warning* Fits file {} cannot be read.".format(QSOfilename))
             continue
 
-        if first: 
+        if first:
             qsos.append(fits[1].read())
             head = fits[1].read_header()
             ra0 = head["RA0"]
             dec0 = head["DEC0"]
             first = False
-        else : 
+        else :
             qsos.append(fits[1].read())
 
         fits.close()
@@ -353,7 +353,7 @@ def main():
         sys.exit(0)
     print (len(qsos),"QSO read")
 
-    #............................. draw non parallel l.o.s. between Rmin and R_QSO    
+    #............................. draw non parallel l.o.s. between Rmin and R_QSO
     #   for dmax=3 produce array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
     #       ...,        [ 3,  3,  1], [ 3,  3,  2], [ 3,  3,  3]])
     xx = 2 * dmax + 1
@@ -383,7 +383,7 @@ def main():
     pmf_list = []
     t0 = time.time()
     for qso in (qsos) :		#............................  loop over qso
-        if ((nqsomax > 0) & (iqso >= nqsomax)) :break 
+        if ((nqsomax > 0) & (iqso >= nqsomax)) :break
         ra = qso['RA']
         dec = qso['DEC']
         if rsd:
@@ -402,14 +402,14 @@ def main():
         R_QSO = h * R_of_z(zQSO)
         X_QSO, Y_QSO, Z_QSO = box.ComputeXYZ2(np.radians(ra),np.radians(dec),
                                     R_QSO,np.radians(ra0),np.radians(dec0))
-        tanx = X_QSO / Z_QSO  
-        tany = Y_QSO / Z_QSO     
-        if (np.abs(tanx) > tanx_slice_max ): 
-            continue 
+        tanx = X_QSO / Z_QSO
+        tany = Y_QSO / Z_QSO
+        if (np.abs(tanx) > tanx_slice_max ):
+            continue
         # this cut is not mandatory, if missed results in npixel = 0
         if ((zQSO<z_low) | (zQSO>z_high)):
             continue
-    
+
         # Next lines can be optimized by regrouping all cuts into one
         sinx = np.sign(tanx) * np.sqrt(tanx*tanx/(1+tanx*tanx))
         siny = np.sign(tany) * np.sqrt(tany*tany/(1+tany*tany))
@@ -428,7 +428,7 @@ def main():
             continue
 
         XvecSlice = Xvec-LX * iSlice / NSlice  # Xvec within the considered slice
-        # -LX/2 < Xvec < LX/2, while the read box is only LX/Nslice wide, 
+        # -LX/2 < Xvec < LX/2, while the read box is only LX/Nslice wide,
         # so XvecSlice must start at zero in order to get correct indices
         # (cf ComputeWeight())
         if (iSlice > 0) : XvecSlice += DX * dmax # Xvec within the considered slice
@@ -569,13 +569,12 @@ def main():
         outfits.close()
 
     print("Done. {} s".format(time.time()-t1))
-
     print (iqso, "QSO written")
     if (iqso != 0):
         print (1000*(t1-t0)/iqso, "ms per spectra")
         if (pixtot != 0) : print (1000*(t1-t0)/pixtot, "ms per pixel")
         print (pixtot," / ",iqso," = ", pixtot/iqso,"pixels / spectra")
-    
+
     print("Slice {} done. Took {}s".format(iSlice, time.time()-t_init))
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from memory_profiler import profile
 # @profile
 def main():
     t0 = time.time()
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-inDir", help="Directory where files are merged")
     parser.add_argument("-outDir", help="Directory where the out file is saved")
@@ -16,7 +16,7 @@ def main():
     parser.add_argument("-NX", type=int, help="number of pixels along x, default 256", default=256)
     parser.add_argument("-NY", type=int, help="number of pixels along y, default 256", default=256)
     parser.add_argument("-NZ", type=int, help="number of pixels along z, default 256", default=256)
-    
+
     args = parser.parse_args()
     N_HDU = args.N
     inDir = args.inDir
@@ -60,6 +60,6 @@ def main():
 
     print("Merged fits file written in {}".format(outDir))
     print("Took {}s".format(time.time()-t0))
-    
+
 if __name__ == "__main__":
     main()

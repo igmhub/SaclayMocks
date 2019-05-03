@@ -14,7 +14,7 @@ def iterfiles(root):
 
 if True:
 # def main():
-    t_init = time.time()    
+    t_init = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument("-indir", help="Root directory of the various Chunks")
     parser.add_argument("-outfile", help="Path to out file")
@@ -77,7 +77,7 @@ if True:
     # t2 = time.time()
     # print("Done. {} s".format(t2 - t1))
 
-    
+
     # Write DLA catalog
     t2 = time.time()
     print("Writting merged file...")

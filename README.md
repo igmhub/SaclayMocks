@@ -52,6 +52,9 @@ If you want to produce a small footprint, on your laptop, you can run:
 ```
 submit_mocks.py --mock-dir <out_path> --cori-nodes False --box-size 256
 ```
+When not running on cori nodes, it is advised to not use the nominal chunk size (2560),
+because it uses a lot of memory and threads.
+Also, if not distributed on several nodes, it can take hours.
 
 You can also limit the number of chunks by specifying the IDs of chunks to runs:
 ```

@@ -12,10 +12,10 @@ def ComputeXYZ(ra,dec,R,ra0,dec0) :
     '''
     XYZ of a point P (ra,dec,R) in a frame with
     observer at O, Z along OP, X along ra0, Y along dec0
-    
+
     angles in radians
     tested that ra,dec, R = box.ComputeRaDecR(R0,ra0,dec0,X,Y,Z)
-    x,y,z = box.ComputeXYZ(ra[0],dec[0],R,ra0,dec0) 
+    x,y,z = box.ComputeXYZ(ra[0],dec[0],R,ra0,dec0)
     print x-X,y-Y,z-R0-Z        prints ~1E-13  for random inputs
     '''
 
@@ -35,7 +35,7 @@ def ComputeXYZ(ra,dec,R,ra0,dec0) :
     costheta = np.cos(theta)
     sintheta = np.sin(theta)
     OP = R * np.array([sintheta*cosra,sintheta*sinra,costheta])
-    
+
     #print 'op',OP
     #print xVec,yVec,zVec
     X = np.dot(OP,xVec)
@@ -48,8 +48,8 @@ def ComputeRaDecR(R0,ra0,dec0,X,Y,Z) :
     ra, dec, R of P(X,Y,Z) in a box with center located in C(R0,ra0,dec0)
 
     angles in radian -pi < ra < pi   -pi/2 < dec < pi/2
-    R0, ra0, dec0 define the position of the box in a (U,V,W) frame 
-        centered at the oberver position O   
+    R0, ra0, dec0 define the position of the box in a (U,V,W) frame
+        centered at the oberver position O
     box oriented such that Z along OC, X along ra, Y along dec
     R0,ra0,dec0 are scalar   X, Y, Z can be scalars, 1D or 2D arrays
     '''
@@ -80,16 +80,16 @@ def ComputeRaDecR(R0,ra0,dec0,X,Y,Z) :
     #print ra.shape[0],ra.shape[1]
     if (np.isscalar(X+Y+Z)):
         return ra[0,0],dec[0,0],R[0,0]
-    #if (np.isscalar((X+Y+Z)[0])) : # X,Y,Z 1D arrays 
+    #if (np.isscalar((X+Y+Z)[0])) : # X,Y,Z 1D arrays
     #   we may get X+Y+Z a zero length array, in which case, this fails
-    if (ra.shape[0]==1) : # X,Y,Z 1D arrays 
-        return ra[0],dec[0],R[0]    
+    if (ra.shape[0]==1) : # X,Y,Z 1D arrays
+        return ra[0],dec[0],R[0]
     return ra, dec, R
 
 def Compute_cos_min(LX,LY,Rmax) :
     #
     #  angle for a point at X=Xmax and Rmax from observer
-    sinx_max = (LX/2) / Rmax 
+    sinx_max = (LX/2) / Rmax
     cosx_min = np.sqrt(1 - sinx_max**2)
     tanx_max = sinx_max / cosx_min
     #  angle for a point at Y=Ymax and Rmax from observer
@@ -100,15 +100,15 @@ def Compute_cos_min(LX,LY,Rmax) :
     sin_max = (np.sqrt(LX*LX+LY*LY)/2) / Rmax
     cos_min = np.sqrt(1 - sin_max**2)
     return tanx_max,tany_max,cos_min
-    
+
 def box_center(LX,LY,Rmax,Rmin,margin) :
     # we want to include a cone Rmin < R < Rmax in a LX x LY box minus margin
-    # returns the resulting tan_max, the required LZ and the box_center distance 
+    # returns the resulting tan_max, the required LZ and the box_center distance
     tanx_max,tany_max,cos_min = Compute_cos_min(LX-2*margin,LY-2*margin,Rmax)
     LZ = Rmax - (cos_min * Rmin) + 2 * margin
     R0 = Rmax -LZ/2 + margin
     return R0,LZ,tanx_max,tany_max
-    
+
 
 def box_limitOld(LX,LY,LZ,R0,margin) :
     # compute R_min, R_max, tanx_max and tany_max
@@ -117,7 +117,7 @@ def box_limitOld(LX,LY,LZ,R0,margin) :
     #	we want that in any direction R_min < R_QSO < R_max
     Rmax = R0 + LZ/2  - margin
     #  angle for a point at X=Xmax and Rmax from observer
-    sinx_max = (LX/2 -margin) / Rmax 
+    sinx_max = (LX/2 -margin) / Rmax
     cosx_min = np.sqrt(1 - sinx_max**2)
     tanx_max = sinx_max / cosx_min
 #    print sinx_max, tanx_max    # prov
@@ -128,7 +128,7 @@ def box_limitOld(LX,LY,LZ,R0,margin) :
 #    sin_max = max(sinx_max,siny_max)
 #    cos_min = np.sqrt(1 - sin_max**2)
     Rmin = (R0 - LZ/2 + margin) / cos_min
-    
+
 #    print R0-LZ/2, Rmin, Rmax
     #print 0, Rmin-R0+LZ/2, Rmax-R0+LZ/2
     #print sin_alpha
@@ -144,7 +144,7 @@ def box_limit(LX,LY,LZ,R0,margin) :
     if (LX != LY) :
         print ("case LX =",LX,"!= LY=",LY,"not implemented yet")
         exit(0)
-    sinx_max = (LX/2 -margin) / Rmax 
+    sinx_max = (LX/2 -margin) / Rmax
     cosx_min = np.sqrt(1 - sinx_max**2)
     tanx_max = sinx_max / cosx_min
 #    print sinx_max, tanx_max    # prov
@@ -155,13 +155,13 @@ def box_limit(LX,LY,LZ,R0,margin) :
     sin_max = (np.sqrt(LX*LX+LY*LY)/2 -margin) / Rmax
     cos_min = np.sqrt(1 - sin_max**2)
     Rmin = (R0 - LZ/2 + margin) / cos_min
-    
+
 #    print R0-LZ/2, Rmin, Rmax
     #print 0, Rmin-R0+LZ/2, Rmax-R0+LZ/2
     #print sin_alpha
     return Rmin,Rmax,tanx_max,tany_max
 
-    
+
 
 def sample_box(xbox,ybox,zbox,rho,threshold=2.5):
 #                                                               obsolete

@@ -14,7 +14,7 @@ class ReadTransmission(object):
     hdu are stored opened and can be read with the methods read_*
     If the list of transmission files is too long, use alt_init()
     to instance the class : the method will read directly the info,
-    store them in attributes and close de fits files. 
+    store them in attributes and close de fits files.
     '''
     def __init__(self, inDir, read_dla=True):
         metadata = []
@@ -58,7 +58,7 @@ class ReadTransmission(object):
         if err:
             wav_rf, trans, err_trans = util.MakeProfileHisto(self.wav_rf[self.wav_rf.mask==False], self.transmission[self.transmission.mask==False], bins=bins)
         else:
-            wav_rf, trans = stats.binned_statistic(self.wav_rf[self.wav_rf.mask==False], 
+            wav_rf, trans = stats.binned_statistic(self.wav_rf[self.wav_rf.mask==False],
                     [self.wav_rf[self.wav_rf.mask==False], self.transmission[self.transmission.mask==False]],
                                                    bins=bins, statistic='mean').statistic
         if plot:
@@ -78,7 +78,7 @@ class ReadTransmission(object):
                 return wav_rf, trans, err_trans
             else:
                 return wav_rf, trans
-            
+
     def trans_of_z(self, plot=True, title=''):
         z = self.wavelength / constant.lya - 1  # (npix)
         t = ma.mean(self.transmission, axis=0)
@@ -173,7 +173,7 @@ class ReadTransmission(object):
         #     self.read_meta('DEC')
         # if not hasattr(self, 'z'):
         #     self.read_meta('Z')
-        res = stats.binned_statistic_2d(self.metadata['RA'], np.sin(np.radians(self.metadata['DEC'])), 
+        res = stats.binned_statistic_2d(self.metadata['RA'], np.sin(np.radians(self.metadata['DEC'])),
                     self.metadata['Z'], bins=bins)
         X, Y = np.meshgrid(res.x_edge, res.y_edge)
         f, ax = plt.subplots()

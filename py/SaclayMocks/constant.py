@@ -8,7 +8,7 @@ c = scipy.constants.speed_of_light / 1000.  # in km/s
 n_qso_exp = 100.  # expected number of qso per square degrees
 
 lya = 1215.67 ## angstrom https://en.wikipedia.org/wiki/Lyman-alpha_line  1215.668 and 1215.674
-lylimit = lya * 3 /4. # 911.75  ok with https://en.wikipedia.org/wiki/Hydrogen_spectral_series 
+lylimit = lya * 3 /4. # 911.75  ok with https://en.wikipedia.org/wiki/Hydrogen_spectral_series
 lyb = lylimit * 9./8. # 1025.72  https://en.wikipedia.org/wiki/Hydrogen_spectral_series : 1025.7
 lambda_min = 3530.  # Lambda min in A (given by Stephen Bailey - 04/05/2018)
 
@@ -33,7 +33,7 @@ ns = 0.96  # only used in run_camb.py
 QSO_bias = 3.7  # should become b(z) in data.py / QSO.py
 z_QSO_bias = 2.4  # QSO_bias taken from Helion thesis
 z0 = 1.70975268202
-# box_pixel = 1600./1024.   # rather be stored in box.fits 
+# box_pixel = 1600./1024.   # rather be stored in box.fits
 
 H0 = 100.  # In km/s /(Mpc/h)
 

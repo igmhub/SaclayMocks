@@ -358,8 +358,8 @@ if [ $? -ne 0 ]; then
     exit 1
 else
     echo -e "==> dla_rand done. $(( SECONDS - start )) s"
-fi 
-   
+fi
+
 """
 
     if "transmissions" in todo:
@@ -851,7 +851,7 @@ def main():
         help="The number of realisation to be produced (optional)")
 
     parser.add_argument("--mock-realisation", type=int, default=None, required=False,
-        help="Specify a particular realisation to be produced (optional)")    
+        help="Specify a particular realisation to be produced (optional)")
 
     parser.add_argument("--account", type=str, default="eboss", required=False,
         help="account to be used on cori nodes (optional)")
