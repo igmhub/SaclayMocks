@@ -1,4 +1,4 @@
-# get P(k) by reading a file and interpolating 
+# get P(k) by reading a file and interpolating
 # P(k) => xi(r) and xi(r) => P(k)
 import os
 import numpy as np
@@ -12,7 +12,7 @@ from fitsio import FITS
 
 
 #********************************************************************
-class P_1D() :   
+class P_1D() :
     '''Computes P^1D = (1/2PI) int_{k_//}^\infty P^3D(k)kdk  '''
     def __init__(self,k,P,kmax=-1):
         if (kmax>0) :
@@ -21,36 +21,36 @@ class P_1D() :
 #        print k.shape,P.shape
         P1D=np.zeros(len(k))
         for i in np.arange(len(k)) :      #  (1/2PI) int_{k_//}^\infty P(k)kdk
-            P1D[i] = np.trapz((P*k)[i:],k[i:]) /2/np.pi 
+            P1D[i] = np.trapz((P*k)[i:],k[i:]) /2/np.pi
         #dk = k[1:]-k[0:-1]
         #dk = np.append(dk,dk[-1])
         #P1D = np.cumsum(P*k*dk[-1::-1]) # from last to first, in inverse order
         #P1D = P1D[-1::-1]
         #       completely fails ???
         self.pk1DInter=interpolate.InterpolatedUnivariateSpline(k,P1D)
-          
+
     def P1D(self,k):
         return np.maximum(self.pk1DInter(k),0)
             # to avoid P(0) = -1.38775417635e-17
 
 #********************************************************************
-class P_1D_RSD() :   
+class P_1D_RSD() :
     '''Computes P^1D = (1/2PI) int_0^\infty P^3D(k_par,k_perp)k_perp dk_perp  '''
     def __init__(self,k_par,k_perp,P):  # P(k_par,k_perp) 2D array
         P1D=np.zeros(len(k_par))
                 #  (1/2PI) int_0^\infty P(k_//,k_perp)k_perp dk_perp
         for i in np.arange(len(k_par)) :
-            P1D[i] = np.trapz(k_perp*P[i,:],k_perp) /2/np.pi 
+            P1D[i] = np.trapz(k_perp*P[i,:],k_perp) /2/np.pi
         self.pk1DInter=interpolate.InterpolatedUnivariateSpline(k_par,P1D)
-          
+
     def P1D(self,k):
         return np.maximum(self.pk1DInter(k),0)
             # to avoid P(0) = -1.38775417635e-17
 
- 
+
 
 #********************************************************************
-class P_0() :   
+class P_0() :
     '''Read P(k) from a file and interpolate it'''
     def __init__(self,filename=None,G_times_bias=1):
           #     read filename skiping skiprows lines
@@ -74,15 +74,15 @@ class P_0() :
         # DX = 2.19
         # P *= np.exp(-k**2 * DX**2)
 
-        self.pkInter=interpolate.InterpolatedUnivariateSpline(k,P) 
+        self.pkInter=interpolate.InterpolatedUnivariateSpline(k,P)
     def P(self,k):
         return np.maximum(self.pkInter(k),0)
 
-        
+
 #********************************************************************
-# could be same class as P_0 with 
+# could be same class as P_0 with
 #       if (logNormal) : k_input,P_input = LogNormalP(k_input,P_input)
-class P_ln() :   
+class P_ln() :
     '''Read P(k) from a file, compute the lognormal P(k), interpolate it'''
     def __init__(self,filename=None,G_times_bias=1):
           #     read filename skiping skiprows lines
@@ -96,7 +96,7 @@ class P_ln() :
         zref = fits[1].read_header()['ZREF']
         fgrowth = util.fgrowth(zref, constant.omega_M_0)
         P_input /= fgrowth**2  # go to z=0
-        fits.close()        
+        fits.close()
         zero = np.arange(1)
         k_input = np.append(zero,k_input)
         P_input = np.append(zero,P_input)
@@ -107,10 +107,10 @@ class P_ln() :
         # P_input *= np.exp(-k_input**2 * DX**2)
 
         kln, Pln = LogNormalP(k_input,P_input)
-        self.pkInter=interpolate.InterpolatedUnivariateSpline(kln,Pln)  
+        self.pkInter=interpolate.InterpolatedUnivariateSpline(kln,Pln)
     def P(self,k):
         return np.maximum(self.pkInter(k),0)
-        
+
 
 #********************************************************************
 #def P_1D(k) :
@@ -120,9 +120,9 @@ class P_ln() :
 #  from P(k) to xi(r) for uneven spaced k points
 #********************************************************************
 #  r = 2 PI m / kmax
-#  nr = nk / 2 
+#  nr = nk / 2
 #  r_max = PI nk / kmax
-# xi(r) = - 1/(2r PI^2) \im FFT kP(k) 
+# xi(r) = - 1/(2r PI^2) \im FFT kP(k)
 # dr = pi / kmax    r_max = N dr / 2 = N pi/ 2 k_max
 #  kmax = 10 -> dr = 0.314 and N >= 1000 advisable
 def xi_from_pk(k,pk,nk=32*1024,direct=True):
@@ -133,10 +133,10 @@ def xi_from_pk(k,pk,nk=32*1024,direct=True):
     kmax=np.max(k)
     if direct:
         if (kmax < 10) :
-            print "**** WARNING kmax=",kmax," while kmax >= 10 advised ****" 
+            print "**** WARNING kmax=",kmax," while kmax >= 10 advised ****"
         rmax = np.pi * nk / kmax
         if (rmax < 1000) :
-            print "**** WARNING rmax=",rmax," while rmax >= 1000 advised ****" 
+            print "**** WARNING rmax=",rmax," while rmax >= 1000 advised ****"
     kIn=np.linspace(0,kmax,nk)
     pkIn=pkInter(kIn)
     r=2.*np.pi*np.arange(nk)/kmax
@@ -222,7 +222,7 @@ def xi_predicted(xi_g, f, dfbar, delta_s=False, sigma=np.inf):
         def integrand(dl1, dl2, ds1, ds2):
             num = np.exp(-(dl1**2 + dl2**2 - 2*dl1*dl2*xi_g)/(2*(1-xi_g**2)))
             denum = 2*np.pi*np.sqrt(1 - xi_g**2)
-            return ((f(dl1, ds1)/dfbar-1)*(f(dl2, ds2)/dfbar-1) 
+            return ((f(dl1, ds1)/dfbar-1)*(f(dl2, ds2)/dfbar-1)
                     * num/denum * np.exp(-0.5*(ds1**2+ds2**2))/(2*np.pi))
         return integrate.nquad(integrand, [[-sigma, sigma], [-sigma, sigma], [-sigma, sigma], [-sigma, sigma]])
     else:
@@ -355,9 +355,9 @@ class xi_prediction() :
         xi_g = self.xi_Ham.xi4(self.c,r) / self.sigma_g**2
         return self.xig2xiF( xi_g )
 
-        
+
 #********************************************************************
-class xi_Hamilton() :   
+class xi_Hamilton() :
     '''Computes xi^bar, xi^bar-bar, xi_0, xi_2 xi_4 and xi(r,mu) Hamilton 1992 '''
     def __init__(self,r,xi,rmax=-1):
         if (rmax>0) :
@@ -365,7 +365,7 @@ class xi_Hamilton() :
             xi=xi[np.where(r<=rmax)]
         xibar = np.zeros(len(r))
         xibarbar = np.zeros(len(r))
-        '''Computes xi^bar (r) = (1/3r^3) =\int_0^r s^2 xi(s) ds   
+        '''Computes xi^bar (r) = (1/3r^3) =\int_0^r s^2 xi(s) ds
         and  xi^bar-bar (r) = (1/5r^5) =\int_0^r s^4 xi(s) ds   '''
         for i in np.arange(len(r)) :
             if (r[i] == 0 ) :
@@ -377,7 +377,7 @@ class xi_Hamilton() :
         self.xibarInter=interpolate.InterpolatedUnivariateSpline(r,xibar)
         self.xibarbarInter=interpolate.InterpolatedUnivariateSpline(r,xibarbar)
         self.xiInter=interpolate.InterpolatedUnivariateSpline(r,xi)
-          
+
     def xicamb(self,r):
         return self.xiInter(r)
     def xibar(self,r):
@@ -461,7 +461,7 @@ def pk_from_xi_old(k,pk):
 
 def xi_from_pk_old(k,pk):
     pkInter=interpolate.InterpolatedUnivariateSpline(k,pk) #,kind='cubic')
-    
+
     nk=32768
     #   nk=1024
     kmax=np.max(k)

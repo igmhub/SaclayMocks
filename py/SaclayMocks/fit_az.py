@@ -37,8 +37,8 @@ class Chi2(object):
     @classmethod
     def mock_init(Cls, indir, z, beta, cc, dd, a_ref=1e-3, Nhdu=8, bb=1.58, Nreg=1, xx=100., pixel=0.2, kmax=20., dk=0.001):
         '''
-        This alternative init produces p1dmiss.fits and 
-        runs minimize_az which runs MakeSpectra 
+        This alternative init produces p1dmiss.fits and
+        runs minimize_az which runs MakeSpectra
         and MergeSpectra $Nhdu times with the given parameters.
         '''
         # Running comp_p1dmiss.py:
@@ -168,7 +168,7 @@ class Chi2(object):
             if self.Nreg > 1:
                 flux = util.regroup(s[s.mask==False], self.Nreg)
             else:
-                flux = s[s.mask==False]    
+                flux = s[s.mask==False]
             delta = flux / Fmean - 1
             P1D.add_spectrum(delta)
         return P1D.P1D(bins)
@@ -211,7 +211,7 @@ class Chi2(object):
             a = self.fit['a']
         k, Pk, Pkerr = self.comp_p1d(a)
         msk = np.where(k > 0)
-        
+
         # Pk vs k [h.Mpc^-1]
         f1, ax1 = plt.subplots()
         # ax1.set_yscale('log')
