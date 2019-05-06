@@ -256,9 +256,9 @@ class xi_prediction() :
         return np.exp(-self.a * np.exp (self.b * delta) )
 
     def F_pdf(self,F):   # returns F x pdf(F)
-#	F=exp[ -a exp(b g)] = exp[-exp(bg+ln(a))]
-#	where g = gaus(0,1) and bg+ln(a) = Gaus(ln(a),b)
-#	pdf(F) = 1/(F tau \sqrt{2PI} b) exp [-(ln(tau)-ln(a))^2/(2b^2)]
+#    F=exp[ -a exp(b g)] = exp[-exp(bg+ln(a))]
+#    where g = gaus(0,1) and bg+ln(a) = Gaus(ln(a),b)
+#    pdf(F) = 1/(F tau \sqrt{2PI} b) exp [-(ln(tau)-ln(a))^2/(2b^2)]
 #       with tau = -ln(F)
         b=self.b
         a=self.a

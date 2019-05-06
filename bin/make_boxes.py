@@ -39,7 +39,7 @@ import gc
 #********************************************************************
 #@profile
 def DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile, box_null=False):
-#		Draw GRF box in k space in numpy.fft format
+#        Draw GRF box in k space in numpy.fft format
 # later we will directly draw boxk, with appropriate symetries
 # and with var(delta_k)=NX*NY*NZ(see cahier simu FFT normalization)
   t0 = time.time()
@@ -235,10 +235,10 @@ def main() :
     print("Computing eta boxes:")
     kx = np.fft.fftfreq(NX) * 2 * k_ny  # rfftfreq 0 -> 0.5   (NX)
     ky = np.fft.fftfreq(NY) * 2 * k_ny   # (NY)
-    kz = np.fft.rfftfreq(NZ) * 2 * k_ny   # (NZ/2+1)		fftw has no rfftfreq function
+    kz = np.fft.rfftfreq(NZ) * 2 * k_ny   # (NZ/2+1)        fftw has no rfftfreq function
     kz = np.float32(kz)
-    ky = np.float32(ky.reshape(-1, 1))		# (NY,1)
-    kx = np.float32(kx.reshape(-1, 1, 1))		# (NX,1,1)
+    ky = np.float32(ky.reshape(-1, 1))        # (NY,1)
+    kx = np.float32(kx.reshape(-1, 1, 1))        # (NX,1,1)
     kk = kx*kx + ky*ky + kz*kz  # shape = (NX, NY, NZ/2+1)
     kk[0, 0, 0] = 1  # avoid dividing by 0
     if args.dgrowthfile is None:

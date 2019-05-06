@@ -113,7 +113,7 @@ def box_limitOld(LX,LY,LZ,R0,margin) :
     # compute R_min, R_max, tanx_max and tany_max
     # to be inside the box with a margin
     # for a box located at R0 from the observer
-    #	we want that in any direction R_min < R_QSO < R_max
+    #    we want that in any direction R_min < R_QSO < R_max
     Rmax = R0 + LZ/2  - margin
     #  angle for a point at X=Xmax and Rmax from observer
     sinx_max = (LX/2 -margin) / Rmax
@@ -137,7 +137,7 @@ def box_limit(LX,LY,LZ,R0,margin) :
     # compute R_min, R_max, tanx_max and tany_max
     # to be inside the box with a margin
     # for a box located at R0 from the observer
-    #	we want that in any direction R_min < R_QSO < R_max
+    #    we want that in any direction R_min < R_QSO < R_max
     Rmax = R0 + LZ/2  - margin
     #  angle for a point at X=Xmax and Rmax from observer
     if (LX != LY) :
@@ -165,13 +165,13 @@ def box_limit(LX,LY,LZ,R0,margin) :
 def sample_box(xbox,ybox,zbox,rho,threshold=2.5):
 #                                                               obsolete
 #
-    dmax = 3	# we compute rho over +- dmax cells  should be a parameter <==
+    dmax = 3    # we compute rho over +- dmax cells  should be a parameter <==
 
-#.......................	select pixels with rho > threshold*rms
+#.......................    select pixels with rho > threshold*rms
     rms = rho.std()
     iqso = sp.where(rho > threshold*rms)
 #    print("threshold*rms=", threshold*rms)
-    iqso = sp.array(iqso)		# (3,N_QSO) 3 raws N col
+    iqso = sp.array(iqso)        # (3,N_QSO) 3 raws N col
 #.......................   remove QSO at less than dmax cells from the box edges
     imax = xbox.size - dmax
     jmax = ybox.size - dmax

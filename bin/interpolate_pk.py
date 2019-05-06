@@ -63,7 +63,7 @@ def main():
 
     kx = np.fft.fftfreq(NX) * 2 * k_ny  # rfftfreq 0 -> 0.5   (NX)
     ky = np.fft.fftfreq(NY) * 2 * k_ny   # (NY)
-    kz = np.fft.rfftfreq(NZ) * 2 * k_ny   # (NZ/2+1)		fftw has no rfftfreq function
+    kz = np.fft.rfftfreq(NZ) * 2 * k_ny   # (NZ/2+1)        fftw has no rfftfreq function
         # is that correct ?   <=
     # print(kx.shape,ky.shape,kz.shape)
 
@@ -73,8 +73,8 @@ def main():
 
     kz = np.float32(kz)
     # print(kx.shape,type(kx[0]))
-    ky = np.float32(ky.reshape(-1, 1))		# (NY,1)
-    kx = np.float32(kx.reshape(-1, 1, 1))		# (NX,1,1)
+    ky = np.float32(ky.reshape(-1, 1))        # (NY,1)
+    kx = np.float32(kx.reshape(-1, 1, 1))        # (NX,1,1)
     k = np.sqrt(kx*kx + ky*ky + kz*kz)  # shape = (NX, NY, NZ/2+1)
 
     #print(k.nbytes/1024/1024," Mb for k")

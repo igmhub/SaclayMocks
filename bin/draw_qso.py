@@ -83,7 +83,7 @@ def sample(data, num_samples, g_min=19, g_max=23, z_min=0, z_max=6, seed=None):
 
 #********************************************************************
 #def zDistribution(gbin,zbin,nqso) :
-#	np.linalg.matmut(nqso,)
+#    np.linalg.matmut(nqso,)
 
 #********************************************************************
 # @profile
@@ -225,8 +225,8 @@ def main():
     tetay_max = np.arctan(tany_max)
     if ((dra>0) & (ddec>0)) :
         Ldec = np.sin(np.radians(dec0+ddec)) - np.sin(np.radians(dec0-ddec))
-        Lra = 2*np.radians(dra)	
-        surface = Ldec * Lra	# rad^2
+        Lra = 2*np.radians(dra)
+        surface = Ldec * Lra    # rad^2
         print(ddec,dra,Ldec,Lra,surface)
     else :
         surface = 4 * tetax_max * tetay_max     # rad^2
@@ -256,7 +256,7 @@ def main():
     dndz_interp = f_dndz(dz_interp)
 
     # dn/dz/deg^2 => n/cell(z)
-    dn_cell = dndz_interp * DZ / dist.hubble_distance_z(dz_interp,**cosmo_fid) 	
+    dn_cell = dndz_interp * DZ / dist.hubble_distance_z(dz_interp,**cosmo_fid)
     # dZ = (c/H(z) dz = d_H dz   =>  dN/dZ = dN/dz Dz/dZ = dN/dz /d_H
     dn_cell = dn_cell * DX * DY / R_of_z(dz_interp)**2  # deg^-2 -> per cell
 
@@ -307,7 +307,7 @@ def main():
     for mz in range(NZ):
         XX = x_axis
         YY = y_axis
-        XY2 = (XX*XX).reshape(-1,1) + YY*YY	# broadcasting -> (NX,NY)
+        XY2 = (XX*XX).reshape(-1,1) + YY*YY    # broadcasting -> (NX,NY)
         ZZ = z_axis[mz]
         RR = np.sqrt(ZZ*ZZ + XY2)
         redshift = z_of_R(RR/h)
@@ -317,7 +317,7 @@ def main():
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==
-        rnd1 = sp.random.ranf(size=(NX,NY))		#  float64
+        rnd1 = sp.random.ranf(size=(NX,NY))        #  float64
         if (not random_cond):
             cond1 = rnd1 < norm * exprho[:, :, mz]  # (NX,NY)
             # should be a Poisson of norm * np.exp(rho)  <==
@@ -326,7 +326,7 @@ def main():
         else:
             cond1 = rnd1 > (1.-0.006)
 
-        cond2 = density_max * sp.random.ranf(size=(NX,NY)) < density	# (NX,NY)	
+        cond2 = density_max * sp.random.ranf(size=(NX,NY)) < density    # (NX,NY)
 
         # Draw random xyz in the cell
         XX = XX + np.random.uniform(-DX/2, DX/2, size=len(XX))

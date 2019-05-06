@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #!/usr/bin/env python
 #  MakeSpectra.py
-#	reads QSO list
-# 	reads non parallel l.o.s. through boxes
+#    reads QSO list
+#     reads non parallel l.o.s. through boxes
 #   add small scale power
-#	applies Gunn Peterson to make Lya forest
+#    applies Gunn Peterson to make Lya forest
 from __future__ import division, print_function
 from SaclayMocks import box
 from SaclayMocks import constant
@@ -42,14 +42,14 @@ def main():
         ix = int((X +LX/2)/DX)  # -LX/2 < X < -LX/2 + LX/Nslice so 0 < ix < NX/Nslice
         iy = int((Y +LY/2)/DY)  # -LY/2 < Y < LY/2 so 0 < iy < NY
         iz = int((Z +LZ/2 -R0)/DZ)
-        ixyz = sp.array([ix,iy,iz])  	# (3,)
+        ixyz = sp.array([ix,iy,iz])      # (3,)
         cell_center = sp.array([ix*DX-LX/2,iy*DY-LY/2,iz*DZ-LZ/2+R0])
         XYZ = sp.array([X,Y,Z])
 
-        lgrid = grid + XYZ	# grid around XYZ
+        lgrid = grid + XYZ    # grid around XYZ
         lcells = cells + ixyz
-        cell_center_line = cell_center * onesline	
-        # (3,) * (343,1) => (343,3) 	343= (2*dmax+1)**3
+        cell_center_line = cell_center * onesline
+        # (3,) * (343,1) => (343,3)     343= (2*dmax+1)**3
         #    if (icell==0): print
 
         xx = (cell_center_line-lgrid)**2
@@ -269,7 +269,7 @@ def main():
     print("slice #",iSlice,"of box: ", xSlicemin," < x < ",xSlicemax,)
     print(",  due to dmax=",dmax,"requires", iXmin,"<= ix <",iXmax,fullrho.shape,"   ")
 
-    #.................................................  	set the box at z0
+    #.................................................      set the box at z0
     # http://roban.github.io/CosmoloPy/docAPI/cosmolopy.distance-module.html
     # cosmolopy returns distance in Mpc not Mpc/h
     cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
@@ -294,7 +294,7 @@ def main():
         np.min(lambda_vec), np.max(lambda_vec), len(lambda_vec)))
     npixeltot = len(lambda_vec)
 
-    #...................................................	read QSO file
+    #...................................................    read QSO file
     if args.NQSOfile < 0:
         NQSOfile = NSlice
     else:
@@ -362,7 +362,7 @@ def main():
     grid = sp.array([DX*cells[0],DY*cells[1],DZ*cells[2]])
     cells = cells.T
     grid = grid.T
-    onesline = sp.ones((xx**3,1))	# (343,1)
+    onesline = sp.ones((xx**3,1))    # (343,1)
 
     iqso=0
     pixtot=0
@@ -383,7 +383,7 @@ def main():
     fiber_list = []
     pmf_list = []
     t0 = time.time()
-    for qso in (qsos) :		#............................  loop over qso
+    for qso in (qsos) :        #............................  loop over qso
         if ((nqsomax > 0) & (iqso >= nqsomax)) :break
         ra = qso['RA']
         dec = qso['DEC']

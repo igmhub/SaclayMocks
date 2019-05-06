@@ -152,10 +152,10 @@ error=0
 i=<start>
 for p in $pids; do
     if wait $p; then
-	echo "<code>-$i OK"
+    echo "<code>-$i OK"
     else
-	echo "Error in <code>-$i"
-	let "error=$error+1"
+    echo "Error in <code>-$i"
+    let "error=$error+1"
     fi
     let "i=$i+1"
 done
