@@ -275,7 +275,7 @@ def main():
                         nz = 256
                         while (nz < len(wav_tmp)) : nz *= 2
                         delta_s = np.random.normal(size=nz)   # latter, produce directly in k space
-                        delta_sk = fft.rfftn(delta_s)	
+                        delta_sk = fft.rfftn(delta_s)
                         k = np.fft.rfftfreq(nz) * 2 * k_ny
                         if fit_p1d:
                             pmis = p1dmiss(k)
