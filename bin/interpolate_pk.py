@@ -28,7 +28,6 @@ def Power_Spectrum(k, Vcell):
 
 # @profile
 def main():
-    print('helo')
     t0 = time.time()
 
     parser = argparse.ArgumentParser()
