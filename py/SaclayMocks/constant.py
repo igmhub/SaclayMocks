@@ -2,7 +2,6 @@
 import scipy as sp
 from scipy import interpolate
 import scipy.constants
-from pkg_resources import resource_filename
 
 c = scipy.constants.speed_of_light / 1000.  # in km/s
 
@@ -42,11 +41,6 @@ deg2rad = sp.pi/180.
 rad2deg = 180/sp.pi
 
 #boss_lambda_min = 3600.
-
-
-### Define path to files
-path_PlanckDR12 = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits')
-
 
 '''
 class cosmo:
