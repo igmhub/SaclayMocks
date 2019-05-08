@@ -160,7 +160,7 @@ def main():
 
     Om = constant.omega_M_0
     if args.dgrowthfile is None:
-        filename = resource_filename('SaclayMocks', '/etc/dgrowth.fits")
+        filename = resource_filename('SaclayMocks', '/etc/dgrowth.fits')
     if Om == fitsio.read_header(filename, ext=1)['OM']:
         Dgrowth = util.InterpFitsTable(filename, 'Z', 'dD/dz')
     else:

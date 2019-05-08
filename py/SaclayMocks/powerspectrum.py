@@ -58,7 +58,7 @@ class P_0() :
           #     read filename skiping skiprows lines
           #     k in column colk and p in colp
         if filename is None:
-            filename = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits")
+            filename = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits')
         fits = FITS(filename)
         data = fits[1].read()
         k = data['K']
@@ -90,7 +90,7 @@ class P_ln() :
           #     read filename skiping skiprows lines
           #     k in column colk and p in colp
         if filename is None:
-            filename = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits")
+            filename = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits')
         fits = FITS(filename)
         data = fits[1].read()
         k_input = data['K']

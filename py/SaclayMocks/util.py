@@ -173,7 +173,7 @@ def read_P1D(redshift):
     Format is z, k, pk, pkerr, 0, 0, 0
     k in km/s and pk and pkerr in (km/s)**-1
     """
-    filename = resource_filename('SaclayMocks', '/etc/pk_fft35bins_noSi.out")
+    filename = resource_filename('SaclayMocks', '/etc/pk_fft35bins_noSi.out')
     data = np.loadtxt(filename)
     z = np.round(data[:, 0], 3)
     msk = np.where(z == np.round(redshift, 3))[0]
@@ -194,9 +194,9 @@ def read_P1D_fit(redshift):
     output is k in km/s and pk in s/km
     """
     if redshift < 3.9:
-        filename = resource_filename('SaclayMocks', '/etc/models_eBOSS_lowz.fits")
+        filename = resource_filename('SaclayMocks', '/etc/models_eBOSS_lowz.fits')
     else:
-        filename = resource_filename('SaclayMocks', '/etc/models_eBOSS_highz.fits")
+        filename = resource_filename('SaclayMocks', '/etc/models_eBOSS_highz.fits')
     data = fitsio.read(filename, ext=1)
     z = np.round(data['z'], 3)
     msk = np.where(z == np.round(redshift, 3))[0]
@@ -325,7 +325,7 @@ def desi_footprint(ra, dec, filename=None):
     desi_nside =256  # same resolution as original map (cf quickquasars)
     healpix = radec2pix(desi_nside, ra, dec)
     if filename is None:
-        filename = resource_filename('SaclayMocks', '/etc/desi-healpix-weights.fits")
+        filename = resource_filename('SaclayMocks', '/etc/desi-healpix-weights.fits')
     pixmap = fitsio.read(filename, ext=0)
     npix = len(pixmap)
     truenside = hp.npix2nside(npix)
@@ -383,7 +383,7 @@ def read_p1dmiss(z, k, filename=None):
     The fit was done on P1D/(1+z)**3.8
     '''
     if filename is None:
-        filename = resource_filename('SaclayMocks', '/etc/pkmiss_fit.fits")
+        filename = resource_filename('SaclayMocks', '/etc/pkmiss_fit.fits')
     data = fitsio.read(filename, ext=1)
     f = interpolate.interp1d(data['k'], data['p'], axis=0)
     pkinterp = np.array([pol(z, f(kk)) for kk in k])

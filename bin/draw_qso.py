@@ -134,7 +134,7 @@ def main():
     Ok = constant.omega_k_0
     z0 = constant.z0
     if args.dgrowthfile is None:
-        filename = resource_filename('SaclayMocks', '/etc/dgrowth.fits")
+        filename = resource_filename('SaclayMocks', '/etc/dgrowth.fits')
     if Om == fitsio.read_header(filename, ext=1)['OM']:
         Dgrowth = util.InterpFitsTable(filename, 'Z', 'dD/dz')
     else:
@@ -243,7 +243,7 @@ def main():
     print("far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h))
 
     #...............................  read dN/dz assuming constant Delta z
-    filename = resource_filename('SaclayMocks', '/etc/nz_qso_desi.dat")
+    filename = resource_filename('SaclayMocks', '/etc/nz_qso_desi.dat')
     d = np.loadtxt(filename)
     delta_z = d[1,0]-d[0,0]
     zlow = d[:,0]
