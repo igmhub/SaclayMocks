@@ -55,7 +55,7 @@ def main():
     k_ny = np.pi / pixsize
     bb = args.bb
     if args.paramfile is None:
-        filename = resource_filename('SaclayMocks', '/../../etc/params.fits')
+        filename = resource_filename('SaclayMocks', '/etc/params.fits').replace('py/SaclayMocks','')
 
     if args.aa > 0:
         aa = args.aa
@@ -97,7 +97,7 @@ def main():
 
     # .......... Load P1D missing
     if args.p1dfile is None:
-        filename = resource_filename('SaclayMocks', '/../../etc/pkmiss_interp.fits')
+        filename = resource_filename('SaclayMocks', '/etc/pkmiss_interp.fits').replace('py/SaclayMocks','')
     print("Reading P1D file {}".format(filename))
     if fit_p1d:
         p1d_data = fitsio.read(filename, ext=1)
