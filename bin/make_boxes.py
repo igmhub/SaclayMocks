@@ -45,13 +45,13 @@ def DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile, box_null=False):
   t0 = time.time()
   box = np.float32(np.random.normal(size=[NX, NY, NZ]))
   t1 = time.time()
-  print box.nbytes/1024/1024, " Mbytes box drawn",  t1-t0, " s"
-  print box.dtype
+  print(box.nbytes/1024/1024, " Mbytes box drawn",  t1-t0, " s")
+  print(box.dtype)
   boxk = np.zeros([NX,NY,NZ/2+1],dtype=np.complex64)
   myfft = pyfftw.FFTW(box,boxk,axes=(0,1,2),threads=ncpu)
   myfft.execute()
   t2 =time.time()
-  print "FFT", t2-t1, " s"
+  print("FFT", t2-t1, " s")
 
   # Next lines is a test of the FFT:
   # if the produced box is null, then try to save wisdom and redo FFT once again
@@ -87,7 +87,7 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
     del boxk
     box /= NX*NY*2*(NZ-1)
     t3 = time.time()
-    print "FFT done", t3-t2, "s"
+    print("FFT done", t3-t2, "s")
     sigma = np.std(box)
     print("sigma = {}".format(sigma))
 
@@ -101,7 +101,7 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
         fits[0].write_key("seed", np.int32(seed), comment="seed used to generate randoms")
       fits.close()
     t4 = time.time()
-    print boxfilename, "written", t4-t3,"s"
+    print(boxfilename, "written", t4-t3,"s")
 
     # Next lines is a test of the FFT:
     # if the produced box is null, then try to save wisdom and redo FFT once again
@@ -173,7 +173,7 @@ def main() :
   nCell  = NX * NY * NZ
   Vcell = np.float32(Dcell**3)
   volume = nCell * Vcell
-  print "volume = ",volume
+  print("volume = ",volume)
 
   #...............................    get wisdom to save time on FFT
   wisdom_path = os.path.expandvars("$SACLAYMOCKS_BASE/etc/")
@@ -186,7 +186,7 @@ def main() :
     pyfftw.import_wisdom(sp.load(wisdomFile))
     save_wisdom = False
   else :
-    print wisdomFile," wisdomfile not found !!! set save_wisdom = true"
+    print(wisdomFile," wisdomfile not found !!! set save_wisdom = true")
     save_wisdom = True
 
   #............................. Draw GRF in k space
@@ -205,7 +205,7 @@ def main() :
   np.save(boxkfile,boxk)
   t2 = time.time()
 
-  print "boxk produced and saved:",t1-t0,t2-t1," s "
+  print("boxk produced and saved:",t1-t0,t2-t1," s ")
 
   #............................. multiply by sqrt(P/Vcell), FFT and store
   print("Computing delta boxes...")
@@ -322,7 +322,7 @@ def main() :
     FFTandStore(Dcell, nHDU, outDir+'/vz', ncpu, wisdomFile)
     print("Done. {} s".format(time.time() -t0))
 
-  print "NX=", NX,"nCPU=", ncpu  #, "use_pool=",  use_pool
+  print("NX=", NX,"nCPU=", ncpu)  #, "use_pool=",  use_pool
   if (save_wisdom):
     sp.save(wisdomFile, pyfftw.export_wisdom())
     # wisd=pyfftw.export_wisdom()
