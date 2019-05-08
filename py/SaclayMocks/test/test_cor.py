@@ -4,6 +4,7 @@ import tempfile
 import shutil
 from pkg_resources import resource_filename
 import sys
+import subprocess
 if (sys.version_info > (3, 0)):
     # Python 3 code in this block
     import configparser as ConfigParser
@@ -25,9 +26,23 @@ class TestCor(unittest.TestCase):
 
         self._test = True
         self.send_requirements()
+        self.send_submit_mocks()
 
         if self._test:
             self.remove_folder()
+
+        return
+    def produce_folder(self):
+        """
+            Create the necessary folders
+        """
+
+        print("\n")
+        lst_fold = ['/Products/']
+
+        for fold in lst_fold:
+            if not os.path.isdir(self._branchFiles+fold):
+                os.mkdir(self._branchFiles+fold)
 
         return
     def remove_folder(self):
@@ -51,6 +66,9 @@ class TestCor(unittest.TestCase):
                 req[l[0]] = l[1]
 
         return req
+
+
+
     def send_requirements(self):
 
         print("\n")
@@ -62,6 +80,24 @@ class TestCor(unittest.TestCase):
                     print("WARNING: The local version of {}: {} is different from the required version: {}".format(req_lib,local_ver,req_ver))
             except ImportError:
                 print("WARNING: Module {} can't be found".format(req_lib))
+
+        return
+    def send_submit_mocks(self):
+
+        ###
+        print("\n")
+        cmd = 'submit_mocks.py'
+        cmd += ' --mock-dir '+self._branchFiles+'/Products/'
+        cmd += ' --cori-nodes False'
+        cmd += ' --box-size 256'
+        cmd += ' --chunk-id 1'
+        subprocess.call(cmd, shell=True)
+
+        ### Test
+        #if self._test:
+        #    path1 = self._masterFiles + '/Products/'
+        #    path2 = self._branchFiles + '/Products/'
+        #    self.compare_fits(path1,path2,"submit_mocks.py")
 
         return
 
