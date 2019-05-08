@@ -10,14 +10,7 @@ from time import time
 from SaclayMocks import util
 from SaclayMocks import constant
 from memory_profiler import profile
-
-
-def iterfiles(root, prefix):
-    for d in os.listdir(root):
-        if d.startswith('chunk'):
-            for f in os.listdir(root+'/'+d+'/spectra_merged/'):
-                if f.startswith(prefix):
-                    yield os.path.join(root, d, 'spectra_merged', f)
+import glob
 
 
 # @profile
@@ -37,7 +30,6 @@ def main():
     args = parser.parse_args()
 
     overwrite = True
-    inDir = args.inDir
     nside = args.nside
     npixel = hp.nside2npix(nside)
     nest_option = util.str2bool(args.nest)
@@ -67,7 +59,7 @@ def main():
     t0 = time()
     fits = []
     fits_pixels = []
-    files = iterfiles(inDir, 'spectra_merged')
+    files = glob.glob(args.inDir+"/*/spectra_merged/spectra_merged*.fits")
     for f in files:
         i = int(f[:].find('spectra_merged-')) + 15
         j = i + int(f[i:].find('-'))
@@ -105,7 +97,8 @@ def main():
         n_hi_dla = []
         mock_id = []
         dla_id = []
-        files = iterfiles(inDir, 'spectra_merged-{}-'.format(pix))
+        files = glob.glob(args.inDir+"/*/spectra_merged/spectra_merged-{}-*.fits".format(pix))
+        print(len(files))
         first = True
         for f in files:
             try :
