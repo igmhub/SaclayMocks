@@ -11,7 +11,6 @@ git clone https://github.com/igmhub/SaclayMocks.git
 
 then, you need to add to your bashrc:
 ```
-export SACLAYMOCKS_BASE=<path to the git repository>
 export PATH=$SACLAYMOCKS_BASE/bin/:$PATH
 export PYTHONPATH=$SACLAYMOCKS_BASE/py/:$PYTHONPATH
 ```
@@ -37,6 +36,19 @@ Once all the chunks are done, they are combined to produce the final output. Thi
 `dla_saclay.py` and `merge_dla.py` to produce the `master_DLA.fits` file
 `dla_randoms.py` to produce the `master_DLA_randoms.fits` file
 `make_transmissions.py` to produce all the transmissions files
+
+The logs are organized as follow:
+For the Pk, the script `run_pk.sh` has the corresponding `run_pk.log` file in the `pk/logs/` directory.
+It gives the global result of all the python codes run (`interpolate_pk.py` + `merge_pk.py`), each of them has its own log file.
+
+For the boxes, the scripts `run_boxes-$i.sh` have the corresponding `run_boxes-$i.log` files ($i stands for the id of the chunk), in the `mock_*/output/logs/` directory
+It gives the global result of the python code run `make_boxes.py`. Its log file is  `mock_*/output/logs/chunk_$i/make_boxes.py`
+
+For the chunks (QSO + spectra), the scripts `run_chunk-$i.sh` have the corresponding `run_chunk-$i.log` files, in the `mock_*/output/logs/` directory
+It gives the global result of all the python codes run (`draw_qso.py`, `make_spectra.py` and `merge_spectra.py`), each of them has its own log file in `mock_*/output/logs/chunk_$i/`
+
+Finaly, the scripts `run_mergechunks.sh` has the corresponding `run_mergechunks.log` file, in the `mock_*/output/logs/` directory
+It gives the global result of all the python codes run, each of them has its own log file in `mock_*/output/logs/mergechunks/`
 
 
 You don't need to run all these codes by hand. You just have to run `submit_mocks.py`
