@@ -24,8 +24,7 @@ class TestCor(unittest.TestCase):
 
     def test_cor(self):
 
-        self._test = False
-        self._branchFiles = './data_test/'
+        self._test = True
         self.send_requirements()
         self.send_submit_mocks()
 
@@ -93,6 +92,12 @@ class TestCor(unittest.TestCase):
         cmd += ' --box-size 256'
         cmd += ' --chunk-id 1'
         cmd += ' --seed 42'
+        print(cmd)
+        subprocess.call(cmd, shell=True)
+
+        ###
+        print("\n")
+        cmd = self._branchFiles+'/Products/mock_0/output/runs/submit.sh'
         print(cmd)
         subprocess.call(cmd, shell=True)
 
