@@ -59,7 +59,7 @@ class TestCor(unittest.TestCase):
 
         req = {}
         os.environ['SACLAYMOCKS_BASE'] = resource_filename('SaclayMocks', '/../../')
-        path = resource_filename('SaclayMocks', '/../../requirements.txt')
+        path = os.path.expandvars('$SACLAYMOCKS_BASE/requirements.txt')
         with open(path,'r') as f:
             for l in f:
                 l = l.replace('\n','').replace('==',' ').replace('>=',' ').split()
