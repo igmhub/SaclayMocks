@@ -6,6 +6,7 @@ from pkg_resources import resource_filename
 import sys
 import subprocess
 import glob
+import scipy as sp
 if (sys.version_info > (3, 0)):
     # Python 3 code in this block
     import configparser as ConfigParser
@@ -115,6 +116,20 @@ class TestCor(unittest.TestCase):
             for f in fs:
                 with open(f) as tf:
                     print(tf.read())
+
+        ###
+        print("\n")
+        tl = ''
+        for i in range(10):
+            print("\n",i,"\n")
+            tl += '/*/'
+            print(self._branchFiles+'/Products/{}/*.log*'.format(tl))
+            fs = glob.glob(self._branchFiles+'/Products/{}/*.log*'.format(tl))
+            for f in fs:
+                with open(f) as tf:
+                    tff = sp.hstack([ l.split() for l in tf ])
+                    self.assertFalse('Abort!' in tff,"ERROR: 'Abort!' in {}".format(f))
+                    self.assertFalse('Error' in tff,"ERROR: 'Error' in {}".format(f))
 
         ### Test
         #if self._test:
