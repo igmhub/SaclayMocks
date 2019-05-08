@@ -92,7 +92,7 @@ class TestCor(unittest.TestCase):
         cmd = 'submit_mocks.py'
         cmd += ' --mock-dir '+self._branchFiles+'/Products/'
         cmd += ' --cori-nodes False'
-        cmd += ' --box-size 256'
+        cmd += ' --box-size 128'
         cmd += ' --chunk-id 1'
         cmd += ' --seed 42'
         print(cmd)
