@@ -27,7 +27,7 @@ class TestCor(unittest.TestCase):
 
         self._test = True
         self.send_requirements()
-        self.send_submit_mocks()
+        #self.send_submit_mocks()
 
         if self._test:
             self.remove_folder()
@@ -59,6 +59,9 @@ class TestCor(unittest.TestCase):
 
         req = {}
 
+        print(os.listdir(resource_filename('SaclayMocks', './')))
+        print(os.listdir(resource_filename('SaclayMocks', './../')))
+        print(os.listdir(resource_filename('SaclayMocks', './../../')))
         path = resource_filename('SaclayMocks', '/../../requirements.txt')
         with open(path,'r') as f:
             for l in f:
