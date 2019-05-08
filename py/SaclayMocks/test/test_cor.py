@@ -24,7 +24,8 @@ class TestCor(unittest.TestCase):
 
     def test_cor(self):
 
-        self._test = True
+        self._test = False
+        self._branchFiles = './data_test/'
         self.send_requirements()
         self.send_submit_mocks()
 

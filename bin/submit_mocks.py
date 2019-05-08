@@ -418,7 +418,7 @@ def do_dir_tree(outdir, nside):
     '''
     npixel = hp.nside2npix(nside)
     print("Creating directory tree...")
-    for i in range(npixel/100 + 1):
+    for i in range(npixel//100 + 1):
         if os.path.isdir(outdir+"/"+str(i)):
             continue
         subprocess.call(["mkdir", outdir+"/"+str(i)])
