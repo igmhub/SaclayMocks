@@ -6,10 +6,12 @@ import scipy as sp
 import argparse
 import time
 #from memory_profiler import profile
-from SaclayMocks import util, constant
 import pyfftw.interfaces.numpy_fft as fft
 import cosmolopy.perturbation as pert
 import glob
+from pkg_resources import resource_filename
+
+from SaclayMocks import util, constant
 
 
 # @profile
@@ -53,7 +55,7 @@ def main():
     k_ny = np.pi / pixsize
     bb = args.bb
     if args.paramfile is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/params.fits")
+        filename = resource_filename('SaclayMocks', '/../../etc/params.fits')
 
     if args.aa > 0:
         aa = args.aa
@@ -95,7 +97,7 @@ def main():
 
     # .......... Load P1D missing
     if args.p1dfile is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
+        filename = resource_filename('SaclayMocks', '/../../etc/pkmiss_interp.fits')
     print("Reading P1D file {}".format(filename))
     if fit_p1d:
         p1d_data = fitsio.read(filename, ext=1)

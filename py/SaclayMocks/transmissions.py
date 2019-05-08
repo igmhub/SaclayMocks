@@ -5,6 +5,8 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 from scipy import stats as stats
+from pkg_resources import resource_filename
+
 from SaclayMocks import powerspectrum, util, constant
 
 
@@ -113,7 +115,7 @@ class ReadTransmission(object):
     def p1d(self, redshift, Nreg=1, bins=300, title='', filename=None, pixel=0.2):
         # P1D of data
         if filename is None:
-            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out")
+            filename = resource_filename('SaclayMocks', '/../../etc/pk_fft35bins_noSi.out')
         print("Reading P1D data from: {}".format(filename))
         data = np.loadtxt(filename)
         z = data[:, 0]

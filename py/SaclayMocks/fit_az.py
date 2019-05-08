@@ -1,13 +1,14 @@
 import os
 import fitsio
 import numpy as np
-from SaclayMocks import util, powerspectrum, constant
 from iminuit import Minuit
 import time
 import matplotlib.pyplot as plt
 import numpy.ma as ma
 from scipy import interpolate
+from pkg_resources import resource_filename
 
+from SaclayMocks import util, powerspectrum, constant
 
 """
 Chi2 runs on raw spectra (spectra_merged), skewer transmissions.
@@ -66,7 +67,7 @@ class Chi2(object):
         k in km/s and pk and pkerr in (km/s)**-1 translated to Mpc/h
         """
         if filename is None:
-            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out")
+            filename = resource_filename('SaclayMocks', '/../../etc/pk_fft35bins_noSi.out')
         print("Reading data from: {}".format(filename))
         data = np.loadtxt(filename)
         z = data[:, 0]
