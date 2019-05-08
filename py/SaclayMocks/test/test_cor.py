@@ -5,6 +5,7 @@ import shutil
 from pkg_resources import resource_filename
 import sys
 import subprocess
+import glob
 if (sys.version_info > (3, 0)):
     # Python 3 code in this block
     import configparser as ConfigParser
@@ -80,6 +81,8 @@ class TestCor(unittest.TestCase):
                     print("WARNING: The local version of {}: {} is different from the required version: {}".format(req_lib,local_ver,req_ver))
             except ImportError:
                 print("WARNING: Module {} can't be found".format(req_lib))
+            except AttributeError:
+                print("WARNING: Module {} has no version".format(req_lib))
 
         return
     def send_submit_mocks(self):
@@ -100,6 +103,18 @@ class TestCor(unittest.TestCase):
         cmd = self._branchFiles+'/Products/mock_0/output/runs/submit.sh'
         print(cmd)
         subprocess.call(cmd, shell=True)
+
+        ###
+        print("\n")
+        tl = ''
+        for i in range(10):
+            print("\n",i,"\n")
+            tl += '/*/'
+            print(self._branchFiles+'/Products/{}/*.log*'.format(tl))
+            fs = glob.glob(self._branchFiles+'/Products/{}/*.log*'.format(tl))
+            for f in fs:
+                with open(f) as tf:
+                    print(tf.read())
 
         ### Test
         #if self._test:
