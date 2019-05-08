@@ -27,7 +27,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 import cosmolopy.perturbation as pert
 from scipy import interpolate, integrate
-from memory_profiler import profile
+#from memory_profiler import profile
 
 
 # @profile

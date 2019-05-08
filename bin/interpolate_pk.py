@@ -11,7 +11,7 @@ import cosmolopy.perturbation as pert
 from SaclayMocks import powerspectrum
 from SaclayMocks import constant
 from multiprocessing import Pool
-from memory_profiler import profile
+#from memory_profiler import profile
 
 
 #********************************************************************

@@ -9,7 +9,7 @@ import sys
 from time import time
 from SaclayMocks import util
 from SaclayMocks import constant
-from memory_profiler import profile
+#from memory_profiler import profile
 import glob
 
 
