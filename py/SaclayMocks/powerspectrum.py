@@ -5,10 +5,12 @@ import numpy as np
 import scipy as sp
 from scipy import interpolate, integrate
 import matplotlib.pyplot as plt # prov
-from SaclayMocks import util
-from SaclayMocks import constant
 import pyfftw.interfaces.numpy_fft as fft
 from fitsio import FITS
+from pkg_resources import resource_filename
+
+from SaclayMocks import util
+from SaclayMocks import constant
 
 
 #********************************************************************
@@ -56,7 +58,7 @@ class P_0() :
           #     read filename skiping skiprows lines
           #     k in column colk and p in colp
         if filename is None:
-            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
+            filename = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits")
         fits = FITS(filename)
         data = fits[1].read()
         k = data['K']
@@ -88,7 +90,7 @@ class P_ln() :
           #     read filename skiping skiprows lines
           #     k in column colk and p in colp
         if filename is None:
-            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
+            filename = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits")
         fits = FITS(filename)
         data = fits[1].read()
         k_input = data['K']

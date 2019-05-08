@@ -6,10 +6,6 @@
 #   add small scale power
 #	applies Gunn Peterson to make Lya forest
 from __future__ import division, print_function
-from SaclayMocks import box
-from SaclayMocks import constant
-from SaclayMocks import powerspectrum
-from SaclayMocks import util
 import fitsio
 from fitsio import FITS
 import sys
@@ -28,6 +24,12 @@ import matplotlib.pyplot as plt
 import cosmolopy.perturbation as pert
 from scipy import interpolate, integrate
 #from memory_profiler import profile
+from pkg_resources import resource_filename
+
+from SaclayMocks import box
+from SaclayMocks import constant
+from SaclayMocks import powerspectrum
+from SaclayMocks import util
 
 
 # @profile
@@ -158,7 +160,7 @@ def main():
 
     Om = constant.omega_M_0
     if args.dgrowthfile is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/dgrowth.fits")
+        filename = resource_filename('SaclayMocks', '/etc/dgrowth.fits")
     if Om == fitsio.read_header(filename, ext=1)['OM']:
         Dgrowth = util.InterpFitsTable(filename, 'Z', 'dD/dz')
     else:

@@ -11,13 +11,16 @@ import os
 import cosmolopy.distance as dist
 import fitsio
 from fitsio import FITS,FITSHDR
-from SaclayMocks import box
-from SaclayMocks import constant
-from SaclayMocks import util
 import argparse
 from time import time
 #from memory_profiler import profile
 import gc
+from pkg_resources import resource_filename
+
+from SaclayMocks import box
+from SaclayMocks import constant
+from SaclayMocks import util
+
 PI = np.pi
 
 fullBox = False  # to fill the box completely without N(z) in order to check P(k)
@@ -131,7 +134,7 @@ def main():
     Ok = constant.omega_k_0
     z0 = constant.z0
     if args.dgrowthfile is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/dgrowth.fits")
+        filename = resource_filename('SaclayMocks', '/etc/dgrowth.fits")
     if Om == fitsio.read_header(filename, ext=1)['OM']:
         Dgrowth = util.InterpFitsTable(filename, 'Z', 'dD/dz')
     else:
@@ -240,7 +243,7 @@ def main():
     print("far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h))
 
     #...............................  read dN/dz assuming constant Delta z
-    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/nz_qso_desi.dat")
+    filename = resource_filename('SaclayMocks', '/etc/nz_qso_desi.dat")
     d = np.loadtxt(filename)
     delta_z = d[1,0]-d[0,0]
     zlow = d[:,0]

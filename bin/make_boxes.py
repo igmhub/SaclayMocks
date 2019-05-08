@@ -23,11 +23,13 @@ import pyfftw
 import os
 import argparse
 import cosmolopy.perturbation as pert
+from multiprocessing import Pool
+import gc
+from pkg_resources import resource_filename
+
 from SaclayMocks import powerspectrum
 from SaclayMocks import constant
 from SaclayMocks import util
-from multiprocessing import Pool
-import gc
 
 
 # z0 = constant.z0    # V1 produced with z_0 =2.5 !!!
@@ -176,7 +178,7 @@ def main() :
   print("volume = ",volume)
 
   #...............................    get wisdom to save time on FFT
-  wisdom_path = os.path.expandvars("$SACLAYMOCKS_BASE/etc/")
+  wisdom_path = resource_filename('SaclayMocks', '/etc/")
   if (NY==NX and NZ==NX):
     wisdomFile = wisdom_path+"wisdom."+str(NX)+"."+str(ncpu)+".npy"
   else :
@@ -242,7 +244,7 @@ def main() :
     kk = kx*kx + ky*ky + kz*kz  # shape = (NX, NY, NZ/2+1)
     kk[0, 0, 0] = 1  # avoid dividing by 0
     if args.dgrowthfile is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/dgrowth.fits")
+        filename = resource_filename('SaclayMocks', '/etc/dgrowth.fits")
     if Om != fitsio.read_header(filename, ext=1)['OM']:
       raise ValueError("Omega_M_0 in SaclayMocks.constant ({}) != OM in {}".format(Om,
                             fitsio.read_header(filename, ext=1)['OM']))

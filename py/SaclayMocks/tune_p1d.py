@@ -3,9 +3,11 @@ import fitsio
 import numpy as np
 import numpy.ma as ma
 import scipy as sp
-from SaclayMocks import util, powerspectrum, fit_az, constant
 import pyfftw.interfaces.numpy_fft as fft
 import matplotlib.pyplot as plt
+from pkg_resources import resource_filename
+
+from SaclayMocks import util, powerspectrum, fit_az, constant
 
 
 '''
@@ -41,7 +43,7 @@ class P1dmiss(object):
         self.fit_data()
 
         #Compute dD/dz:
-        dgrowthfile = os.path.expandvars("$SACLAYMOCKS_BASE/etc/dgrowth.fits")
+        dgrowthfile = resource_filename('SaclayMocks', '/etc/dgrowth.fits")
         dgrowth = util.InterpFitsTable(dgrowthfile, 'Z', 'dD/dz')
         self.dD_dz = dgrowth.interp
 
@@ -146,7 +148,7 @@ class P1dmiss(object):
         p1d_fit /= self.xx
         msk1 = k_fit < klim
         if filename is None:
-            os.path.expandvars("$SACLAYMOCKS_BASE/etc/fit_p1d_mock_z3.4.fits")
+            resource_filename('SaclayMocks', '/etc/fit_p1d_mock_z3.4.fits")
         data = fitsio.read(filename, ext=1)
         k_mock = data['k']
         p1d_mock = data['P1D']

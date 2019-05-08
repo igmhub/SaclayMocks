@@ -67,7 +67,7 @@ class Chi2(object):
         k in km/s and pk and pkerr in (km/s)**-1 translated to Mpc/h
         """
         if filename is None:
-            filename = resource_filename('SaclayMocks', '/etc/pk_fft35bins_noSi.out').replace('py/SaclayMocks','')
+            filename = resource_filename('SaclayMocks', '/etc/pk_fft35bins_noSi.out')
         print("Reading data from: {}".format(filename))
         data = np.loadtxt(filename)
         z = data[:, 0]
