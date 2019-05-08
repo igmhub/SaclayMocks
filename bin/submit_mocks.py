@@ -953,11 +953,6 @@ def main():
     run_args['run_delete'] = True  # delete the persistent reservation
 
     # -------------------------- Nothing to change bellow
-    if mock_args['sbatch'] == 0:
-        for k in sbatch_args.keys():
-            if 'nodes' in k:
-                sbatch_args[k] = 1
-
     ### Define directories
     nmocks = args.realisation_number
     if nmocks > 1:
@@ -977,6 +972,9 @@ def main():
     if not mock_args['sbatch']:
         print("Warning: the jobs will not be sent to cori nodes, they will be executed here.")
         mock_args['burst_buffer'] = False
+        for k in sbatch_args.keys():
+            if 'nodes' in k:
+                sbatch_args[k] = 1
 
     run_args['todo_chunk'] = ""
     if run_args['draw_qso']: run_args['todo_chunk'] += "qso "

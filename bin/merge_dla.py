@@ -5,16 +5,11 @@ import argparse
 import os
 import numpy as np
 from SaclayMocks import util
+import glob
 
 
-def iterfiles(root):
-    for d in os.listdir(root):
-        if d.startswith('chunk'):
-            yield os.path.join(root, d, 'dla.fits')
-
-
-if True:
-# def main():
+# if True:
+def main():
     t_init = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument("-indir", help="Root directory of the various Chunks")
@@ -25,7 +20,7 @@ if True:
     args = parser.parse_args()
     nside = args.nside
     nest_option = util.str2bool(args.nest)
-    files = iterfiles(args.indir)
+    files = glob.glob(args.indir+"/*/dla.fits")
 
     # Read files
     print("Reading files...")
@@ -90,5 +85,5 @@ if True:
     print("Took {} s".format(time.time()-t_init))
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
