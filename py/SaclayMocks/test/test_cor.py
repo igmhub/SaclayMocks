@@ -91,6 +91,7 @@ class TestCor(unittest.TestCase):
         cmd += ' --cori-nodes False'
         cmd += ' --box-size 256'
         cmd += ' --chunk-id 1'
+        print(cmd)
         subprocess.call(cmd, shell=True)
 
         ### Test
