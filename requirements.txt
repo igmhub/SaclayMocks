@@ -7,3 +7,4 @@ numba>=0.43.1
 future>=0.17.1
 setuptools==27.2.0
 memory_profiler>=0.55.0
+cosmolopy>=0.1.104
