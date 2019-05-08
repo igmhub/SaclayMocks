@@ -45,7 +45,7 @@ rad2deg = 180/sp.pi
 
 
 ### Define path to files
-PlanckDR12 = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits')
+path_PlanckDR12 = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits')
 
 
 '''
