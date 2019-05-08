@@ -855,6 +855,9 @@ def main():
     parser.add_argument("--mock-realisation", type=int, default=None, required=False,
         help="Specify a particular realisation to be produced (optional)")
 
+    parser.add_argument("--seed", type=int, default=None, required=False,
+        help="Specify a particular seed (optional)")
+
     parser.add_argument("--account", type=str, default="eboss", required=False,
         help="account to be used on cori nodes (optional)")
 
@@ -911,6 +914,8 @@ def main():
     mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
+    if args.seed is not None:
+        mock_args['seed'] = "-seed "+str(args.seed)
     mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
     mock_args['NQSO'] = -1  # If >0, limit the number of QSO treated in make_spectra
     mock_args['small_scales'] = True  # If True, add small scales in FGPA
@@ -953,11 +958,6 @@ def main():
     run_args['run_delete'] = True  # delete the persistent reservation
 
     # -------------------------- Nothing to change bellow
-    if mock_args['sbatch'] == 0:
-        for k in sbatch_args.keys():
-            if 'nodes' in k:
-                sbatch_args[k] = 1
-
     ### Define directories
     nmocks = args.realisation_number
     if nmocks > 1:
@@ -977,6 +977,9 @@ def main():
     if not mock_args['sbatch']:
         print("Warning: the jobs will not be sent to cori nodes, they will be executed here.")
         mock_args['burst_buffer'] = False
+        for k in sbatch_args.keys():
+            if 'nodes' in k:
+                sbatch_args[k] = 1
 
     run_args['todo_chunk'] = ""
     if run_args['draw_qso']: run_args['todo_chunk'] += "qso "
