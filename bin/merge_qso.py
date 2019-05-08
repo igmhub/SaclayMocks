@@ -4,9 +4,9 @@ import numpy as np
 import argparse
 import time
 import os
-from SaclayMocks import util, constant
 import glob
 
+from SaclayMocks import util, constant
 
 # if True:
 def main():

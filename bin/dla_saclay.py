@@ -11,8 +11,9 @@ import time
 import glob
 #import matplotlib.pyplot as plt
 import argparse
-from SaclayMocks import constant
 import cosmolopy.distance as dist
+
+from SaclayMocks import constant
 
 try:
     from pyigm.fN.fnmodel import FNModel

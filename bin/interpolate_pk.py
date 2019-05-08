@@ -9,25 +9,20 @@ import time
 import argparse
 import cosmolopy.perturbation as pert
 from multiprocessing import Pool
-from pkg_resources import resource_filename
 #from memory_profiler import profile
 
-from SaclayMocks import powerspectrum
-from SaclayMocks import constant
+from SaclayMocks import powerspectrum, constant
 
 
 #********************************************************************
 def Power_Spectrum_ln(k, growth, bias, Vcell):
-    print(os.listdir(resource_filename('SaclayMocks', './')))
-    print(os.listdir(resource_filename('SaclayMocks', './../')))
-    print(os.listdir(resource_filename('SaclayMocks', './../../')))
-    filename = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits')
+    filename = constant.path_PlanckDR12
     myPln = np.float32(powerspectrum.P_ln(filename,G_times_bias=growth*bias).P(k))
     return np.float32( np.sqrt(myPln/Vcell) )
 
 #********************************************************************
 def Power_Spectrum(k, Vcell):
-    filename = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits')
+    filename = constant.path_PlanckDR12
     myP = np.float32(powerspectrum.P_0(filename).P(k))
     return np.float32( np.sqrt(myP/Vcell) )
 

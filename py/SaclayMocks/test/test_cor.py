@@ -58,10 +58,6 @@ class TestCor(unittest.TestCase):
     def load_requirements(self):
 
         req = {}
-
-        print(os.listdir(resource_filename('SaclayMocks', './')))
-        print(os.listdir(resource_filename('SaclayMocks', './../')))
-        print(os.listdir(resource_filename('SaclayMocks', './../../')))
         path = resource_filename('SaclayMocks', '/../../requirements.txt')
         with open(path,'r') as f:
             for l in f:
