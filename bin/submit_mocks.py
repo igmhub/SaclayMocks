@@ -855,6 +855,9 @@ def main():
     parser.add_argument("--seed", type=int, default=None, required=False,
         help="Specify a particular seed (optional)")
 
+    parser.add_argument("--time", type=str, default="True", required=False,
+        help="If True, use /usr/bin/time to time the jobs (optional)")
+
     parser.add_argument("--account", type=str, default="eboss", required=False,
         help="account to be used on cori nodes (optional)")
 
@@ -921,7 +924,7 @@ def main():
     mock_args['nmin'] = 17.2  # log(N_HI) min for DLA
     mock_args['nmax'] = 22.5  # log(N_HI) max for DLA
     # Run options:
-    mock_args['use_time'] = True  # If True, use /usr/bin/time/ to time jobs
+    mock_args['use_time'] = util.str2bool(args.time)  # If True, use /usr/bin/time/ to time jobs
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
     mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
