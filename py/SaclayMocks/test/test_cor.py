@@ -27,7 +27,7 @@ class TestCor(unittest.TestCase):
 
         self._test = True
         self.send_requirements()
-        #self.send_submit_mocks()
+        self.send_submit_mocks()
 
         if self._test:
             self.remove_folder()

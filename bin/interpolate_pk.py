@@ -18,6 +18,9 @@ from SaclayMocks import constant
 
 #********************************************************************
 def Power_Spectrum_ln(k, growth, bias, Vcell):
+    print(os.listdir(resource_filename('SaclayMocks', './')))
+    print(os.listdir(resource_filename('SaclayMocks', './../')))
+    print(os.listdir(resource_filename('SaclayMocks', './../../')))
     filename = resource_filename('SaclayMocks', '/etc/PlanckDR12.fits')
     myPln = np.float32(powerspectrum.P_ln(filename,G_times_bias=growth*bias).P(k))
     return np.float32( np.sqrt(myPln/Vcell) )
