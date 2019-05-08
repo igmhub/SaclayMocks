@@ -855,6 +855,9 @@ def main():
     parser.add_argument("--mock-realisation", type=int, default=None, required=False,
         help="Specify a particular realisation to be produced (optional)")
 
+    parser.add_argument("--seed", type=int, default=None, required=False,
+        help="Specify a particular seed (optional)")
+
     parser.add_argument("--account", type=str, default="eboss", required=False,
         help="account to be used on cori nodes (optional)")
 
@@ -911,6 +914,8 @@ def main():
     mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
+    if args.seed is not None:
+        mock_args['seed'] = "-seed "+str(args.seed)
     mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
     mock_args['NQSO'] = -1  # If >0, limit the number of QSO treated in make_spectra
     mock_args['small_scales'] = True  # If True, add small scales in FGPA
