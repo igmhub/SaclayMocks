@@ -258,7 +258,7 @@ parser.add_argument('--dla_bias', type = float, default=2.,
                     help='DLA bias at z=2.25')
 parser.add_argument('--cell_size', type = float, default=2.19,
                     help='size of voxcell')
-parser.add_argument('--seed', type = int, default=None,
+parser.add_argument('-seed', type = int, default=None,
                     help='set seed')
 args = parser.parse_args()
 
