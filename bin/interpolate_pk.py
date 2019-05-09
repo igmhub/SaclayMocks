@@ -7,9 +7,9 @@ import numpy as np
 from fitsio import FITS
 import time
 import argparse
-import cosmolopy.perturbation as pert
 from SaclayMocks import powerspectrum
 from SaclayMocks import constant
+from SaclayMocks import util
 from multiprocessing import Pool
 from memory_profiler import profile
 
@@ -89,7 +89,7 @@ def main():
     omega_M_0 = constant.omega_M_0
     bias = constant.QSO_bias
     z_QSO_bias = constant.z_QSO_bias    # V1 produced with z_0 =2.5 !!!
-    growth = pert.fgrowth(z_QSO_bias, omega_M_0)
+    growth = util.fgrowth(z_QSO_bias, omega_M_0)
 
     # Open fits file
     fits = FITS(Pfilename, 'rw', clobber=True)

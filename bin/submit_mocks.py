@@ -310,7 +310,7 @@ def mergechunks(todo, mock_args, sbatch_args):
         script += """echo -e "*** Running merge_qso ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} ".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'])
+        script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax}".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
         script += "&> {path}/merge_qso.log &\n".format(path=mock_args['logs_dir_mergechunks'])
 
     if "merge_randoms" in todo:
@@ -804,17 +804,17 @@ def submit(mock_args, run_args):
     else:
         if run_args['run_pk']:
             script += "bash {}".format(mock_args['dir_pk_run']+"/run_pk.sh")
-            script += " &> "+mock_args['dir_pk_logs']+"/run_pk.log\n"
+            script += " 2>&1 | tee "+mock_args['dir_pk_logs']+"/run_pk.log\n"
         for cid in mock_args['chunkid']:
             if run_args['run_boxes']:
                 script += "bash {path}/run_boxes-{i}.sh".format(path=path, i=cid)
-                script += " &> "+mock_args['logs_dir']+"/run_boxes-{i}.log\n".format(i=cid)
+                script += " 2>&1 | tee "+mock_args['logs_dir']+"/run_boxes-{i}.log\n".format(i=cid)
             if run_args['run_chunks']:
                 script += "bash {path}/run_chunk-{i}.sh".format(path=path, i=cid)
-                script += " &> "+mock_args['logs_dir']+"/run_chunks-{i}.log\n".format(i=cid)
+                script += " 2>&1 | tee "+mock_args['logs_dir']+"/run_chunks-{i}.log\n".format(i=cid)
         if run_args['run_mergechunks']:
             script += "bash {}".format(path+"/run_mergechunks.sh")
-            script += " &> "+mock_args['logs_dir']+"/run_mergechunks.log\n"
+            script += " 2>&1 | tee "+mock_args['logs_dir']+"/run_mergechunks.log\n"
     filename = mock_args['run_dir']+'/submit.sh'
     fout = open(filename, 'w')
     fout.write(script)

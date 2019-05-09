@@ -11,6 +11,7 @@ git clone https://github.com/igmhub/SaclayMocks.git
 
 then, you need to add to your bashrc:
 ```
+export SACLAYMOCKS_BASE=<path_to_git_repository>
 export PATH=$SACLAYMOCKS_BASE/bin/:$PATH
 export PYTHONPATH=$SACLAYMOCKS_BASE/py/:$PYTHONPATH
 ```
