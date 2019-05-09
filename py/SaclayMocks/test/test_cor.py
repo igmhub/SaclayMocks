@@ -86,6 +86,8 @@ class TestCor(unittest.TestCase):
                 local_ver = __import__(req_lib).__version__
                 if local_ver!=req_ver:
                     print("WARNING: The local version of {}: {} is different from the required version: {}".format(req_lib,local_ver,req_ver))
+            except ModuleNotFoundError:
+                print("WARNING: Module {} has some errors".format(req_lib))
             except ImportError:
                 print("WARNING: Module {} can't be found".format(req_lib))
             except AttributeError:
