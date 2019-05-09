@@ -113,10 +113,11 @@ class TestCor(unittest.TestCase):
         print("\n")
         tl = ''
         for i in range(10):
-            print("\n",i,"\n")
             tl += '/*/'
-            print(self._branchFiles+'/Products/{}/*.log*'.format(tl))
             fs = glob.glob(self._branchFiles+'/Products/{}/*.log*'.format(tl))
+            if len(fs)==0: continue
+            print(fs)
+            print("\n",i,"\n")
             for f in fs:
                 with open(f) as tf:
                     print(tf.read())
@@ -125,10 +126,11 @@ class TestCor(unittest.TestCase):
         print("\n")
         tl = ''
         for i in range(10):
-            print("\n",i,"\n")
             tl += '/*/'
-            print(self._branchFiles+'/Products/{}/*.log*'.format(tl))
             fs = glob.glob(self._branchFiles+'/Products/{}/*.log*'.format(tl))
+            if len(fs)==0: continue
+            print(fs)
+            print("\n",i,"\n")
             for f in fs:
                 with open(f) as tf:
                     tff = sp.hstack([ l.split() for l in tf ])

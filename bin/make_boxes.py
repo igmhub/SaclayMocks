@@ -94,7 +94,7 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
     for i in np.arange(0, nHDU):
       fits = FITS(boxfilename+'-{}.fits'.format(i),'rw',clobber=True)
       hdict = {'DX': Dcell, 'DY': Dcell, 'DZ':Dcell, 'NX':NX, 'NY':NY, 'NZ':(NZ-1)*2}
-      fits.write(box[i*NX/nHDU:(i+1)*NX/nHDU],header=hdict)
+      fits.write(box[i*NX//nHDU:(i+1)*NX//nHDU],header=hdict)
       if i == 0:
         fits[0].write_key("sigma", np.float32(sigma), comment="std of the box")
         fits[0].write_key("seed", np.int32(seed), comment="seed used to generate randoms")
