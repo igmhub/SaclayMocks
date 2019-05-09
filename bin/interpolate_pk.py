@@ -68,7 +68,7 @@ def main():
     # print(kx.shape,ky.shape,kz.shape)
 
     # Select treated slice of kx
-    kx = kx[iSlice*len(kx)/NSlice:(iSlice+1)*len(kx)/NSlice]  # NX/NSlice
+    kx = kx[iSlice*len(kx)//NSlice:(iSlice+1)*len(kx)//NSlice]  # NX/NSlice
 
 
     kz = np.float32(kz)
