@@ -9,3 +9,4 @@ setuptools==27.2.0
 memory_profiler>=0.55.0
 cosmolopy>=0.1.104
 pyfftw>=0.11.1
+git+https://github.com/pyigm/pyigm.git>=0.1.dev0
