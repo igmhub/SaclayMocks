@@ -64,8 +64,12 @@ class TestCor(unittest.TestCase):
         with open(path,'r') as f:
             for l in f:
                 l = l.replace('\n','').replace('==',' ').replace('>=',' ').split()
-                self.assertTrue(len(l)==2,"requirements.txt attribute is not valid: {}".format(str(l)))
-                req[l[0]] = l[1]
+                if len(l)==1:
+                    req[l[0]] = 0
+                elif len(l)==2:
+                    req[l[0]] = l[1]
+                else:
+                    self.assertTrue(False,"requirements.txt attribute is not valid: {}".format(str(l)))
 
         return req
 
