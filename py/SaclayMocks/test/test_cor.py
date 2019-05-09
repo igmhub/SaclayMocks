@@ -138,7 +138,6 @@ class TestCor(unittest.TestCase):
             for f in fs:
                 with open(f) as tf:
                     tff = sp.hstack([ l.replace('\n','') for l in tf ])
-                    print(tff)
                     self.assertFalse('Command exited with non-zero status 1' in tff,"ERROR: 'Command exited with non-zero status 1' in {}".format(f))
                 with open(f) as tf:
                     tff = sp.hstack([ l.split() for l in tf ])
