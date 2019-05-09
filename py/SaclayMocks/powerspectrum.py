@@ -146,8 +146,8 @@ def xi_from_pk(k,pk,nk=32*1024,direct=True):
     r[0]=0
     pkInter=interpolate.InterpolatedUnivariateSpline(k,pk*k*k) #,kind='cubic')
     cric[0]=pkInter.integral(0,kmax) /2/np.pi**2    #   (1/2 PI^2) int P(k) k^2 dk
-    r=r[0:nk/2]
-    cric=cric[0:nk/2]
+    r=r[0:int(nk//2)]
+    cric=cric[0:int(nk//2)]
     return r,cric
 
 #********************************************************************
