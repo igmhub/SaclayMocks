@@ -11,7 +11,7 @@ import cosmolopy.perturbation as pert
 from SaclayMocks import powerspectrum
 from SaclayMocks import constant
 from multiprocessing import Pool
-#from memory_profiler import profile
+from memory_profiler import profile
 
 
 #********************************************************************
@@ -65,20 +65,20 @@ def main():
     ky = np.fft.fftfreq(NY) * 2 * k_ny   # (NY)
     kz = np.fft.rfftfreq(NZ) * 2 * k_ny   # (NZ/2+1)		fftw has no rfftfreq function
         # is that correct ?   <=
-    # print(kx.shape,ky.shape,kz.shape)
+    # print kx.shape,ky.shape,kz.shape
 
     # Select treated slice of kx
-    kx = kx[iSlice*len(kx)//NSlice:(iSlice+1)*len(kx)//NSlice]  # NX/NSlice
+    kx = kx[iSlice*len(kx)/NSlice:(iSlice+1)*len(kx)/NSlice]  # NX/NSlice
 
 
     kz = np.float32(kz)
-    # print(kx.shape,type(kx[0]))
+    # print kx.shape,type(kx[0])
     ky = np.float32(ky.reshape(-1, 1))		# (NY,1)
     kx = np.float32(kx.reshape(-1, 1, 1))		# (NX,1,1)
     k = np.sqrt(kx*kx + ky*ky + kz*kz)  # shape = (NX, NY, NZ/2+1)
 
-    #print(k.nbytes/1024/1024," Mb for k")
-    #print(type(kx[0,0,0]),type(k[0,0,0]))
+    #print k.nbytes/1024/1024," Mb for k"
+    #print type(kx[0,0,0]),type(k[0,0,0])
 
     if (NY == NX and NZ == NX):
         Pfilename = outDir + "/P{}_{}_{}.fits".format(NX, iSlice, NSlice)
@@ -114,8 +114,8 @@ def main():
     fits.write(P_0, header=hdict)
     del P_0
     fits.close()
-    print("produced ", Pfilename)
-    print("Took {}s".format(time.time() - t0))
+    print "produced ", Pfilename
+    print "Took {}s".format(time.time() - t0)
 
 
 if __name__ == "__main__":

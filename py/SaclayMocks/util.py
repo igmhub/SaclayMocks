@@ -23,7 +23,7 @@ def regroup(spectrum, m):
     m = int(m)
     N=len(spectrum)
     p = N / m
-#    print(N,p*m # prov)
+#    print N,p*m # prov
     spectrum = spectrum[0:p*m]
     xx = spectrum.reshape(p,m)
     xx = xx.mean(1)
