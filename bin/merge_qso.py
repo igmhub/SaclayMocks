@@ -6,6 +6,7 @@ import time
 import os
 from SaclayMocks import util, constant
 import glob
+import cosmolopy.distance as dist
 
 
 # if True:
@@ -119,7 +120,7 @@ def main():
                  'omega_lambda_0':constant.omega_lambda_0,
                  'omega_k_0':constant.omega_k_0, 'h':constant.h}
     R_of_z = dist.quick_distance_function(dist.comoving_distance, return_inverse=False, **cosmo_fid)
-    growthf_24 = util.fgrowth(2.4, Om)
+    growthf_24 = util.fgrowth(2.4, constant.omega_M_0)
     redshift = np.linspace(args.zmin, args.zmax, 10000)
     growthf = growthf_24*(1+2.4) / (1+redshift)
     rz = R_of_z(redshift)*constant.h  # in comobile coordinates
