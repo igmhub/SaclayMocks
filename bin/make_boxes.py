@@ -22,7 +22,6 @@ from memory_profiler import profile
 import pyfftw
 import os
 import argparse
-import cosmolopy.perturbation as pert
 from SaclayMocks import powerspectrum
 from SaclayMocks import constant
 from SaclayMocks import util
