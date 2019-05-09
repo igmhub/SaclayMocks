@@ -8,7 +8,6 @@ import time
 from memory_profiler import profile
 from SaclayMocks import util, constant
 import pyfftw.interfaces.numpy_fft as fft
-import cosmolopy.perturbation as pert
 import glob
 
 
@@ -79,7 +78,7 @@ def main():
 
     # .......... Compute growth factor
     Om = constant.omega_M_0
-    growthf_24 = pert.fgrowth(2.4, Om)
+    growthf_24 = util.fgrowth(2.4, Om)
 
     # .......... Load QSO files
     if check_id:
