@@ -46,7 +46,7 @@ def DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile, box_null=False):
   t1 = time.time()
   print(box.nbytes/1024/1024, " Mbytes box drawn",  t1-t0, " s")
   print(box.dtype)
-  boxk = np.zeros([NX,NY,NZ/2+1],dtype=np.complex64)
+  boxk = np.zeros([NX,NY,NZ//2+1],dtype=np.complex64)
   myfft = pyfftw.FFTW(box,boxk,axes=(0,1,2),threads=ncpu)
   myfft.execute()
   t2 =time.time()
