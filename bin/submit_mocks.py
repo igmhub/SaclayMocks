@@ -804,21 +804,17 @@ def submit(mock_args, run_args):
     else:
         if run_args['run_pk']:
             script += "bash {}".format(mock_args['dir_pk_run']+"/run_pk.sh")
-            #script += " &> "+mock_args['dir_pk_logs']+"/run_pk.log\n"
-            script += "\n"
+            script += " &> "+mock_args['dir_pk_logs']+"/run_pk.log\n"
         for cid in mock_args['chunkid']:
             if run_args['run_boxes']:
                 script += "bash {path}/run_boxes-{i}.sh".format(path=path, i=cid)
-                #script += " &> "+mock_args['logs_dir']+"/run_boxes-{i}.log\n".format(i=cid)
-                script += "\n"
+                script += " &> "+mock_args['logs_dir']+"/run_boxes-{i}.log\n".format(i=cid)
             if run_args['run_chunks']:
                 script += "bash {path}/run_chunk-{i}.sh".format(path=path, i=cid)
-                #script += " &> "+mock_args['logs_dir']+"/run_chunks-{i}.log\n".format(i=cid)
-                script += "\n"
+                script += " &> "+mock_args['logs_dir']+"/run_chunks-{i}.log\n".format(i=cid)
         if run_args['run_mergechunks']:
             script += "bash {}".format(path+"/run_mergechunks.sh")
-            #script += " &> "+mock_args['logs_dir']+"/run_mergechunks.log\n"
-            script += "\n"
+            script += " &> "+mock_args['logs_dir']+"/run_mergechunks.log\n"
     filename = mock_args['run_dir']+'/submit.sh'
     fout = open(filename, 'w')
     fout.write(script)
