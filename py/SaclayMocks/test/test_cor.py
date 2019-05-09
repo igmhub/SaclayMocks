@@ -64,6 +64,8 @@ class TestCor(unittest.TestCase):
         with open(path,'r') as f:
             for l in f:
                 l = l.replace('\n','').replace('==',' ').replace('>=',' ').split()
+                if 'git+https://github.com/' in l[0]:
+                    l[0] = l[0].split('.git')[-2].split('/')[-1]
                 if len(l)==1:
                     req[l[0]] = 0
                 elif len(l)==2:
