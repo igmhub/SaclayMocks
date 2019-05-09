@@ -19,6 +19,9 @@ def main():
     parser.add_argument("-nest", help="If True, healpix scheme is nest. Default True", default='True')
     parser.add_argument("-random", type=str, help="If True, generate randoms. Default: False", default='False')
     parser.add_argument("-prod", help="True: use mock prod architecture ; False: use a special directory. Default is True", default='True')
+    parser.add_argument("-zmin", type=float, help="minimal redshift for drawing QSO, default is 0", default=0)
+    parser.add_argument("-zmax", type=float, help="maximal redshift for drawing QSO, default is 10", default=10)
+    parser.add_argument("-dgrowthfile", help="dD/dz file, default etc/dgrowth.fits", default=None)
 
     args = parser.parse_args()
     nside = args.nside
@@ -111,6 +114,34 @@ def main():
     outfits[1].write_key("h", constant.h, comment="h")
     outfits[1].write_key("z0", constant.z0, comment="box center redshift")
 
+    # Write distance relations
+    cosmo_fid = {'omega_M_0':constant.omega_M_0,
+                 'omega_lambda_0':constant.omega_lambda_0,
+                 'omega_k_0':constant.omega_k_0, 'h':constant.h}
+    R_of_z = dist.quick_distance_function(dist.comoving_distance, return_inverse=False, **cosmo_fid)
+    growthf_24 = util.fgrowth(2.4, Om)
+    redshift = np.linspace(args.zmin, args.zmax, 10000)
+    growthf = growthf_24*(1+2.4) / (1+redshift)
+    rz = R_of_z(redshift)*constant.h  # in comobile coordinates
+    if args.dgrowthfile is None:
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/dgrowth.fits")
+    if constant.omega_M_0 == fitsio.read_header(filename, ext=1)['OM']:
+        Dgrowth = util.InterpFitsTable(filename, 'Z', 'dD/dz')
+    else:
+        raise ValueError("Omega_M_0 in SaclayMocks.constant ({}) != OM in {}".format(
+            constant.omega_M_0, fitsio.read_header(filename, ext=1)['OM']))
+    fz = Dgrowth.interp(redshift)
+    table = [redshift, rz, growthf, fz]
+    names = ['Z', 'DC', 'G', 'F']
+    outfits.write(table, names=names, extname='COSMODIS')
+
+    # Write input power spectrum
+    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
+    data = fitsio.read(filename, ext=1)
+    head = fitsio.read_header(filename, ext=1)
+    outfits.write(data, header=head)
+
+    outfits.close()
     if random_cond:
         print("Merged fits file written in :"+outDir+'/master_randoms.fits')
     else:
