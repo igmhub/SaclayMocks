@@ -26,12 +26,6 @@ class TestCor(unittest.TestCase):
 
     def test_cor(self):
 
-        from pyigm.fN.fnmodel import FNModel
-        fN_default = FNModel.default_model()
-        fN_default.zmnx = (0.,4)
-        fN_cosmo = fN_default.cosmo
-        use_pyigm = True
-
         self._test = True
         self.send_requirements()
         self.send_submit_mocks()
