@@ -184,7 +184,7 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     # y = interp1d(z_cell,D_cell)
     # bias = dla_bias/(D_cell)*y(2.25)  # (npix)
     # sigma_g = fitsio.FITS(fname_sigma)[0].read_header()['SIGMA']
-    sigma_g = 1.19
+    sigma_g = constant.sigma_g
     # Gaussian field threshold:
     nu_arr = nu_of_bD(dla_bias*sigma_g*D_cell)  # (npix)
     #Figure out cells that could host a DLA, based on Gaussian fluctuation
