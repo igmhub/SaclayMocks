@@ -69,7 +69,7 @@ def create_reservation(mock_args):
     script += "#!/bin/bash\n"
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
-    script += "#SBATCH -J saclay_create_{}\n".format(mock_args['imock'])
+    script += "#SBATCH -J create_saclay_{}\n".format(mock_args['imock'])
     script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#BB create_persistent name={name} capacity={size} access_mode=striped type=scratch\n".format(name=mock_args['bb_name'], size=mock_args['bb_size'])
@@ -102,7 +102,7 @@ def stage_out(mock_args):
     script = "#!/bin/bash\n"
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
-    script += "#SBATCH -J saclay_stageout_{}\n".format(mock_args['imock'])
+    script += "#SBATCH -J stageout_saclay_{}\n".format(mock_args['imock'])
     script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
@@ -127,7 +127,7 @@ def delete_reservation(mock_args):
     script += "#!/bin/bash\n"
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
-    script += "#SBATCH -J saclay_delete_{}\n".format(mock_args['imock'])
+    script += "#SBATCH -J delete_saclay_{}\n".format(mock_args['imock'])
     script += "#SBATCH -q regular\n"  # don't need debug since it's just to free space in BB nodes at the total end
     script += "#SBATCH -t 00:05:00\n"
     script += "#BB destroy_persistent name={name}\n".format(name=mock_args['bb_name'])
@@ -874,25 +874,25 @@ def main():
     # Parameters for pk job:
     sbatch_args['time_pk'] = "00:10:00"  # default "00:15:00"
     sbatch_args['queue_pk'] = "debug"  # default "regular"
-    sbatch_args['name_pk'] = "saclay_pk"
+    sbatch_args['name_pk'] = "pk_saclay"
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
     sbatch_args['time_boxes'] = "02:00:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
-    sbatch_args['name_boxes'] = "saclay_boxes"
+    sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
     sbatch_args['time_chunk'] = "00:40:00"  # default "00:30:00"
     sbatch_args['queue_chunk'] = "regular"  # default "regular"
-    sbatch_args['name_chunk'] = "saclay_chunk"
+    sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
     sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
-    sbatch_args['name_mergechunks'] = "saclay_mergechunks"
+    sbatch_args['name_mergechunks'] = "mergechunks_saclay"
     sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
 
