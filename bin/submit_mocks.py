@@ -326,7 +326,7 @@ def mergechunks(todo, mock_args, sbatch_args):
         for cid in mock_args['chunkid']:
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_file {base}/chunk_{i}/dla.fits --fname_sigma {base}/chunk_{i}/boxes/box-0.fits --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_file {base}/chunk_{i}/dla.fits --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
             script += "&> {path}/dla-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids+=" $!"\n"""
         script += get_errors("dla_saclay", 0)
