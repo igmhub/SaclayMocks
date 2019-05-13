@@ -12,15 +12,6 @@ lylimit = lya * 3 /4. # 911.75  ok with https://en.wikipedia.org/wiki/Hydrogen_s
 lyb = lylimit * 9./8. # 1025.72  https://en.wikipedia.org/wiki/Hydrogen_spectral_series : 1025.7
 lambda_min = 3530.  # Lambda min in A (given by Stephen Bailey - 04/05/2018)
 
-# Not used:
-R_H = 10973731.568 # m^-1  https://en.wikipedia.org/wiki/Rydberg_constant
-                # pdg gives hc R_H -> 100000*13.605693009/197.3269788/2/np.pi
-                # i.e. 1097.373156849444
-#lylimit = 1E10/R_H # 911.27 angtroem !!!
-#lya = lylimit * 4 / 3.  #  1215.0227
-#lyb = lylimit * 9 / 8.  # 1025.18
-
-
 # Cosmo params given by Helion in a mail (30/03/2018)
 # should correspond to Planck 2015
 h = 0.6731
@@ -40,34 +31,5 @@ H0 = 100.  # In km/s /(Mpc/h)
 deg2rad = sp.pi/180.
 rad2deg = 180/sp.pi
 
-#boss_lambda_min = 3600.
-
-
-'''
-class cosmo:
-
-    def __init__(self,Om,Ok=0):
-        H0 = 100. ## km/s/Mpc
-        ## ignore Orad and neutrinos
-        nbins=10000
-        zmax=10.
-        dz = zmax/nbins
-        z=sp.array(range(nbins))*dz
-        hubble = H0*sp.sqrt(Om*(1+z)**3+Ok*(1+z)**2+1-Ok-Om)
-
-        chi=sp.zeros(nbins)
-        for i in range(1,nbins):
-            chi[i]=chi[i-1]+c*(1./hubble[i-1]+1/hubble[i])/2.*dz
-
-        self.r_comoving = interpolate.interp1d(z,chi)
-
-        ## da here is the comoving angular diameter distance
-        da = chi
-        if Ok<0:
-            da = sp.sin(H0*sp.sqrt(-Ok)/c*chi)/(H0*sp.sqrt(-Ok)/c)
-        if Ok>0:
-            da = sp.sinh(H0*sp.sqrt(Ok)/c*chi)/(H0*sp.sqrt(Ok)/c)
-        self.da = interpolate.interp1d(z,da)
-        self.hubble = interpolate.interp1d(z,hubble)
-        self.r_2_z = interpolate.interp1d(chi,z)
-'''
+# Hardcoded params:
+sigma_g = 1.19

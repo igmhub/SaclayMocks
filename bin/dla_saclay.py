@@ -161,7 +161,7 @@ def get_N(z, Nmin=20.0, Nmax=22.5, nsamp=100):
     return NHI
 
 
-def add_DLA_table_to_object_Saclay(hdulist,fname_sigma,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8):
+def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8):
     qso = hdulist['METADATA'].read() # Read the QSO table
     lam = hdulist['LAMBDA'].read() # Read the vector with the wavelenghts corresponding to each cell
     deltas = hdulist['DELTA'].read()  # (nspec, npix)
@@ -184,7 +184,7 @@ def add_DLA_table_to_object_Saclay(hdulist,fname_sigma,dNdz_arr,dz_of_z,dla_bias
     # y = interp1d(z_cell,D_cell)
     # bias = dla_bias/(D_cell)*y(2.25)  # (npix)
     # sigma_g = fitsio.FITS(fname_sigma)[0].read_header()['SIGMA']
-    sigma_g = 1.19
+    sigma_g = constant.sigma_g
     # Gaussian field threshold:
     nu_arr = nu_of_bD(dla_bias*sigma_g*D_cell)  # (npix)
     #Figure out cells that could host a DLA, based on Gaussian fluctuation
@@ -246,10 +246,6 @@ parser.add_argument('--output_file', type = str, default = None, required = True
                     help='Output filename')
 parser.add_argument('--input_pattern', type = str, default = 'spectra_merged*.fits',
                     help='Filename pattern')
-# parser.add_argument('--fname_cosmo', type = str, default = None, required = True,
-#                     help='Path to file with cosmological parameter information')
-parser.add_argument('--fname_sigma', type = str, default = None, required = True,
-                    help='Path to file with information sigma(0) (initial density field RMS)')
 parser.add_argument('--nmin', type = float, default=17.2,
                     help='Minimum value of log(NHI) to consider')
 parser.add_argument('--nmax', type = float, default=22.5,
@@ -290,7 +286,7 @@ ndlas = 0
 for i, fname in enumerate(flist):
     try:
         hdulist = fitsio.FITS(fname)
-        aux, n = add_DLA_table_to_object_Saclay(hdulist, args.fname_sigma, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax)
+        aux, n = add_DLA_table_to_object_Saclay(hdulist, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax)
         hdulist.close()
     except IOError:
         print("WARNING: can't read fname")
