@@ -62,7 +62,7 @@ and it will produce a bash script `submit.sh`, that will send all the bash scrip
 themselves send the python scripts to the cori nodes, on NERSC.
 
 If you want to produce a small footprint, on your laptop, you can run:
-```
+```bash
 submit_mocks.py --mock-dir <out_path> --cori-nodes False --box-size 256
 ```
 When not running on cori nodes, it is advised to not use the nominal chunk size (2560),
