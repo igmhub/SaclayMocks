@@ -2,7 +2,6 @@
 
 Simulated Absorption for Cosmology with Lyman-Alpha from the Yvette Mocks
 
-
 ## Installation
 to download, you can simply use git clone:
 ```bash
