@@ -878,20 +878,20 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "02:00:00"  # default "01:30:00"
-    sbatch_args['queue_boxes'] = "regular"  # default "regular"
+    sbatch_args['time_boxes'] = "00:30:00"  # default "01:30:00"
+    sbatch_args['queue_boxes'] = "debug"  # default "regular"
     sbatch_args['name_boxes'] = "saclay_boxes"
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:40:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "regular"  # default "regular"
+    sbatch_args['time_chunk'] = "00:30:00"  # default "00:30:00"
+    sbatch_args['queue_chunk'] = "debug"  # default "regular"
     sbatch_args['name_chunk'] = "saclay_chunk"
     sbatch_args['threads_chunk'] = 32  # default 32
-    sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
+    sbatch_args['nodes_chunk'] = 1  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
-    sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
+    sbatch_args['time_mergechunks'] = "00:30:00"  # default "01:30:00"
+    sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
     sbatch_args['name_mergechunks'] = "saclay_mergechunks"
     sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
@@ -928,7 +928,7 @@ def main():
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
     mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
-    mock_args['burst_buffer'] = True  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
+    mock_args['burst_buffer'] = False  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
     mock_args['bb_size'] = "5000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
     mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+i_realisation
 
@@ -997,6 +997,10 @@ def main():
         if 'cscratch1' not in args.mock_dir:
             print("--mock-dir option should point to /global/cscratch1 when using the burst buffer mode !")
             sys.exit(1)
+    else:
+        run_args['run_create'] = False
+        run_args['run_stageout'] = False
+        run_args['run_delete'] = False
     print("Writting scripts for {} realisations".format(nmocks))
     print("Mock files will be written in {}".format(mock_dir))
     if args.out_dir is not None:
