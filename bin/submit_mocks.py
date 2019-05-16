@@ -70,7 +70,10 @@ def create_reservation(mock_args):
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
     script += "#SBATCH -J saclay_create_{}\n".format(mock_args['imock'])
-    script += "#SBATCH -q regular\n"
+    if len(mock_args['chunkid']) < 2:
+        script += "#SBATCH -q debug\n"
+    else:
+        script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#BB create_persistent name={name} capacity={size} access_mode=striped type=scratch\n".format(name=mock_args['bb_name'], size=mock_args['bb_size'])
     script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
@@ -732,9 +735,9 @@ def submit(mock_args, run_args):
             script += """echo "run_pk.sh: "$run_pk\n"""
         if mock_args['burst_buffer'] and run_args['run_create']:
             script += "run_create=$(sbatch --parsable "
-            script += "--output "+mock_args['logs_dir']+"/run_create.log "
             if run_args['run_pk']:
                 script += "--dependency=afterok:$run_pk "
+            script += "--output "+mock_args['logs_dir']+"/run_create.log "
             script += path+"/create_reservation.sh)\n"
             script += """echo "run_create.sh: "$run_create \n"""
         for i, cid in enumerate(mock_args['chunkid']):
