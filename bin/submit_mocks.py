@@ -796,9 +796,20 @@ def submit(mock_args, run_args):
             script += """echo "run_stageout.sh: "$run_stageout \n"""
         if mock_args['burst_buffer'] and run_args['run_delete']:
             script += "run_delete=$(sbatch --parsable "
-            if run_args['run_stageout']:
-                script += "--dependency=afterok:$run_stageout "
-            script += "--output "+mock_args['logs_dir']+"/run_delete.log "
+            if run_args['run_boxes'] or run_args['run_chunks'] or run_args['run_mergechunks'] or run_args['run_stageout']:
+                script += "-d afterok:"
+                afterok = ""
+                for cid in mock_args['chunkid']:
+                    if run_args['run_boxes']:
+                        afterok += "$run_boxes_{i},".format(i=cid)
+                    if run_args['run_chunks']:
+                        afterok += "$run_chunk_{i},".format(i=cid)
+                if run_args['run_mergechunks']:
+                    afterok += "$run_mergechunks,"
+                if run_args['run_stageout']:
+                    afterok += "$run_stageout "
+                script += afterok[:-1]
+            script += " --output "+mock_args['logs_dir']+"/run_delete.log "
             script += path+"/delete_reservation.sh)\n"
             script += """echo "run_delete.sh: "$run_delete \n"""
     else:
@@ -878,19 +889,19 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "00:30:00"  # default "01:30:00"
-    sbatch_args['queue_boxes'] = "debug"  # default "regular"
+    sbatch_args['time_boxes'] = "02:00:00"  # default "01:30:00"
+    sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "saclay_boxes"
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:30:00"  # default "00:30:00"
+    sbatch_args['time_chunk'] = "00:20:00"  # default "00:30:00"
     sbatch_args['queue_chunk'] = "debug"  # default "regular"
     sbatch_args['name_chunk'] = "saclay_chunk"
     sbatch_args['threads_chunk'] = 32  # default 32
-    sbatch_args['nodes_chunk'] = 1  # nodes * threads should be = nslice, default 16
+    sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "00:30:00"  # default "01:30:00"
+    sbatch_args['time_mergechunks'] = "00:10:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
     sbatch_args['name_mergechunks'] = "saclay_mergechunks"
     sbatch_args['threads_mergechunks'] = 64  # default 64
@@ -928,8 +939,8 @@ def main():
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
     mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
-    mock_args['burst_buffer'] = False  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
-    mock_args['bb_size'] = "5000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
+    mock_args['burst_buffer'] = True  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
+    mock_args['bb_size'] = "600GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
     mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+i_realisation
 
     ### Code to runs:
@@ -942,16 +953,16 @@ def main():
     run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = True  # run draw_qso.py for randoms
-    run_args['make_spectra'] = True  # run make_spectra.py
-    run_args['merge_spectra'] = True  # run merge_spectra.py
+    run_args['make_spectra'] = False  # run make_spectra.py
+    run_args['merge_spectra'] = False  # run merge_spectra.py
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = True  # Compute master_randoms.fits file
-    run_args['compute_dla'] = True  # Compute dla catalog or each chunks
-    run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['dla_randoms'] = True  # Compute master_DLA_randoms.fits file
-    run_args['transmissions'] = True  # Write transmissions files
+    run_args['compute_dla'] = False  # Compute dla catalog or each chunks
+    run_args['merge_dla'] = False  # Compute master_DLA.fits file
+    run_args['dla_randoms'] = False  # Compute master_DLA_randoms.fits file
+    run_args['transmissions'] = False  # Write transmissions files
     # burst buffer
     run_args['run_create'] = True  # Create persistent reservation
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
