@@ -70,7 +70,10 @@ def create_reservation(mock_args):
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
     script += "#SBATCH -J saclay_create_{}\n".format(mock_args['imock'])
-    script += "#SBATCH -q regular\n"
+    if len(mock_args['chunkid']) < 2:
+        script += "#SBATCH -q debug\n"
+    else:
+        script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#BB create_persistent name={name} capacity={size} access_mode=striped type=scratch\n".format(name=mock_args['bb_name'], size=mock_args['bb_size'])
     script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
@@ -310,8 +313,9 @@ def mergechunks(todo, mock_args, sbatch_args):
         script += """echo -e "*** Running merge_qso ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax}".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
+        script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax} ".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
         script += "&> {path}/merge_qso.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_qso=$!\n"
 
     if "merge_randoms" in todo:
         script += """echo -e "*** Running merge_qso for randoms ***"\n"""
@@ -319,6 +323,28 @@ def mergechunks(todo, mock_args, sbatch_args):
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
         script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax} -random True ".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
         script += "&> {path}/merge_randoms.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_rand=$!\n"
+
+    if "merge_qso" in todo:
+        script += """
+if wait $pid_qso; then
+    echo "merge_qso OK"
+else
+    echo "Error in merge_qso"
+    exit 1
+fi
+"""
+    if "merge_randoms" in todo:
+        script += """
+if wait $pid_rand; then
+    echo "merge_randoms OK"
+else
+    echo "Error in merge_randoms"
+    exit 1
+fi
+"""
+    if "merge_qso" in todo or "merge_randoms" in todo:
+        script += """echo -e "==> QSO catalogs done. $(( SECONDS - start )) s"\n"""
 
     if "compute_dla" in todo:
         script += """echo -e "*** Producing DLA ***"\n"""
@@ -768,9 +794,9 @@ def submit(mock_args, run_args):
             script += """echo "run_pk.sh: "$run_pk\n"""
         if mock_args['burst_buffer'] and run_args['run_create']:
             script += "run_create=$(sbatch --parsable "
-            script += "--output "+mock_args['logs_dir']+"/run_create.log "
             if run_args['run_pk']:
                 script += "--dependency=afterok:$run_pk "
+            script += "--output "+mock_args['logs_dir']+"/run_create.log "
             script += path+"/create_reservation.sh)\n"
             script += """echo "run_create.sh: "$run_create \n"""
         for i, cid in enumerate(mock_args['chunkid']):
@@ -805,8 +831,9 @@ def submit(mock_args, run_args):
             if run_args['run_chunks'] or run_args['run_create']:
                 script += "-d afterok:"
                 afterok = ""
-                for cid in mock_args['chunkid']:
-                    afterok += "$run_chunk_{i},".format(i=cid)
+                if run_args['run_chunks']:
+                    for cid in mock_args['chunkid']:
+                        afterok += "$run_chunk_{i},".format(i=cid)
                 if run_args['run_create']:
                     afterok += "$run_create "
                 script += afterok[:-1]
@@ -832,9 +859,20 @@ def submit(mock_args, run_args):
             script += """echo "run_stageout.sh: "$run_stageout \n"""
         if mock_args['burst_buffer'] and run_args['run_delete']:
             script += "run_delete=$(sbatch --parsable "
-            if run_args['run_stageout']:
-                script += "--dependency=afterok:$run_stageout "
-            script += "--output "+mock_args['logs_dir']+"/run_delete.log "
+            if run_args['run_boxes'] or run_args['run_chunks'] or run_args['run_mergechunks'] or run_args['run_stageout']:
+                script += "-d afterok:"
+                afterok = ""
+                for cid in mock_args['chunkid']:
+                    if run_args['run_boxes']:
+                        afterok += "$run_boxes_{i},".format(i=cid)
+                    if run_args['run_chunks']:
+                        afterok += "$run_chunk_{i},".format(i=cid)
+                if run_args['run_mergechunks']:
+                    afterok += "$run_mergechunks,"
+                if run_args['run_stageout']:
+                    afterok += "$run_stageout "
+                script += afterok[:-1]
+            script += " --output "+mock_args['logs_dir']+"/run_delete.log "
             script += path+"/delete_reservation.sh)\n"
             script += """echo "run_delete.sh: "$run_delete \n"""
     else:
@@ -920,14 +958,14 @@ def main():
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:40:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "regular"  # default "regular"
+    sbatch_args['time_chunk'] = "00:20:00"  # default "00:30:00"
+    sbatch_args['queue_chunk'] = "debug"  # default "regular"
     sbatch_args['name_chunk'] = "saclay_chunk"
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
-    sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
+    sbatch_args['time_mergechunks'] = "00:10:00"  # default "01:30:00"
+    sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
     sbatch_args['name_mergechunks'] = "saclay_mergechunks"
     sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
@@ -965,21 +1003,21 @@ def main():
     mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
     mock_args['burst_buffer'] = True  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
-    mock_args['bb_size'] = "5000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
+    mock_args['bb_size'] = "600GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
     mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+i_realisation
 
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = True  # Produce Pk
+    run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = True  # Produce GRF boxes
+    run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = True  # produce chunks
+    run_args['run_chunks'] = False  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = True  # run draw_qso.py for randoms
-    run_args['make_spectra'] = True  # run make_spectra.py
-    run_args['merge_spectra'] = True  # run merge_spectra.py
+    run_args['make_spectra'] = False  # run make_spectra.py
+    run_args['merge_spectra'] = False  # run merge_spectra.py
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
@@ -1034,6 +1072,10 @@ def main():
         if 'cscratch1' not in args.mock_dir:
             print("--mock-dir option should point to /global/cscratch1 when using the burst buffer mode !")
             sys.exit(1)
+    else:
+        run_args['run_create'] = False
+        run_args['run_stageout'] = False
+        run_args['run_delete'] = False
     print("Writting scripts for {} realisations".format(nmocks))
     print("Mock files will be written in {}".format(mock_dir))
     if args.out_dir is not None:
