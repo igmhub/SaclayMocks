@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function, division
 import numpy as np
-#import astropy.io.fits as fits
 from scipy.stats import norm
 from scipy.interpolate import interp1d, interp2d
 import astropy.table
@@ -9,9 +8,8 @@ import os
 import fitsio
 import time
 import glob
-#import matplotlib.pyplot as plt
 import argparse
-from SaclayMocks import constant
+from SaclayMocks import constant, util
 import cosmolopy.distance as dist
 
 try:
@@ -90,10 +88,13 @@ def nu_of_bD(b):
 #         skewers = fits.open(fname)[2].data
 #         return np.std(skewers,axis=0)
 
-def flag_DLA(zq,z_cells,deltas,nu_arr,sigma_g,zlow,dz_of_z):
+def flag_DLA(zq,z_cells,deltas,nu_arr,sigma_g,zlow,dz_of_z, rand=False):
     """ Flag the pixels in a skewer where DLAs are possible"""
     # find cells with density above threshold
-    flag = deltas > nu_arr*sigma_g  # (nspec, npix)
+    if not rand:
+        flag = deltas > nu_arr*sigma_g  # (nspec, npix)
+    else:
+        flag = np.bool_(np.ones_like(deltas))  # (nspec, npix)
     # mask cells with z > z_qso, where DLAs would not be observed
     Nq=len(zq)
     for i in range(Nq):
@@ -161,7 +162,7 @@ def get_N(z, Nmin=20.0, Nmax=22.5, nsamp=100):
     return NHI
 
 
-def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8):
+def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8, rand=False):
     qso = hdulist['METADATA'].read() # Read the QSO table
     lam = hdulist['LAMBDA'].read() # Read the vector with the wavelenghts corresponding to each cell
     deltas = hdulist['DELTA'].read()  # (nspec, npix)
@@ -188,7 +189,7 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     # Gaussian field threshold:
     nu_arr = nu_of_bD(dla_bias*sigma_g*D_cell)  # (npix)
     #Figure out cells that could host a DLA, based on Gaussian fluctuation
-    flagged_cells = flag_DLA(zq,z_cell,deltas,nu_arr,sigma_g,zlow, dz_of_z)
+    flagged_cells = flag_DLA(zq,z_cell,deltas,nu_arr,sigma_g,zlow, dz_of_z, rand)
     flagged_cells[deltas==-1e6]=False  # don't draw DLA outside forest
     #Edges of the z bins
     if extrapolate_z_down and extrapolate_z_down<z_cell[0]:
@@ -242,8 +243,8 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--input_path', type = str, default = None, required = True,
                     help='Path to input directory tree to explore, e.g., /global/cscratch1/sd/*/spectra/*')
-parser.add_argument('--output_file', type = str, default = None, required = True,
-                    help='Output filename')
+parser.add_argument('--output_path', type = str, default = None, required = True,
+                    help='Output path')
 parser.add_argument('--input_pattern', type = str, default = 'spectra_merged*.fits',
                     help='Filename pattern')
 parser.add_argument('--nmin', type = float, default=17.2,
@@ -256,9 +257,14 @@ parser.add_argument('--cell_size', type = float, default=2.19,
                     help='size of voxcell')
 parser.add_argument('-seed', type = int, default=None,
                     help='set seed')
+parser.add_argument("-random",type = str, default='False',
+                    help="If True, generate randoms")
+parser.add_argument("--random_factor",type = float, default=3.,
+                    help="Factor x thus that n_rand = x * n_data")
 args = parser.parse_args()
 
 t0 = time.time()
+random_cond = util.str2bool(args.random)
 seed = args.seed
 if seed is None:
     seed = np.random.randint(2**31 -1, size=1)[0]
@@ -277,8 +283,10 @@ lam = hdulist[2].read()
 # cosmo_hdu = fitsio.FITS(args.fname_cosmo)[1].read_header()
 z_cell = lam / constant.lya - 1.
 dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)
-dNdz_arr *= 20000
+dNdz_arr *= 20000.
 dNdz_arr *= 6.4
+if random_cond:
+    dNdz_arr *= args.random_factor
 dNdz_arr /= (-0.01534254*z_cell + 0.0597803)*6.4 / 0.186  # correct the z dependency
 dz_of_z = dz_of_z(args.cell_size)
 ndlas = 0
@@ -286,7 +294,7 @@ ndlas = 0
 for i, fname in enumerate(flist):
     try:
         hdulist = fitsio.FITS(fname)
-        aux, n = add_DLA_table_to_object_Saclay(hdulist, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax)
+        aux, n = add_DLA_table_to_object_Saclay(hdulist, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax, rand=random_cond)
         hdulist.close()
     except IOError:
         print("WARNING: can't read fname")
@@ -298,7 +306,11 @@ for i, fname in enumerate(flist):
     if i%500==0:
         print('Read %d of %d' %(i,len(flist)))
 
-out_table.write(args.output_file, overwrite=True)
+if not random_cond:
+    filename = args.output_path + "/dla.fits"
+else:
+    filename = args.output_path + "/dla_randoms.fits"
+out_table.write(filename, overwrite=True)
 print("Fits table written.")
 print("Draw {} DLAs".format(ndlas))
 print("Took {} s".format(time.time() - t0))
