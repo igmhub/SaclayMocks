@@ -313,8 +313,9 @@ def mergechunks(todo, mock_args, sbatch_args):
         script += """echo -e "*** Running merge_qso ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax}".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
+        script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax} ".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
         script += "&> {path}/merge_qso.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_qso=$!\n"
 
     if "merge_randoms" in todo:
         script += """echo -e "*** Running merge_qso for randoms ***"\n"""
@@ -322,6 +323,28 @@ def mergechunks(todo, mock_args, sbatch_args):
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
         script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax} -random True ".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
         script += "&> {path}/merge_randoms.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_rand=$!\n"
+
+    if "merge_qso" in todo:
+        script += """
+if wait $pid_qso; then
+    echo "merge_qso OK"
+else
+    echo "Error in merge_qso"
+    exit 1
+fi
+"""
+    if "merge_randoms" in todo:
+        script += """
+if wait $pid_rand; then
+    echo "merge_randoms OK"
+else
+    echo "Error in merge_randoms"
+    exit 1
+fi
+"""
+    if "merge_qso" in todo or "merge_randoms" in todo:
+        script += """echo -e "==> QSO catalogs done. $(( SECONDS - start )) s"\n"""
 
     if "compute_dla" in todo:
         script += """echo -e "*** Producing DLA ***"\n"""
@@ -772,8 +795,9 @@ def submit(mock_args, run_args):
             if run_args['run_chunks'] or run_args['run_create']:
                 script += "-d afterok:"
                 afterok = ""
-                for cid in mock_args['chunkid']:
-                    afterok += "$run_chunk_{i},".format(i=cid)
+                if run_args['run_chunks']:
+                    for cid in mock_args['chunkid']:
+                        afterok += "$run_chunk_{i},".format(i=cid)
                 if run_args['run_create']:
                     afterok += "$run_create "
                 script += afterok[:-1]
@@ -949,11 +973,11 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = True  # Produce Pk
+    run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = True  # Produce GRF boxes
+    run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = True  # produce chunks
+    run_args['run_chunks'] = False  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = True  # run draw_qso.py for randoms
     run_args['make_spectra'] = False  # run make_spectra.py
