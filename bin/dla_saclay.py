@@ -275,7 +275,11 @@ else:
     print("Specified seed is {}".format(seed))
 
 print("Files will be read from {}".format(args.input_path))
-print("Output will be written in {}".format(args.output_file))
+if not random_cond:
+    filename = args.output_path + "/dla.fits"
+else:
+    filename = args.output_path + "/dla_randoms.fits"
+print("Output will be written in {}".format(filename))
 flist = glob.glob(os.path.join(args.input_path,args.input_pattern))
 print('Will read', len(flist),' files')
 hdulist = fitsio.FITS(flist[0])
@@ -306,10 +310,6 @@ for i, fname in enumerate(flist):
     if i%500==0:
         print('Read %d of %d' %(i,len(flist)))
 
-if not random_cond:
-    filename = args.output_path + "/dla.fits"
-else:
-    filename = args.output_path + "/dla_randoms.fits"
 out_table.write(filename, overwrite=True)
 print("Fits table written.")
 print("Draw {} DLAs".format(ndlas))
