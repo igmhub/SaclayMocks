@@ -409,21 +409,8 @@ else
 fi
 """
 
-    if "dla_randoms" in todo:
-        script += """echo -e "*** Producing randoms DLA ***"\n"""
-        if mock_args['use_time']:
-            script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "dla_randoms.py -infile {path}/master_DLA.fits -outfile {path}/master_DLA_randoms.fits ".format(path=mock_args['out_dir'])
-        script += "&> {path}/dla_randoms.log\n".format(path=mock_args['logs_dir_mergechunks'])
-        script += """
-if [ $? -ne 0 ]; then
-    echo "==> Error in dla_rand ...   Abort!"
-    exit 1
-else
-    echo -e "==> dla_rand done. $(( SECONDS - start )) s"
-fi
-
-"""
+    if "merge_dla" in todo or "merge_dla_rand" in todo:
+        script += """echo -e "==> DLA catalogs done. $(( SECONDS - start )) s"\n"""
 
     if "transmissions" in todo:
         script += """echo -e "*** Running make_transmissions {threads} times ***"\n""".format(threads=sbatch_args['threads_mergechunks'])
