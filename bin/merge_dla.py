@@ -23,8 +23,10 @@ def main():
     nest_option = util.str2bool(args.nest)
     random_cond = util.str2bool(args.random)
     if not random_cond:
+        print("Merging DLA files ...")
         files = glob.glob(args.indir+"/*/dla.fits")
     else:
+        print("Merging DLA randoms files ...")
         files = glob.glob(args.indir+"/*/dla_randoms.fits")
 
     # Read files
@@ -82,7 +84,7 @@ def main():
     # Write DLA catalog
     t2 = time.time()
     print("Writting merged file...")
-    if random_cond:
+    if not random_cond:
         filename = args.outdir + "/master_DLA.fits"
         table = [ra, dec, z_qso, z_qso_rsd, z, z_rsd, nhi, mockid, dla_id, pixnum]
         names = ['RA', 'DEC', 'Z_QSO_NO_RSD', 'Z_QSO_RSD', 'Z_DLA_NO_RSD', 'Z_DLA_RSD', 'N_HI_DLA', 'MOCKID', 'DLAID', 'PIXNUM']
@@ -92,7 +94,7 @@ def main():
         names = ['RA', 'DEC', 'Z_QSO_NO_RSD', 'Z_QSO_RSD', 'Z', 'MOCKID']
     outfits = fitsio.FITS(filename, 'rw', clobber=True)
     outfits.write(table, names=names, extname='DLACAT')
-    print("Done. {} s. Written {} DLAs".format(time.time()-t2, len(ra)))
+    print("Done. {} s. Written {} DLAs in {}".format(time.time()-t2, len(ra), filename))
     print("Took {} s".format(time.time()-t_init))
 
 

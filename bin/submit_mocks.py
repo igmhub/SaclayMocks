@@ -386,7 +386,7 @@ fi
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
         script += "merge_dla.py -indir {base} -outdir {outpath} -random True ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
-        script += "&> {path}/merge_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "&> {path}/merge_dla_rand.log &\n".format(path=mock_args['logs_dir_mergechunks'])
         script += "pid_dla_rand=$!\n"
 
     if "merge_dla" in todo:
@@ -1048,8 +1048,9 @@ def main():
     if run_args['merge_qso']: run_args['todo_mergechunks'] += "merge_qso "
     if run_args['merge_randoms']: run_args['todo_mergechunks'] += "merge_randoms "
     if run_args['compute_dla']: run_args['todo_mergechunks'] += "compute_dla "
-    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
     if run_args['dla_randoms']: run_args['todo_mergechunks'] += "dla_randoms "
+    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
+    if run_args['merge_dla_rand']: run_args['todo_mergechunks'] += "merge_dla_rand "
     if run_args['transmissions']: run_args['todo_mergechunks'] += "transmissions "
 
     if mock_args['burst_buffer']:
