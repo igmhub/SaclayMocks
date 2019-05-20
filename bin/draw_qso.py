@@ -179,7 +179,8 @@ def main():
         boxfits.close()
         t1=time()
         print "read box in ",t1-t0,"s ",rho.shape
-        print "sigma(rho)=",rho.std()
+        sigma_rho = rho.std()
+        print "sigma(rho)=",sigma_rho
         exprho = np.exp(rho)
         del rho  # unassign variable
         gc.collect()  # force memory clearing
@@ -210,8 +211,10 @@ def main():
         t3 = time()
         z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
                     (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)
-        az = util.bias_qso(z_box)*(1+constant.z_QSO_bias)/(constant.QSO_bias*(1+z_box))
-        exprho **= az
+        z_tmp = np.linspace(0, 10, 10000)
+        az = util.bias_qso(z_tmp)*(1+constant.z_QSO_bias)/(constant.QSO_bias*(1+z_tmp))
+        az_interp = sp.interpolate.interp1d(z_tmp, az)
+        exprho **= az_interp(z_box)
         print("Done. {} s".format(time() - t3))
 
     # margin of dmax cells
@@ -270,12 +273,14 @@ def main():
     # dZ = (c/H(z) dz = d_H dz   =>  dN/dZ = dN/dz Dz/dZ = dN/dz /d_H
     dn_cell = dn_cell * DX * DY / R_of_z(dz_interp)**2  # deg^-2 -> per cell
 
-    density_max = dn_cell.max()
-    density_mean = dn_cell[(dz_interp>z_min)*(dz_interp<z_max)].mean()
+    mmm = (dz_interp>z_min) & (dz_interp<z_max)
+    density_max = np.max(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
+    i_tmp = np.argmin(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
+    density_mean = np.mean(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
     if z_max > 2.1:  # Count only QSO for z > 2.1 to have the right N/deg^2
         N_zmin_zmax = dn_cell[(dz_interp>z_min)*(dz_interp<z_max)].sum()
         N_21_zmax = dn_cell[(dz_interp>2.1)*(dz_interp<z_max)].sum()
-    print "dN per cell max:",density_max,", mean:", density_mean,density_max/density_mean
+    print("dN per cell max: {}, at z={} ; mean: {}".format(density_max, dz_interp[i_tmp], density_mean))
     dn_cell = np.append(dn_cell, np.zeros(10*NZ))  # artificially increasing dNdz range
 
     if (drawPlot) :
@@ -323,7 +328,7 @@ def main():
         redshift = z_of_R(RR/h)
         delta_z = dz_interp[1] - dz_interp[0]
         iz = ((redshift - dz_interp[0]) / delta_z).round().astype(int)
-        density = dn_cell[iz]
+        density = dn_cell[iz] * np.exp(sigma_rho**2 / 2)**(1-az_interp(redshift)**2)
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==
