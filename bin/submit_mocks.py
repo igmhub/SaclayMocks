@@ -381,12 +381,12 @@ fi
         script += "&> {path}/merge_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
         script += "pid_dla=$!\n"
 
-    if "merge_dla_rand" in todo:
+    if "merge_rand_dla" in todo:
         script += """echo -e "*** Merging DLA randoms ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
         script += "merge_dla.py -indir {base} -outdir {outpath} -random True ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
-        script += "&> {path}/merge_dla_rand.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "&> {path}/merge_rand_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
         script += "pid_dla_rand=$!\n"
 
     if "merge_dla" in todo:
@@ -399,7 +399,7 @@ else
 fi
 """
 
-    if "merge_dla_rand" in todo:
+    if "merge_rand_dla" in todo:
         script += """
 if wait $pid_dla_rand; then
     echo "merge_dla randoms OK"
@@ -409,7 +409,7 @@ else
 fi
 """
 
-    if "merge_dla" in todo or "merge_dla_rand" in todo:
+    if "merge_dla" in todo or "merge_rand_dla" in todo:
         script += """echo -e "==> DLA catalogs done. $(( SECONDS - start )) s"\n"""
 
     if "transmissions" in todo:
@@ -951,8 +951,8 @@ def main():
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 1  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "00:10:00"  # default "01:30:00"
-    sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
+    sbatch_args['time_mergechunks'] = "01:00:00"  # default "01:30:00"
+    sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
     sbatch_args['name_mergechunks'] = "saclay_mergechunks"
     sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
@@ -998,22 +998,22 @@ def main():
     # pk:
     run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = True  # Produce GRF boxes
+    run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = True  # produce chunks
+    run_args['run_chunks'] = False  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = True  # run draw_qso.py for randoms
     run_args['make_spectra'] = True  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
-    run_args['merge_qso'] = True  # Compute master.fits file
-    run_args['merge_randoms'] = True  # Compute master_randoms.fits file
-    run_args['compute_dla'] = True  # Compute dla catalog of each chunks
+    run_args['merge_qso'] = False  # Compute master.fits file
+    run_args['merge_randoms'] = False  # Compute master_randoms.fits file
+    run_args['compute_dla'] = False  # Compute dla catalog of each chunks
     run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
-    run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['merge_dla_rand'] = True  # Compute master_DLA_randoms.fits file
-    run_args['transmissions'] = True  # Write transmissions files
+    run_args['merge_dla'] = False  # Compute master_DLA.fits file
+    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
+    run_args['transmissions'] = False  # Write transmissions files
     # burst buffer
     run_args['run_create'] = True  # Create persistent reservation
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
@@ -1050,7 +1050,7 @@ def main():
     if run_args['compute_dla']: run_args['todo_mergechunks'] += "compute_dla "
     if run_args['dla_randoms']: run_args['todo_mergechunks'] += "dla_randoms "
     if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
-    if run_args['merge_dla_rand']: run_args['todo_mergechunks'] += "merge_dla_rand "
+    if run_args['merge_rand_dla']: run_args['todo_mergechunks'] += "merge_rand_dla "
     if run_args['transmissions']: run_args['todo_mergechunks'] += "transmissions "
 
     if mock_args['burst_buffer']:
