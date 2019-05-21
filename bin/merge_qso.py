@@ -45,7 +45,7 @@ def main():
         else:
             files = glob.glob(args.inDir+"/*/qso/QSO*.fits")
     else:
-        files = os.listdir(args.inDir)
+        files = glob.glob(args.inDir+"/*.fits")
 
     ra = []
     dec = []
