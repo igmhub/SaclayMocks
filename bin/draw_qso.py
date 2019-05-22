@@ -274,13 +274,17 @@ def main():
     dn_cell = dn_cell * DX * DY / R_of_z(dz_interp)**2  # deg^-2 -> per cell
 
     mmm = (dz_interp>z_min) & (dz_interp<z_max)
-    density_max = np.max(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
-    i_tmp = np.argmin(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
-    density_mean = np.mean(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
+    if not random_cond:
+        density_max = np.max(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
+        i_tmp = np.argmin(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
+        density_mean = np.mean(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
+    else:
+        density_max = dn_cell.max()
+
     if z_max > 2.1:  # Count only QSO for z > 2.1 to have the right N/deg^2
         N_zmin_zmax = dn_cell[(dz_interp>z_min)*(dz_interp<z_max)].sum()
         N_21_zmax = dn_cell[(dz_interp>2.1)*(dz_interp<z_max)].sum()
-    print("dN per cell max: {}, at z={} ; mean: {}".format(density_max, dz_interp[i_tmp], density_mean))
+    print("dN per cell max: {} ;  mean: {}".format(density_max, density_mean))
     dn_cell = np.append(dn_cell, np.zeros(10*NZ))  # artificially increasing dNdz range
 
     if (drawPlot) :
@@ -328,7 +332,9 @@ def main():
         redshift = z_of_R(RR/h)
         delta_z = dz_interp[1] - dz_interp[0]
         iz = ((redshift - dz_interp[0]) / delta_z).round().astype(int)
-        density = dn_cell[iz] * np.exp(sigma_rho**2 / 2)**(1-az_interp(redshift)**2)
+        density = dn_cell[iz]
+        if not random_cond:
+            density *= np.exp(sigma_rho**2 / 2)**(1-az_interp(redshift)**2)
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==
