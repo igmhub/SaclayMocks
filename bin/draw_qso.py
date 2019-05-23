@@ -276,7 +276,6 @@ def main():
     mmm = (dz_interp>z_min) & (dz_interp<z_max)
     if not random_cond:
         density_max = np.max(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
-        i_tmp = np.argmin(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
         density_mean = np.mean(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
     else:
         density_max = dn_cell.max()
