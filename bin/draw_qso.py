@@ -280,6 +280,7 @@ def main():
         density_mean = np.mean(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
     else:
         density_max = dn_cell.max()
+        density_mean = dn_cell.mean()
 
     if z_max > 2.1:  # Count only QSO for z > 2.1 to have the right N/deg^2
         N_zmin_zmax = dn_cell[(dz_interp>z_min)*(dz_interp<z_max)].sum()
