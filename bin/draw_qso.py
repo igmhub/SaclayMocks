@@ -211,10 +211,7 @@ def main():
         t3 = time()
         z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
                     (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)
-        z_tmp = np.linspace(0, 10, 10000)
-        az = util.bias_qso(z_tmp)*(1+constant.z_QSO_bias)/(constant.QSO_bias*(1+z_tmp))
-        az_interp = sp.interpolate.interp1d(z_tmp, az)
-        exprho **= az_interp(z_box)
+        exprho **= util.bias_qso(z_box)*(1+constant.z_QSO_bias)/(constant.QSO_bias*(1+z_box))
         print("Done. {} s".format(time() - t3))
 
     # margin of dmax cells
