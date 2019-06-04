@@ -209,9 +209,16 @@ def main():
     if not random_cond:
         print("Computing exp(a(z)*g)...")
         t3 = time()
-        z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
+        x_axis_tmp = (np.arange(NX)+0.5)*DX*Nslice - LX_fullbox/2
+        print(x_axis_tmp)
+        print(y_axis)
+        z_box = z_of_R(np.sqrt((x_axis_tmp**2).reshape(-1,1,1) +
                     (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)
-        exprho **= util.bias_qso(z_box)*(1+constant.z_QSO_bias)/(constant.QSO_bias*(1+z_box))
+        rho_sum = np.sum(exprho**util.qso_a_of_z(z_box))
+        # apply a(z): P = exp(delta)**a(z)
+        z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
+                    (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)        
+        exprho **= util.qso_a_of_z(z_box)
         print("Done. {} s".format(time() - t3))
 
     # margin of dmax cells
@@ -272,8 +279,8 @@ def main():
 
     mmm = (dz_interp>z_min) & (dz_interp<z_max)
     if not random_cond:
-        density_max = np.max(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
-        density_mean = np.mean(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-az_interp(dz_interp[mmm])**2))
+        density_max = np.max(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm])**2))
+        density_mean = np.mean(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm])**2))
     else:
         density_max = dn_cell.max()
         density_mean = dn_cell.mean()
@@ -294,13 +301,22 @@ def main():
 
     if (not random_cond):
         rho_max = exprho.max()
-        rho_sum = exprho.sum()
+        # rho_sum = exprho.sum()
         kk = nQSOexp / rho_sum
         norm = nQSOexp / rho_sum    # corresponds to cond1
         norm *= density_max / density_mean  # correction for cond2
         norm /= volFrac             # correction for cond3
         if z_max > 2.1:
             norm /= N_21_zmax / N_zmin_zmax  # correct for z > 2.1 only
+
+        print("nQSOexp={}".format(nQSOexp))
+        print("rho_sum={}".format(rho_sum))
+        print("density_max={}".format(density_max))
+        print("density_mean={}".format(density_mean))
+        print("volFrac={}".format(volFrac))
+        print("N_21_zmax={}".format(N_21_zmax))
+        print("N_zmin_zmax={}".format(N_zmin_zmax))
+        print("norm={}".format(norm))
         # gives ~4% more QSO than expected
         # this is due to the fact that the 3 cond are not independent
 
@@ -331,7 +347,7 @@ def main():
         iz = ((redshift - dz_interp[0]) / delta_z).round().astype(int)
         density = dn_cell[iz]
         if not random_cond:
-            density *= np.exp(sigma_rho**2 / 2)**(1-az_interp(redshift)**2)
+            density *= np.exp(sigma_rho**2 / 2)**(1-util.qso_a_of_z(redshift)**2)
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==

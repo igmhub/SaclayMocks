@@ -448,9 +448,15 @@ def convert1DTo2D(array1D,nbX=None,nbY=None):
         array2D[i][j] = array1D[k]
     return array2D
 
+
 def bias_qso(redshift):
     '''
     This function return the bias of QSO for a given redshift
     The parametrisation comes from P. Laurent et al (2017)
     '''
     return 3.7 * ((1+redshift)/(1+2.33))**1.7
+
+
+def qso_a_of_z(redshift):
+    # return bias_qso(redshift)*(1+constant.z_QSO_bias)/(constant.QSO_bias*(1+redshift))
+    return np.ones_like(redshift)*1.28
