@@ -7,6 +7,7 @@ import argparse
 import time
 from memory_profiler import profile
 from SaclayMocks import util, constant
+import pyfftw
 import pyfftw.interfaces.numpy_fft as fft
 import glob
 
@@ -36,12 +37,14 @@ def main():
     parser.add_argument("--fit-p1d", help="If True, store delta_l, delta_s and eta_par. Default False", default='False')
     parser.add_argument("-seed", type=int, help="specify a seed", default=None)
     parser.add_argument("--check-id", help="If True, check if the spectra ID matches the QSO ID by looking at (ra,dec), default True", default='True')
+    parser.add_argument("-ncpu", type=int, help="number of cpu, default = 2", default=2)
     args = parser.parse_args()
 
     inpath = args.inDir
     outpath = args.outDir
     islice = args.i
     nside = args.nside
+    ncpu = args.ncpu
     nest_option = util.str2bool(args.nest)
     rsd = util.str2bool(args.rsd)
     add_noise = util.str2bool(args.addnoise)
@@ -204,6 +207,17 @@ def main():
     healpix = util.radec2pix(nside, RA, DEC, nest=nest_option)
     print("IDs read - {} s".format(time.time()-t_init))
 
+    #...............................    get wisdom to save time on FFT
+    wisdom_path = os.path.expandvars("$SACLAYMOCKS_BASE/etc/")
+    wisdomFile = wisdom_path+"wisdom1D_"+str(ncpu)+".npy"
+
+    if os.path.isfile(wisdomFile) :
+        pyfftw.import_wisdom(sp.load(wisdomFile))
+        save_wisdom = False
+    else :
+        print("{f} file not found. Saving wisdom file to {f}".format(f=wisdomFile))
+        save_wisdom = True
+
     # .......... Merge spectra
     print("Merging spectra...")
     names = ['RA', 'DEC', 'Z_noRSD', 'Z', 'HDU', 'THING_ID', 'PLATE', 'MJD', 'FIBERID', 'PMF']
@@ -274,7 +288,7 @@ def main():
                         nz = 256
                         while (nz < len(wav_tmp)) : nz *= 2
                         delta_s = np.random.normal(size=nz)   # latter, produce directly in k space
-                        delta_sk = fft.rfftn(delta_s)	
+                        delta_sk = fft.rfftn(delta_s, threads=ncpu)
                         k = np.fft.rfftfreq(nz) * 2 * k_ny
                         if fit_p1d:
                             pmis = p1dmiss(k)
@@ -282,9 +296,13 @@ def main():
                             zeff = z[mmm].mean()
                             pmis = p1dmiss(zeff, k)
                         delta_sk *= np.sqrt(pmis/pixsize)
-                        delta_s = fft.irfftn(delta_sk)
+                        delta_s = fft.irfftn(delta_sk, threads=ncpu)
                         delta_s = delta_s[0:len(wav_tmp)]
                         delta = delta_l_tmp + delta_s
+                        # Save wisdom
+                        if save_wisdom:
+                            sp.save(wisdomFile, pyfftw.export_wisdom())
+                            save_wisdom = False
                     else:
                         delta = delta_l_tmp
                 else:
