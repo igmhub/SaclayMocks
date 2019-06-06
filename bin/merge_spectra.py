@@ -299,10 +299,6 @@ def main():
                         delta_s = fft.irfftn(delta_sk, threads=ncpu)
                         delta_s = delta_s[0:len(wav_tmp)]
                         delta = delta_l_tmp + delta_s
-                        # Save wisdom
-                        if save_wisdom:
-                            sp.save(wisdomFile, pyfftw.export_wisdom())
-                            save_wisdom = False
                     else:
                         delta = delta_l_tmp
                 else:
@@ -375,6 +371,11 @@ def main():
         cpt3 += len(ra_list)
 
     print("Merging and writting done. {} s".format(time.time() - t2))
+    # Save wisdom
+    if save_wisdom:
+        print("Saving wisdom file in {}".format(wisdomFile))
+        sp.save(wisdomFile, pyfftw.export_wisdom())
+        save_wisdom = False
     print("Spectra merged and fits file saved.")
     print("{} initial forests.".format(cpt1))
     print("{} forest mergers.".format(cpt2))
