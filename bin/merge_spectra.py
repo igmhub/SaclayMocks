@@ -230,6 +230,7 @@ def main():
     cpt2 = 0
     cpt3 = 0
     t2 = time.time()
+    timer = 0
     for pix in np.unique(healpix):
         cut = (healpix == pix)  # select only ID in pix healpix
         spectra_list = []
@@ -282,6 +283,7 @@ def main():
 
                 # Generate small scales
                 if add_noise:
+                    timer_init = time.time()
                     wav_rf = wav_tmp / (1+Z_QSO_RSD[cut][msk][0])
                     mmm = np.where((wav_rf<constant.lya) & (wav_rf>constant.lylimit))[0]
                     if len(mmm) > 0:
@@ -301,6 +303,7 @@ def main():
                         delta = delta_l_tmp + delta_s
                     else:
                         delta = delta_l_tmp
+                    timer += time.time() - timer_init
                 else:
                     delta = delta_l_tmp
 
@@ -381,6 +384,7 @@ def main():
     print("{} forest mergers.".format(cpt2))
     print("{} total forest written.".format(cpt3))
     print("Slice {} done. Took {}s".format(islice, time.time()-t_init))
+    print("FFT timer = {} s".format(timer))
 
 if __name__ == "__main__":
     main()
