@@ -8,8 +8,8 @@ c = scipy.constants.speed_of_light / 1000.  # in km/s
 n_qso_exp = 100.  # expected number of qso per square degrees
 
 lya = 1215.67 ## angstrom https://en.wikipedia.org/wiki/Lyman-alpha_line  1215.668 and 1215.674
-lylimit = lya * 3 /4. # 911.75  ok with https://en.wikipedia.org/wiki/Hydrogen_spectral_series
-# lylimit = 0.  # do not cut pixels bellow lylimit
+# lylimit = lya * 3 /4. # 911.75  ok with https://en.wikipedia.org/wiki/Hydrogen_spectral_series
+lylimit = 0.  # do not cut pixels bellow lylimit
 lyb = lylimit * 9./8. # 1025.72  https://en.wikipedia.org/wiki/Hydrogen_spectral_series : 1025.7
 lambda_min = 3476.  # Lambda min in A (given by Stephen Bailey - 04/05/2018)
 
