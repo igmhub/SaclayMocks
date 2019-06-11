@@ -87,9 +87,6 @@ def main():
 
     # constants
     omega_M_0 = constant.omega_M_0
-    bias = constant.QSO_bias
-    z_QSO_bias = constant.z_QSO_bias    # V1 produced with z_0 =2.5 !!!
-    growth = util.fgrowth(z_QSO_bias, omega_M_0)
 
     # Open fits file
     fits = FITS(Pfilename, 'rw', clobber=True)
@@ -99,19 +96,42 @@ def main():
         print("Number of modes too large : {} > 2**31 !\nExit.".format(len(k.ravel())))
         exit()
 
-    # .............................   P_ln
+    # .............................   P_ln 1
+    # bias = constant.QSO_bias
+    # z_QSO_bias = constant.z_QSO_bias    # V1 produced with z_0 =2.5 !!!
+    z_QSO_bias = constant.z_QSO_bias_1
+    print("Writting lognormal 1 at z={}...".format(z_QSO_bias))
+    bias = util.bias_qso(z_QSO_bias)
+    growth = util.fgrowth(z_QSO_bias, omega_M_0)
     Pln = Power_Spectrum_ln(k, growth, bias, Vcell)
     hdict = {'Dcell': Dcell, 'NX': NX, 'NY': NY, 'NZ': NZ}
-    fits.write(Pln, header=hdict)
+    fits.write(Pln, header=hdict, extname='Pln1')
     fits[-1].write_key("QSO_bias", bias, comment="QSO bias at z={}".format(z_QSO_bias))
     fits[-1].write_key("G", growth, comment="growth factor at z={}".format(z_QSO_bias))
     fits[-1].write_key("Om", omega_M_0, comment="Omega matter today")
     del Pln
+    print("Done.")
+
+    # .............................   P_ln 2
+    # bias = constant.QSO_bias
+    # z_QSO_bias = constant.z_QSO_bias    # V1 produced with z_0 =2.5 !!!
+    z_QSO_bias = constant.z_QSO_bias_2
+    print("Writting lognormal 2 at z={}...".format(z_QSO_bias))
+    bias = util.bias_qso(z_QSO_bias)
+    growth = util.fgrowth(z_QSO_bias, omega_M_0)
+    Pln = Power_Spectrum_ln(k, growth, bias, Vcell)
+    hdict = {'Dcell': Dcell, 'NX': NX, 'NY': NY, 'NZ': NZ}
+    fits.write(Pln, header=hdict, extname='Pln2')
+    fits[-1].write_key("QSO_bias", bias, comment="QSO bias at z={}".format(z_QSO_bias))
+    fits[-1].write_key("G", growth, comment="growth factor at z={}".format(z_QSO_bias))
+    fits[-1].write_key("Om", omega_M_0, comment="Omega matter today")
+    del Pln
+    print("Done.")
 
     # .............................   P_0
     P_0 = Power_Spectrum(k, Vcell)
     hdict = {'Dcell': Dcell, 'NX': NX, 'NY': NY, 'NZ': NZ}
-    fits.write(P_0, header=hdict)
+    fits.write(P_0, header=hdict, extname='P0')
     del P_0
     fits.close()
     print "produced ", Pfilename

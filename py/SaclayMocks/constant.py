@@ -22,7 +22,8 @@ omega_k_0 = 0.0
 ns = 0.96  # only used in run_camb.py
 
 QSO_bias = 3.7  # should become b(z) in data.py / QSO.py
-z_QSO_bias = 2.4  # QSO_bias taken from Helion thesis
+z_QSO_bias_1 = 2.1  # QSO_bias taken from Helion thesis
+z_QSO_bias_2 = 3.5
 z0 = 1.70975268202
 # box_pixel = 1600./1024.   # rather be stored in box.fits
 
