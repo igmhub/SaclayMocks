@@ -155,7 +155,7 @@ def main():
         print("Specified seed is {}".format(seed))
 
     #........................................   read box.fits header
-    boxfits = fitsio.FITS(args.indir+"/boxln-{}.fits".format(i_slice))
+    boxfits = fitsio.FITS(args.indir+"/boxln_1-{}.fits".format(i_slice))
     head = boxfits[0].read_header()
     Nslice = args.Nslice
     DX = head["DX"]
@@ -175,14 +175,19 @@ def main():
 
     if not random_cond:
         t0=time()
-        rho = boxfits[0].read()
+        rho1 = boxfits[0].read()
         boxfits.close()
+        rho2 = fitsio.read(args.indir+"/boxln_2-{}.fits".format(i_slice), ext=0)
         t1=time()
-        print "read box in ",t1-t0,"s ",rho.shape
-        sigma_rho = rho.std()
-        print "sigma(rho)=",sigma_rho
-        exprho = np.exp(rho)
-        del rho  # unassign variable
+        print("read boxes in {} s, shape: {}".format(t1-t0,rho1.shape))
+        sigma_rho_1 = np.std(rho1)
+        sigma_rho_2 = np.std(rho2)
+        sigma_rho_tot = np.std([rho1, rho2])
+        print "sigma(rho)=",sigma_rho_tot, sigma_rho_1, sigma_rho_2
+        exprho1 = np.exp(rho1)
+        exprho2 = np.exp(rho2)
+        del rho1  # unassign variable
+        del rho2
         gc.collect()  # force memory clearing
         if rsd:
             print("Reading velocity boxes...")
@@ -209,16 +214,23 @@ def main():
     if not random_cond:
         print("Computing exp(a(z)*g)...")
         t3 = time()
+        z1 = constant.z_QSO_bias_1
+        z2 = constant.z_QSO_bias_2
+        # compte rho sum over the whole box
         x_axis_tmp = (np.arange(NX)+0.5)*DX*Nslice - LX_fullbox/2
         print(x_axis_tmp)
         print(y_axis)
         z_box = z_of_R(np.sqrt((x_axis_tmp**2).reshape(-1,1,1) +
                     (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)
-        rho_sum = np.sum(exprho**util.qso_a_of_z(z_box))
-        # apply a(z): P = exp(delta)**a(z)
+        rho_sum = np.sum(exprho1**util.qso_a_of_z(z_box, z1)*(z2 - z_box)/(z2-z1) + exprho2**util.qso_a_of_z(z_box,z2)*(z_box-z1)/(z2-z1))
+        # apply a(z): P = exp(delta)**a(z) for each lognormal
         z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
                     (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)        
-        exprho **= util.qso_a_of_z(z_box)
+        exprho1 **= util.qso_a_of_z(z_box, z1)
+        exprho2 **= util.qso_a_of_z(z_box, z2)
+        # Interpolate the 2 lognormal
+        exprho1 = exprho1*(z2 - z_box)/(z2-z1) + exprho2*(z_box-z1)/(z2-z1)
+        del exprho2
         print("Done. {} s".format(time() - t3))
 
     # margin of dmax cells
@@ -279,8 +291,19 @@ def main():
 
     mmm = (dz_interp>z_min) & (dz_interp<z_max)
     if not random_cond:
-        density_max = np.max(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm])**2))
-        density_mean = np.mean(dn_cell[mmm] * np.exp(sigma_rho**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm])**2))
+        # <P> = <P1*(z2-z)/(z2-z1) + P2*(z-z1)/(z2-z1)
+        # proba_mean = (z2*np.exp(sigma_rho_1**2/2) - z1*np.exp(sigma_rho_2**2/2) +
+        #               dz_interp[mmm]*np.exp(sigma_rho_2**2/2)**util.qso_a_of_z(dz_interp[mmm], z1) -
+        #               dz_interp[mmm]*np.exp(sigma_rho_1**2/2)**util.qso_a_of_z(dz_interp[mmm], z2))
+        # # take mean over z
+        # density_mean = np.mean(dn_cell[mmm]*np.exp(sigma_rho_tot**2/2) / proba_mean)
+        # density_max = np.max(dn_cell[mmm]* np.exp(sigma_rho_tot**2/2) / proba_mean)
+        density_max1 = np.max(dn_cell[mmm] * np.exp(sigma_rho_1**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm], z1)**2))
+        density_max2 = np.max(dn_cell[mmm] * np.exp(sigma_rho_2**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm], z2)**2))
+        density_mean1 = np.mean(dn_cell[mmm] * np.exp(sigma_rho_1**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm], z1)**2))
+        density_mean2 = np.mean(dn_cell[mmm] * np.exp(sigma_rho_2**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm], z2)**2))
+        density_max = np.max(density_max1, density_max2)
+        density_mean = np.mean(density_mean1, density_mean2)
     else:
         density_max = dn_cell.max()
         density_mean = dn_cell.mean()
@@ -294,14 +317,14 @@ def main():
     if (drawPlot) :
         hrho , hh = np.histogram(rho,100)
         plt.plot(hrho)
-        plt.hist(exprho.reshape(np.size(exprho)),1000)
+        plt.hist(exprho1.reshape(np.size(exprho1)),1000)
         plt.xscale('log')
         plt.yscale('log')
         plt.show()
 
     if (not random_cond):
-        rho_max = exprho.max()
-        # rho_sum = exprho.sum()
+        rho_max = exprho1.max()
+        # rho_sum = exprho1.sum()
         kk = nQSOexp / rho_sum
         norm = nQSOexp / rho_sum    # corresponds to cond1
         norm *= density_max / density_mean  # correction for cond2
@@ -323,8 +346,8 @@ def main():
         print "exp(rho) max and sum = ",rho_max,rho_sum
         print "k exp(rho_max) =",kk*rho_max
         if (kk*rho_max>1):
-            print "k exp(rho) > 1 in ", np.size(np.where(kk*exprho>1)[0]),"cells"
-            print "sum min(k exp(rho) , 1) =", np.minimum(kk*exprho,1).sum()
+            print "k exp(rho) > 1 in ", np.size(np.where(kk*exprho1>1)[0]),"cells"
+            print "sum min(k exp(rho) , 1) =", np.minimum(kk*exprho1,1).sum()
 
     #.........................................................    loop on cells
     nQSO = 0
@@ -347,13 +370,16 @@ def main():
         iz = ((redshift - dz_interp[0]) / delta_z).round().astype(int)
         density = dn_cell[iz]
         if not random_cond:
-            density *= np.exp(sigma_rho**2 / 2)**(1-util.qso_a_of_z(redshift)**2)
+            density *= np.exp(sigma_rho_tot**2/2) / (z2*np.exp(sigma_rho_1**2/2) - z1*np.exp(sigma_rho_2**2/2) +
+                    redshift*np.exp(sigma_rho_2**2/2)**util.qso_a_of_z(redshift, z1) -
+                    redshift*np.exp(sigma_rho_1**2/2)**util.qso_a_of_z(redshift, z2)) * (z2-z1)
+
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==
         rnd1 = sp.random.ranf(size=(NX,NY))		#  float64
         if (not random_cond):
-            cond1 = rnd1 < norm * exprho[:, :, mz]  # (NX,NY)
+            cond1 = rnd1 < norm * exprho1[:, :, mz]  # (NX,NY)
             # should be a Poisson of norm * np.exp(rho)  <==
             # sometime get 2 QSO in a cell
             nnQSO += np.size(np.where(cond1)[0])
@@ -440,7 +466,7 @@ def main():
         # YGRID = np.array(iqso[1])
         # ZGRID = un * mz
         #if (len(XGRID)>0):
-        #    print ( np.mean(np.log(exprho[XGRID,YGRID,ZGRID])) )
+        #    print ( np.mean(np.log(exprho1[XGRID,YGRID,ZGRID])) )
         THING_ID = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO, nQSO+len(zzz)) + 1).astype(int)  # start at 1
         HDU = un * i_slice  # QSOhdu
         plate = THING_ID

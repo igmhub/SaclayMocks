@@ -457,6 +457,6 @@ def bias_qso(redshift):
     return 3.7 * ((1+redshift)/(1+2.33))**1.7
 
 
-def qso_a_of_z(redshift):
-    # return bias_qso(redshift)*(1+constant.z_QSO_bias)/(constant.QSO_bias*(1+redshift))
-    return np.ones_like(redshift)*1.28
+def qso_a_of_z(redshift, z_qso_bias):
+    return bias_qso(redshift)*(1+z_qso_bias)/(bias_qso(z_qso_bias)*(1+redshift))
+    # return np.ones_like(redshift)*1.28
