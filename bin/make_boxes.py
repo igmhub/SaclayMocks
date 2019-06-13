@@ -192,6 +192,7 @@ def main() :
   t0 = time.time()
   print(NX,NY,NZ)
   global boxk
+  boxkfile = outDir + "/boxk.npy"
   boxk, box_null = DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile)
   if box_null:
     print("Starting again DrawGRF_boxk...")
@@ -200,7 +201,6 @@ def main() :
     boxk, box_null = DrawGRF_boxk(NX, NY, NZ, ncpu, wisdomFile)
 
   t1 = time.time()
-  boxkfile = outDir + "/boxk.npy"
   np.save(boxkfile,boxk)
   t2 = time.time()
 

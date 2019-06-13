@@ -212,22 +212,22 @@ def main():
 
     # add z dependence
     if not random_cond:
-        print("Computing exp(a(z)*g)...")
+        print("Computing exp(a(z)*g) for the 2 lognormal fields and interpolating...")
         t3 = time()
         z1 = constant.z_QSO_bias_1
         z2 = constant.z_QSO_bias_2
         # compte rho sum over the whole box
         x_axis_tmp = (np.arange(NX)+0.5)*DX*Nslice - LX_fullbox/2
-        print(x_axis_tmp)
-        print(y_axis)
         z_box = z_of_R(np.sqrt((x_axis_tmp**2).reshape(-1,1,1) +
                     (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)
         rho_sum = np.sum(exprho1**util.qso_a_of_z(z_box, z1)*(z2 - z_box)/(z2-z1) + exprho2**util.qso_a_of_z(z_box,z2)*(z_box-z1)/(z2-z1))
+        print("rho_sum = {} ; {} s".format(rho_sum, time()-t3))
         # apply a(z): P = exp(delta)**a(z) for each lognormal
         z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
                     (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)        
         exprho1 **= util.qso_a_of_z(z_box, z1)
         exprho2 **= util.qso_a_of_z(z_box, z2)
+        print("a(z) applied to boxes. {} s".format(time()-t3))
         # Interpolate the 2 lognormal
         exprho1 = exprho1*(z2 - z_box)/(z2-z1) + exprho2*(z_box-z1)/(z2-z1)
         del exprho2
@@ -291,19 +291,12 @@ def main():
 
     mmm = (dz_interp>z_min) & (dz_interp<z_max)
     if not random_cond:
-        # <P> = <P1*(z2-z)/(z2-z1) + P2*(z-z1)/(z2-z1)
-        # proba_mean = (z2*np.exp(sigma_rho_1**2/2) - z1*np.exp(sigma_rho_2**2/2) +
-        #               dz_interp[mmm]*np.exp(sigma_rho_2**2/2)**util.qso_a_of_z(dz_interp[mmm], z1) -
-        #               dz_interp[mmm]*np.exp(sigma_rho_1**2/2)**util.qso_a_of_z(dz_interp[mmm], z2))
-        # # take mean over z
-        # density_mean = np.mean(dn_cell[mmm]*np.exp(sigma_rho_tot**2/2) / proba_mean)
-        # density_max = np.max(dn_cell[mmm]* np.exp(sigma_rho_tot**2/2) / proba_mean)
-        density_max1 = np.max(dn_cell[mmm] * np.exp(sigma_rho_1**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm], z1)**2))
-        density_max2 = np.max(dn_cell[mmm] * np.exp(sigma_rho_2**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm], z2)**2))
-        density_mean1 = np.mean(dn_cell[mmm] * np.exp(sigma_rho_1**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm], z1)**2))
-        density_mean2 = np.mean(dn_cell[mmm] * np.exp(sigma_rho_2**2 / 2)**(1-util.qso_a_of_z(dz_interp[mmm], z2)**2))
-        density_max = np.max(density_max1, density_max2)
-        density_mean = np.mean(density_mean1, density_mean2)
+        mean_rho_interp = dn_cell[mmm] / (
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z1)*sigma_rho_1)**2/2)*(z2-dz_interp[mmm])/(z2-z1) +
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z2)*sigma_rho_2)**2/2)*(dz_interp[mmm]-z1)/(z2-z1)
+            )
+        density_max = np.max(mean_rho_interp)
+        density_mean = np.mean(mean_rho_interp)
     else:
         density_max = dn_cell.max()
         density_mean = dn_cell.mean()
@@ -369,11 +362,10 @@ def main():
         delta_z = dz_interp[1] - dz_interp[0]
         iz = ((redshift - dz_interp[0]) / delta_z).round().astype(int)
         density = dn_cell[iz]
+        # correct the z dependence in cond1 (due to a(z))
         if not random_cond:
-            density *= np.exp(sigma_rho_tot**2/2) / (z2*np.exp(sigma_rho_1**2/2) - z1*np.exp(sigma_rho_2**2/2) +
-                    redshift*np.exp(sigma_rho_2**2/2)**util.qso_a_of_z(redshift, z1) -
-                    redshift*np.exp(sigma_rho_1**2/2)**util.qso_a_of_z(redshift, z2)) * (z2-z1)
-
+            density /= (np.exp((util.qso_a_of_z(redshift, z1)*sigma_rho_1)**2/2)*(z2-redshift)/(z2-z1) +
+                        np.exp((util.qso_a_of_z(redshift, z2)*sigma_rho_2)**2/2)*(redshift-z1)/(z2-z1))
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==
