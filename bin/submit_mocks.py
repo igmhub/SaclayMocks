@@ -15,7 +15,7 @@ manualy in the main function.
 
 At the end, this code produces a bash file: submit.sh, for each mock realisation.
 You need to run this bash file in order to send the jobs to cori nodes.
-08/04/2019 - Thomas Etournea
+08/04/2019 - Thomas Etourneau
 thomas.etouneau@cea.fr
 """
 
@@ -95,6 +95,42 @@ def create_reservation(mock_args):
     fout.close()
 
 
+def stage_out_dir(mock_args):
+    '''
+    This function returns the bash lines to stage_out the specified directories
+    '''
+    script = ''
+    # stage_out everything
+    if 'all' in mock_args['stage_out_dir']:
+        script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i} destination={path}/mock_{i} type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], path=mock_args['mock_dir'])
+        return script
+
+    # stage_out only some particular directories
+    # output dir
+    script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/output destination={path}/mock_{i}/output type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], path=mock_args['mock_dir'])
+    # boxes
+    if 'boxes' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/boxes destination={path}/mock_{i}/chunk_{j}/boxes type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # qso
+    if 'qso' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/qso destination={path}/mock_{i}/chunk_{j}/qso type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # randoms
+    if 'randoms' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/randoms destination={path}/mock_{i}/chunk_{j}/randoms type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # spectra
+    if 'spectra' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/spectra destination={path}/mock_{i}/chunk_{j}/spectra type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # spectra_merged
+    if 'spectra_merged' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/spectra_merged destination={path}/mock_{i}/chunk_{j}/spectra_merged type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    return script
+
+
 def stage_out(mock_args):
     '''
     This functions stages out the mock outputs written on the burst buffer nodes.
@@ -106,11 +142,10 @@ def stage_out(mock_args):
     script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
-    script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i} destination={path2} type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], path2=mock_args['mock_dir']+"/mock_"+str(mock_args['imock']))
-    # script += "echo 'BB nodes:'\n"
-    # script += "du -sh $DW_PERSISTENT_STRIPED_{name}/mock_{i}\n".format(name=mock_args['bb_name'], i=mock_args['imock'])
-    # script += "echo 'staged out:'\n"
-    # script += "du -sh {}\n".format(mock_args['mock_dir']+"/mock_"+str(mock_args['imock']))
+    # add the #DW stage_out lines for each directory to stage out
+    script += stage_out_dir(mock_args)
+    script += "echo 'This will stage out:'\n"
+    script += "echo '{}'\n".format(mock_args['stage_out_dir'])
     script += "echo 'END'\n"
 
     filename = mock_args['run_dir']+'/stage_out.sh'
@@ -852,6 +887,10 @@ def main():
     parser.add_argument("--mock-realisation", type=int, default=None, required=False,
         help="Specify a particular realisation to be produced (optional)")
 
+    parser.add_argument("--stage-out", type=str, nargs="*", default='all', required=False,
+        help="Specify what output you want to save to your scratch directory when using the burst buffer (optional)\n"+
+                        "you can backup among: 'boxes qso randoms spectra spectra_merged' or just 'all'")
+
     parser.add_argument("--seed", type=int, default=None, required=False,
         help="Specify a particular seed (optional)")
 
@@ -997,6 +1036,7 @@ def main():
         if 'cscratch1' not in args.mock_dir:
             print("--mock-dir option should point to /global/cscratch1 when using the burst buffer mode !")
             sys.exit(1)
+        mock_args['stage_out_dir'] = args.stage_out
     print("Writting scripts for {} realisations".format(nmocks))
     print("Mock files will be written in {}".format(mock_dir))
     if args.out_dir is not None:
