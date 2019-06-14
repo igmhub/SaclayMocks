@@ -264,6 +264,7 @@ def main():
         surface = 4 * tetax_max * tetay_max     # rad^2
     surfaceDeg = surface * (180/PI)**2
     nQSOexp = constant.n_qso_exp * surfaceDeg
+    nQSOexp *= constant.qso_nz_adhoc
     nQSOexp /= Nslice
     volFrac= (surface/3)*(Rmax**3-Rmin**3)/LX_fullbox/LY/LZ
     print "Fraction of box volume used",volFrac
