@@ -34,3 +34,4 @@ rad2deg = 180/sp.pi
 
 # Hardcoded params:
 sigma_g = 1.19
+rho_sum = 16452460
