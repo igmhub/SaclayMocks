@@ -216,11 +216,14 @@ def main():
         t3 = time()
         z1 = constant.z_QSO_bias_1
         z2 = constant.z_QSO_bias_2
-        # compte rho sum over the whole box
-        x_axis_tmp = (np.arange(NX)+0.5)*DX*Nslice - LX_fullbox/2
-        z_box = z_of_R(np.sqrt((x_axis_tmp**2).reshape(-1,1,1) +
-                    (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)
-        rho_sum = np.sum(exprho1**util.qso_a_of_z(z_box, z1)*(z2 - z_box)/(z2-z1) + exprho2**util.qso_a_of_z(z_box,z2)*(z_box-z1)/(z2-z1))
+        # # compte rho sum over the whole box
+        # x_axis_tmp = (np.arange(NX)+0.5)*DX*Nslice - LX_fullbox/2
+        # print(x_axis_tmp)
+        # print(y_axis)
+        # z_box = z_of_R(np.sqrt((x_axis_tmp**2).reshape(-1,1,1) +
+        #             (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ) but should cover the whole box
+        # rho_sum = np.sum(exprho1**util.qso_a_of_z(z_box, z1)*(z2 - z_box)/(z2-z1) + exprho2**util.qso_a_of_z(z_box,z2)*(z_box-z1)/(z2-z1))
+        rho_sum = constant.rho_sum
         print("rho_sum = {} ; {} s".format(rho_sum, time()-t3))
         # apply a(z): P = exp(delta)**a(z) for each lognormal
         z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
