@@ -460,3 +460,24 @@ def bias_qso(redshift):
 def qso_a_of_z(redshift, z_qso_bias):
     return bias_qso(redshift)*(1+z_qso_bias)/(bias_qso(z_qso_bias)*(1+redshift))
     # return np.ones_like(redshift)*1.28
+
+
+def qso_lognormal_coef(redshift):
+    '''
+    This function returns the interpolated coefficient for computing the
+    interpolation between the 3 different lognormal fields
+    '''
+    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/qso_lognormal_coef.txt")
+    data = np.loadtxt(filename)
+    z = data[:,0]
+    coef = data[:,1]
+    if (redshift > z.max()).sum():
+        print("input redshift > {} ; setting coef = 0 for these values".format(z.max()))
+        z = np.append(z, redshift.max())
+        coef = np.append(coef, 0)
+    if redshift < z.min():
+        print("input redshift < {} ; setting coef = 1 for these values".format(z.min()))
+        z = np.append(redshift.min(), z)
+        coef = np.append(1, coef)
+    f = sp.interpolate.interp1d(z, coef)
+    return f(redshift)

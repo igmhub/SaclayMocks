@@ -128,6 +128,22 @@ def main():
     del Pln
     print("Done.")
 
+    # .............................   P_ln 3
+    # bias = constant.QSO_bias
+    # z_QSO_bias = constant.z_QSO_bias    # V1 produced with z_0 =2.5 !!!
+    z_QSO_bias = constant.z_QSO_bias_3
+    print("Writting lognormal 3 at z={}...".format(z_QSO_bias))
+    bias = util.bias_qso(z_QSO_bias)
+    growth = util.fgrowth(z_QSO_bias, omega_M_0)
+    Pln = Power_Spectrum_ln(k, growth, bias, Vcell)
+    hdict = {'Dcell': Dcell, 'NX': NX, 'NY': NY, 'NZ': NZ}
+    fits.write(Pln, header=hdict, extname='Pln3')
+    fits[-1].write_key("QSO_bias", bias, comment="QSO bias at z={}".format(z_QSO_bias))
+    fits[-1].write_key("G", growth, comment="growth factor at z={}".format(z_QSO_bias))
+    fits[-1].write_key("Om", omega_M_0, comment="Omega matter today")
+    del Pln
+    print("Done.")
+
     # .............................   P_0
     P_0 = Power_Spectrum(k, Vcell)
     hdict = {'Dcell': Dcell, 'NX': NX, 'NY': NY, 'NZ': NZ}
