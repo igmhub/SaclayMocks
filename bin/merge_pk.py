@@ -47,6 +47,11 @@ def main():
     outfits.write(Pln, header=hdict, extname='Pln2')
     del Pln
 
+    Pln = [f['Pln3'].read() for f in infits]
+    Pln = np.concatenate(Pln, axis=0)
+    outfits.write(Pln, header=hdict, extname='Pln3')
+    del Pln
+
     P0 = [f['P0'].read() for f in infits]
     P0 = np.concatenate(P0, axis=0)
     outfits.write(P0, header=hdict, extname='P0')

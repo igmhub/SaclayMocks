@@ -223,10 +223,14 @@ def main() :
     boxk = np.load(boxkfile)
     boxk *= fitsio.read(Pfilename, ext=0)
     FFTandStore(Dcell, nHDU, outDir+'/boxln_1', ncpu, wisdomFile, box_null)
-  #Second lognormal
+  # Second lognormal
   boxk = np.load(boxkfile)
   boxk *= fitsio.read(Pfilename, ext='Pln2')
   box_null = FFTandStore(Dcell, nHDU, outDir+'/boxln_2', ncpu, wisdomFile)
+  # Third lognormal
+  boxk = np.load(boxkfile)
+  boxk *= fitsio.read(Pfilename, ext='Pln3')
+  box_null = FFTandStore(Dcell, nHDU, outDir+'/boxln_3', ncpu, wisdomFile)
   # Density field
   boxk=np.load(boxkfile)
   nHDU_bis = NX   # we want 1 HDU per ix

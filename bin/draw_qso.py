@@ -174,21 +174,24 @@ def main():
         out_file = args.outpath+'/QSO-{}-{}.fits'.format(i_slice, Nslice)
 
     if not random_cond:
+        # p1,2,3 are first the lognormal field boxes
+        # at the end, we draw the QSO with a probability ~ f(p1, p2, p3)
         t0=time()
-        rho1 = boxfits[0].read()
+        p1 = boxfits[0].read()
         boxfits.close()
-        rho2 = fitsio.read(args.indir+"/boxln_2-{}.fits".format(i_slice), ext=0)
+        p2 = fitsio.read(args.indir+"/boxln_2-{}.fits".format(i_slice), ext=0)
+        p2 = fitsio.read(args.indir+"/boxln_3-{}.fits".format(i_slice), ext=0)
         t1=time()
-        print("read boxes in {} s, shape: {}".format(t1-t0,rho1.shape))
-        sigma_rho_1 = np.std(rho1)
-        sigma_rho_2 = np.std(rho2)
-        sigma_rho_tot = np.std([rho1, rho2])
-        print "sigma(rho)=",sigma_rho_tot, sigma_rho_1, sigma_rho_2
-        exprho1 = np.exp(rho1)
-        exprho2 = np.exp(rho2)
-        del rho1  # unassign variable
-        del rho2
-        gc.collect()  # force memory clearing
+        print("read boxes in {} s, shape: {}".format(t1-t0,p1.shape))
+        sigma_p_1 = np.std(p1)
+        sigma_p_2 = np.std(p2)
+        sigma_p_3 = np.std(p3)
+        sigma_p_tot = np.std([p1, p2, p3])
+        print "sigma(rho)=",sigma_p_tot, sigma_p_1, sigma_p_2, sigma_p_3
+        # take exponential of each field
+        np.exp(p1, p1)
+        np.exp(p2, p2)
+        np.exp(p3, p3)
         if rsd:
             print("Reading velocity boxes...")
             vx = fitsio.read(args.indir+"/vx-{}.fits".format(i_slice), ext=0)
@@ -211,30 +214,33 @@ def main():
     dz = z_of_R(z_edges[1:]/h) - z_of_R(z_edges[0:-1]/h)   #  z_of_R[m+1] - z_of_R[m]
 
     # add z dependence
+    # there are 3 lognormal fields p1, p2, p3 at z1, z2, z3
+    # we build p12 and p23 which are the interpolation of p1, p2 and p2, p3
+    # we then build the probability ptot = c*p12 + (1-c)*p23
+    # where c is a coefficient, store in etc/qso_lognormal_coef.txt
     if not random_cond:
         print("Computing exp(a(z)*g) for the 2 lognormal fields and interpolating...")
         t3 = time()
         z1 = constant.z_QSO_bias_1
         z2 = constant.z_QSO_bias_2
-        # # compte rho sum over the whole box
-        # x_axis_tmp = (np.arange(NX)+0.5)*DX*Nslice - LX_fullbox/2
-        # print(x_axis_tmp)
-        # print(y_axis)
-        # z_box = z_of_R(np.sqrt((x_axis_tmp**2).reshape(-1,1,1) +
-        #             (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ) but should cover the whole box
-        # rho_sum = np.sum(exprho1**util.qso_a_of_z(z_box, z1)*(z2 - z_box)/(z2-z1) + exprho2**util.qso_a_of_z(z_box,z2)*(z_box-z1)/(z2-z1))
+        z3 = constant.z_QSO_bias_3
         rho_sum = constant.rho_sum
         print("rho_sum = {} ; {} s".format(rho_sum, time()-t3))
         # apply a(z): P = exp(delta)**a(z) for each lognormal
         z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
                     (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)        
-        exprho1 **= util.qso_a_of_z(z_box, z1)
-        exprho2 **= util.qso_a_of_z(z_box, z2)
+        p1 **= util.qso_a_of_z(z_box, z1)
+        p2 **= util.qso_a_of_z(z_box, z2)
+        p3 **= util.qso_a_of_z(z_box, z3)
         print("a(z) applied to boxes. {} s".format(time()-t3))
-        # Interpolate the 2 lognormal
-        exprho1 = exprho1*(z2 - z_box)/(z2-z1) + exprho2*(z_box-z1)/(z2-z1)
-        del exprho2
-        print("Done. {} s".format(time() - t3))
+        # Do the interpolations
+        p12 = p1*(z2 - z_box)/(z2-z1) + p2*(z_box-z1)/(z2-z1)
+        p23 = p2*(z3 - z_box)/(z3-z2) + p3*(z_box-z2)/(z3-z2)
+        del p1, p2, p3
+        ptot = util.qso_lognormal_coef(z_box)*(p12 - p23) + p23
+        del p12, p23, z_box
+        gc.collect()
+        print("Interpolations done. {} s".format(time() - t3))
 
     # margin of dmax cells
     print LX,LY,LZ,R0,dmax*DX # prov
@@ -314,14 +320,14 @@ def main():
     if (drawPlot) :
         hrho , hh = np.histogram(rho,100)
         plt.plot(hrho)
-        plt.hist(exprho1.reshape(np.size(exprho1)),1000)
+        plt.hist(ptot.reshape(np.size(ptot)),1000)
         plt.xscale('log')
         plt.yscale('log')
         plt.show()
 
     if (not random_cond):
-        rho_max = exprho1.max()
-        # rho_sum = exprho1.sum()
+        rho_max = ptot.max()
+        # rho_sum = ptot.sum()
         kk = nQSOexp / rho_sum
         norm = nQSOexp / rho_sum    # corresponds to cond1
         norm *= density_max / density_mean  # correction for cond2
@@ -343,8 +349,8 @@ def main():
         print "exp(rho) max and sum = ",rho_max,rho_sum
         print "k exp(rho_max) =",kk*rho_max
         if (kk*rho_max>1):
-            print "k exp(rho) > 1 in ", np.size(np.where(kk*exprho1>1)[0]),"cells"
-            print "sum min(k exp(rho) , 1) =", np.minimum(kk*exprho1,1).sum()
+            print "k exp(rho) > 1 in ", np.size(np.where(kk*ptot>1)[0]),"cells"
+            print "sum min(k exp(rho) , 1) =", np.minimum(kk*ptot,1).sum()
 
     #.........................................................    loop on cells
     nQSO = 0
@@ -375,7 +381,7 @@ def main():
         #  use reproducible random <==
         rnd1 = sp.random.ranf(size=(NX,NY))		#  float64
         if (not random_cond):
-            cond1 = rnd1 < norm * exprho1[:, :, mz]  # (NX,NY)
+            cond1 = rnd1 < norm * ptot[:, :, mz]  # (NX,NY)
             # should be a Poisson of norm * np.exp(rho)  <==
             # sometime get 2 QSO in a cell
             nnQSO += np.size(np.where(cond1)[0])
@@ -462,7 +468,7 @@ def main():
         # YGRID = np.array(iqso[1])
         # ZGRID = un * mz
         #if (len(XGRID)>0):
-        #    print ( np.mean(np.log(exprho1[XGRID,YGRID,ZGRID])) )
+        #    print ( np.mean(np.log(ptot[XGRID,YGRID,ZGRID])) )
         THING_ID = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO, nQSO+len(zzz)) + 1).astype(int)  # start at 1
         HDU = un * i_slice  # QSOhdu
         plate = THING_ID
