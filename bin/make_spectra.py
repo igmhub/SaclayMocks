@@ -19,9 +19,6 @@ import cosmolopy.distance as dist
 import os
 import time
 from numba import jit
-import pyfftw.interfaces.numpy_fft as fft
-import pyfftw
-import json
 import argparse
 import scipy.stats as stats
 import matplotlib.pyplot as plt
