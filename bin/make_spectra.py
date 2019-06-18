@@ -35,25 +35,32 @@ def main():
     #  .................... hardcoded param
     PI = np.pi
     plotPkMis = False
+
     #*************************************************************
     @jit       #    @jit improves from 73 to 32 ms
-    def ComputeWeight(X,Y,Z,grid,cells,onesline, sig2) : # LX,LY,LZ,DX,DY,DZ
+    def ComputeWeight(X,Y,Z,grid,cells,onesline, sig2) : 
+        # compute Gaussian weight for (x,y,z) 
+        # other variables are actually constants 
+        # also uses constants LX,LY,LZ,DX,DY,DZ
         ix = int((X +LX/2)/DX)  # -LX/2 < X < -LX/2 + LX/Nslice so 0 < ix < NX/Nslice
         iy = int((Y +LY/2)/DY)  # -LY/2 < Y < LY/2 so 0 < iy < NY
         iz = int((Z +LZ/2 -R0)/DZ)
         ixyz = sp.array([ix,iy,iz])  	# (3,)
         cell_center = sp.array([(ix+0.5)*DX-LX/2,(iy+0.5)*DY-LY/2,
                 (iz+0.5)*DZ-LZ/2+R0])  # (3,)
-        XYZ = sp.array([X,Y,Z])
+        XYZ = sp.array([X,Y,Z]) # (3,)
 
         lgrid = grid + cell_center	# grid around XYZ
-        lcells = cells + ixyz
-        XYZ_line = XYZ * oneslines
+        lcells = cells + ixyz   #(343,3) 
+        #onesline = sp.ones((xx**3,1))	# (343,1)
+        XYZ_line = XYZ * onesline
         # (3,) * (343,1) => (343,3) 	343= (2*dmax+1)**3
         #    if (icell==0): print
 
         xx = (XYZ_line-lgrid)**2
-        Delta_r2 = xx[:,0]+xx[:,1]+xx[:,2]    # Delta_r2 = ((cell_center_line-lgrid)**2).sum(axis=1) 
+        Delta_r2 = xx[:,0]+xx[:,1]+xx[:,2]    # (343,)
+        #Delta_r2 = ((XYZ_line-lgrid)**2).sum(axis=1) 
+        # equivalent, but longer 69s instead of 44 for full MakeSpectra !!!
         weight = sp.exp(-Delta_r2 / sig2)
         if (sig2<-1000) : # prov
             #yy = (XYZ_line-lgrid) 
@@ -85,12 +92,12 @@ def main():
     #   @jit degrades from 80 t0 94 for the full treatment of a QSO
     #@jit
     def ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=0, imax=sys.maxint):
-        # LX,LY,LZ,DX,DY,DZ
-        # (Xvec, Yvec, Zvec) is the vector along line of sight,
+        # reads spectrum for (Xvec, Yvec, Zvec)
         # XvecSlice is in [-LX/2, -LX/2 + LX/NSlice]
         # cells is the list of indices used for G.S. around (0,0,0),
-        # and grid its value in Mpc/h,
+        # and grid its value in Mpc/h, both shapes are (343,3)
         # imin imax are the indices delimiting the lya forest
+        # function also uses cosntants LX,LY,LZ,DX,DY,DZ
         if rsd:
             eta_par = sp.zeros_like(XvecSlice)  # so that exp(-a(exp(b*g) + taubar_a*eta_par)) = 1
             if dla:
@@ -374,9 +381,9 @@ def main():
     #   for dmax=3 produce array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
     #       ...,        [ 3,  3,  1], [ 3,  3,  2], [ 3,  3,  3]])
     xx = 2 * dmax + 1
-    cells = sp.indices((xx,xx,xx)).reshape(3,-1) - dmax
+    cells = sp.indices((xx,xx,xx)).reshape(3,-1) - dmax  # (3,343)
     grid = sp.array([DX*cells[0],DY*cells[1],DZ*cells[2]])
-    cells = cells.T
+    cells = cells.T  # (343,3)
     grid = grid.T
     onesline = sp.ones((xx**3,1))	# (343,1)
 
