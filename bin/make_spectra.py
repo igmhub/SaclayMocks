@@ -42,18 +42,35 @@ def main():
         iy = int((Y +LY/2)/DY)  # -LY/2 < Y < LY/2 so 0 < iy < NY
         iz = int((Z +LZ/2 -R0)/DZ)
         ixyz = sp.array([ix,iy,iz])  	# (3,)
-        cell_center = sp.array([ix*DX-LX/2,iy*DY-LY/2,iz*DZ-LZ/2+R0])
+        cell_center = sp.array([(ix+0.5)*DX-LX/2,(iy+0.5)*DY-LY/2,
+                (iz+0.5)*DZ-LZ/2+R0])  # (3,)
         XYZ = sp.array([X,Y,Z])
 
-        lgrid = grid + XYZ	# grid around XYZ
+        lgrid = grid + cell_center	# grid around XYZ
         lcells = cells + ixyz
-        cell_center_line = cell_center * onesline	
+        XYZ_line = XYZ * oneslines
         # (3,) * (343,1) => (343,3) 	343= (2*dmax+1)**3
         #    if (icell==0): print
 
-        xx = (cell_center_line-lgrid)**2
-        Delta_r2 = xx[:,0]+xx[:,1]+xx[:,2]    # Delta_r2 = ((cell_center_line-lgrid)**2).sum(axis=1)
+        xx = (XYZ_line-lgrid)**2
+        Delta_r2 = xx[:,0]+xx[:,1]+xx[:,2]    # Delta_r2 = ((cell_center_line-lgrid)**2).sum(axis=1) 
         weight = sp.exp(-Delta_r2 / sig2)
+        if (sig2<-1000) : # prov
+            #yy = (XYZ_line-lgrid) 
+            print ("*** xyz",ixyz)
+            ii=3*np.arange(len(weight)//3)
+            #print ("yy[:,0]",yy[ii,0])
+            #print (yy[ii+1,0])
+            #print (yy[ii+2,0])
+            #print ("yy[:,1]",yy[ii,1])
+            #print (yy[ii+1,1])
+            #print (yy[ii+2,1])
+            #print ("yy[:,2]",yy[ii,2])
+            #print (yy[ii+1,2])
+            #print (yy[ii+2,2])
+            #print ("Delta_r2",Delta_r2[ii])
+            #print (Delta_r2[ii+1])
+            #print (Delta_r2[ii+2])
         return lcells, weight
 
     #*************************************************************
