@@ -32,47 +32,62 @@ def main():
     #  .................... hardcoded param
     PI = np.pi
     plotPkMis = False
+
     #*************************************************************
     @jit       #    @jit improves from 73 to 32 ms
-    def ComputeWeight(X,Y,Z,grid,cells,onesline, sig2) : # LX,LY,LZ,DX,DY,DZ
+    def ComputeWeight(X,Y,Z, sig2) : 
+        # returns local cells around (X,Y,Z) and Gaussian weights
+        # also uses constants grid,cell,LX,LY,LZ,DX,DY,DZ
+        # dmax=3 cell = array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
+        #   ...,   [ 3,  3,  1], [ 3,  3,  2], [ 3,  3,  3]])   (343,3)
+        # grid idem multiplied by DX,DY,DZ
+
+        #  .......  cell that contains (X,Y,Z) and surrounding cells
         ix = int((X +LX/2)/DX)  # -LX/2 < X < -LX/2 + LX/Nslice so 0 < ix < NX/Nslice
         iy = int((Y +LY/2)/DY)  # -LY/2 < Y < LY/2 so 0 < iy < NY
         iz = int((Z +LZ/2 -R0)/DZ)
         ixyz = sp.array([ix,iy,iz])  	# (3,)
-        cell_center = sp.array([ix*DX-LX/2,iy*DY-LY/2,iz*DZ-LZ/2+R0])
-        XYZ = sp.array([X,Y,Z])
+        lcells = cells + ixyz   # surrounding cells (343,3) 
 
-        lgrid = grid + XYZ	# grid around XYZ
-        lcells = cells + ixyz
-        cell_center_line = cell_center * onesline	
-        # (3,) * (343,1) => (343,3) 	343= (2*dmax+1)**3
-        #    if (icell==0): print
-
-        xx = (cell_center_line-lgrid)**2
-        Delta_r2 = xx[:,0]+xx[:,1]+xx[:,2]    # Delta_r2 = ((cell_center_line-lgrid)**2).sum(axis=1)
+        # weights
+        cell_center = sp.array([(ix+0.5)*DX-LX/2,(iy+0.5)*DY-LY/2,
+                (iz+0.5)*DZ-LZ/2+R0])  # (3,)
+        xx = (grid+cell_center - sp.array([X,Y,Z]))**2  # (343,3)
+        Delta_r2 = xx[:,0]+xx[:,1]+xx[:,2]    # 41-46 s (343,)
+        #Delta_r2 = np.sum( ((XYZ-grid-cell_center)**2) ,axis=1 ) # 80-95 s
+        #Delta_r2 = ((XYZ-grid-cell_center)**2).sum(axis=1) # 69 - 74 s
+        # equivalent, but longer !!  (time for full MakeSpectra)
         weight = sp.exp(-Delta_r2 / sig2)
         return lcells, weight
 
     #*************************************************************
     #@jit   # @jit degrades from 22 to 27 ms
     def computeRho(myrho,weight) :
-        sumweight = weight.sum(axis=0)
-        sumrho = (weight*myrho).sum(axis=0)
-        return sumrho / sumweight
+        return (weight*myrho).sum() / weight.sum()
+        #sumweight = weight.sum()
+        #sumrho = (weight*myrho).sum()
+        #return sumrho / sumweight
+
+    #*************************************************************
+    # this seems marginally faster, significant ? 
+    def computeRhob(rho,lcells,weight) :
+        return (weight*rho[lcells[:,0],lcells[:,1],lcells[:,2]]).sum() / weight.sum()
 
     #*************************************************************
     #   @jit + python -m cProfile fails
     #   @jit degrades from 80 t0 94 for the full treatment of a QSO
     #@jit
-    def ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=0, imax=sys.maxint):
-        # LX,LY,LZ,DX,DY,DZ
-        # (Xvec, Yvec, Zvec) is the vector along line of sight,
+    def ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=0, imax=sys.maxint):
+        # reads spectrum for (Xvec, Yvec, Zvec)
         # XvecSlice is in [-LX/2, -LX/2 + LX/NSlice]
         # cells is the list of indices used for G.S. around (0,0,0),
-        # and grid its value in Mpc/h,
+        # and grid its value in Mpc/h, both shapes are (343,3)
         # imin imax are the indices delimiting the lya forest
+        # function also uses cosntants LX,LY,LZ,DX,DY,DZ
+
+        spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
         if rsd:
-            eta_par = sp.zeros_like(XvecSlice)  # so that exp(-a(exp(b*g) + taubar_a*eta_par)) = 1
+            eta_par = sp.zeros_like(XvecSlice)
             if dla:
                 vpar = sp.zeros_like(XvecSlice)
 
@@ -84,9 +99,10 @@ def main():
             Xtrue = Xvec[icell]
             Y = Yvec[icell]
             Z = Zvec[icell]
-            lcells, weight = ComputeWeight(X,Y,Z,grid,cells,onesline, sig2)
+            lcells, weight = ComputeWeight(X,Y,Z, sig2)
             myrho = fullrho[lcells[:,0],lcells[:,1],lcells[:,2]]
             spectrum[icell] = computeRho(myrho,weight)
+            #spectrum[icell] = computeRhob(fullrho,lcells,weight)
             if rsd:
                 RR = Xtrue**2+Y**2+Z**2
                 myeta_xx = eta_xx[lcells[:,0],lcells[:,1],lcells[:,2]]
@@ -354,11 +370,10 @@ def main():
     #   for dmax=3 produce array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
     #       ...,        [ 3,  3,  1], [ 3,  3,  2], [ 3,  3,  3]])
     xx = 2 * dmax + 1
-    cells = sp.indices((xx,xx,xx)).reshape(3,-1) - dmax
+    cells = sp.indices((xx,xx,xx)).reshape(3,-1) - dmax  # (3,343)
     grid = sp.array([DX*cells[0],DY*cells[1],DZ*cells[2]])
-    cells = cells.T
+    cells = cells.T  # (343,3)
     grid = grid.T
-    onesline = sp.ones((xx**3,1))	# (343,1)
 
     iqso=0
     pixtot=0
@@ -446,18 +461,18 @@ def main():
         if rsd:
             if dla:
                 try:
-                    delta_l, eta_par, velo_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=imin, imax=imax)
+                    delta_l, eta_par, velo_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
                 except:
                     print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
                     continue
             else:
                 try:
-                    delta_l, eta_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=imin, imax=imax)
+                    delta_l, eta_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
                 except:
                     print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
                     continue
         else:
-            delta_l = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=imin, imax=imax)
+            delta_l = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
 
         # LX,LY,LZ,DX,DY,DZ are hidden parameters,
         # as well as fullrho and eta_x, eta_y eta_z
