@@ -180,7 +180,7 @@ def main():
         p1 = boxfits[0].read()
         boxfits.close()
         p2 = fitsio.read(args.indir+"/boxln_2-{}.fits".format(i_slice), ext=0)
-        p2 = fitsio.read(args.indir+"/boxln_3-{}.fits".format(i_slice), ext=0)
+        p3 = fitsio.read(args.indir+"/boxln_3-{}.fits".format(i_slice), ext=0)
         t1=time()
         print("read boxes in {} s, shape: {}".format(t1-t0,p1.shape))
         sigma_p_1 = np.std(p1)
@@ -302,8 +302,14 @@ def main():
     mmm = (dz_interp>z_min) & (dz_interp<z_max)
     if not random_cond:
         mean_rho_interp = dn_cell[mmm] / (
-            np.exp((util.qso_a_of_z(dz_interp[mmm], z1)*sigma_rho_1)**2/2)*(z2-dz_interp[mmm])/(z2-z1) +
-            np.exp((util.qso_a_of_z(dz_interp[mmm], z2)*sigma_rho_2)**2/2)*(dz_interp[mmm]-z1)/(z2-z1)
+            util.qso_lognormal_coef(dz_interp[mmm])*(
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z1)*sigma_p_1)**2/2)*(z2-dz_interp[mmm])/(z2-z1) +
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z2)*sigma_p_2)**2/2)*(dz_interp[mmm]-z1)/(z2-z1)
+            )
+            + (1-util.qso_lognormal_coef(dz_interp[mmm]))*(
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z2)*sigma_p_2)**2/2)*(z3-dz_interp[mmm])/(z3-z2) +
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z3)*sigma_p_3)**2/2)*(dz_interp[mmm]-z2)/(z3-z2)
+            )
             )
         density_max = np.max(mean_rho_interp)
         density_mean = np.mean(mean_rho_interp)
@@ -374,8 +380,16 @@ def main():
         density = dn_cell[iz]
         # correct the z dependence in cond1 (due to a(z))
         if not random_cond:
-            density /= (np.exp((util.qso_a_of_z(redshift, z1)*sigma_rho_1)**2/2)*(z2-redshift)/(z2-z1) +
-                        np.exp((util.qso_a_of_z(redshift, z2)*sigma_rho_2)**2/2)*(redshift-z1)/(z2-z1))
+            density /= (util.qso_lognormal_coef(redshift)*(
+            np.exp((util.qso_a_of_z(redshift, z1)*sigma_p_1)**2/2)*(z2-redshift)/(z2-z1) +
+            np.exp((util.qso_a_of_z(redshift, z2)*sigma_p_2)**2/2)*(redshift-z1)/(z2-z1)
+            )
+            + (1-util.qso_lognormal_coef(redshift))*(
+            np.exp((util.qso_a_of_z(redshift, z2)*sigma_p_2)**2/2)*(z3-redshift)/(z3-z2) +
+            np.exp((util.qso_a_of_z(redshift, z3)*sigma_p_3)**2/2)*(redshift-z2)/(z3-z2)
+            )
+            )
+
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==
