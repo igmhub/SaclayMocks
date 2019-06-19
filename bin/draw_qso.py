@@ -107,6 +107,7 @@ def main():
     parser.add_argument("-zmin", type=float, help="minimal redshift for drawing QSO, default is None", default=-1)
     parser.add_argument("-zmax", type=float, help="maximal redshift for drawing QSO, default is None", default=-1)
     parser.add_argument("-desi", type=str, help="select only objects in desi footprint, default is True", default="True")
+    parser.add_argument("-zfix", type=float, help="If specified, all QSO will be drawn at redshift = zfix", default=None)
     parser.add_argument("-seed", type=int, help="specify a seed", default=None)
     parser.add_argument("-rsd", help="If True, rsd are added, default True", default='True')
     parser.add_argument("-dgrowthfile", help="dD/dz file, default etc/dgrowth.fits", default=None)
@@ -142,7 +143,6 @@ def main():
     print("\n\nBegining of DrawQSO.")
     if random_cond:
         print("***Random catalogs***")
-        print(random_cond)
 
     global seed
     seed = args.seed
@@ -153,6 +153,9 @@ def main():
     else:
         np.random.seed(seed)
         print("Specified seed is {}".format(seed))
+
+    if args.zfix is not None:
+        print("Redshift has been fixed to {}".format(args.zfix))
 
     #........................................   read box.fits header
     boxfits = fitsio.FITS(args.indir+"/boxln_1-{}.fits".format(i_slice))
@@ -374,7 +377,10 @@ def main():
         XY2 = (XX*XX).reshape(-1,1) + YY*YY	# broadcasting -> (NX,NY)
         ZZ = z_axis[mz]
         RR = np.sqrt(ZZ*ZZ + XY2)
-        redshift = z_of_R(RR/h)
+        if args.zfix is  None:
+            redshift = z_of_R(RR/h)
+        else:
+            redshift = args.zfix*np.ones_like(RR)
         delta_z = dz_interp[1] - dz_interp[0]
         iz = ((redshift - dz_interp[0]) / delta_z).round().astype(int)
         density = dn_cell[iz]
@@ -389,7 +395,6 @@ def main():
             np.exp((util.qso_a_of_z(redshift, z3)*sigma_p_3)**2/2)*(redshift-z2)/(z3-z2)
             )
             )
-
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==
@@ -414,14 +419,20 @@ def main():
         ra, dec, RR = box.ComputeRaDecR2(XXX, YYY, ZZZ, np.radians(ra0), np.radians(dec0))
         ra = np.degrees(ra)
         dec = np.degrees(dec)
-        redshift = z_of_R(RR/h)
+        if args.zfix is None:
+            redshift = z_of_R(RR/h)
+        else:
+            redshift = args.zfix*np.ones_like(RR)
         if redshift.min() > z_max +1.: continue
         if not random_cond and rsd:
             vpar = (XX.reshape(-1,1)*vx[:, :, mz]
                   + YY*vy[:, :, mz]
                   + ZZ*vz[:, :, mz]) / RR
             msk = np.where(redshift < z_max + 1.)  # don't go above z=5
-            RR_RSD = RR.copy()
+            if args.zfix is None:
+                RR_RSD = RR.copy()
+            else:
+                RR_RSD = R_of_z(redshift)*h
             RR_RSD[msk] += vpar[msk] * (1+redshift[msk]) * Dgrowth.interp(redshift[msk]) / (dgrowth0 * H0)
             redshift_RSD = z_of_R(RR_RSD/h)
 
@@ -445,11 +456,12 @@ def main():
         YY = YY[iqso[1]]
         ZZ = ZZZ[iqso]
         RR = RR[iqso]
-        zzz = z_of_R(RR/h)
+        # zzz = z_of_R(RR/h)
+        zzz = redshift[iqso]
         if RR.size == 0: continue
         if rsd and not random_cond:
             RR_RSD = RR_RSD[iqso]
-            zzz_RSD = z_of_R(RR_RSD/h)
+            zzz_RSD = redshift_RSD[iqso]
         else:
             zzz_RSD = zzz
 

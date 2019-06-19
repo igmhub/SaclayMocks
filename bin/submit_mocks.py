@@ -694,7 +694,7 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_draw_qso'] += " -zmax "+str(mock_args['zmax'])
                         mock_args['args_draw_qso'] += " -desi "+str(mock_args['desifootprint'])
                         mock_args['args_draw_qso'] += " -rsd "+str(mock_args['rsd'])
-                        mock_args['args_draw_qso'] += " "+mock_args['seed']
+                        mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
                         run_python_script(node, cid, "draw_qso", mock_args, sbatch_args)
                     if run_args['randoms']:
                         mock_args['args_draw_qso'] = "-Nslice "+str(mock_args['nslice'])
@@ -709,7 +709,7 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_draw_qso'] += " -zmax "+str(mock_args['zmax'])
                         mock_args['args_draw_qso'] += " -desi "+str(mock_args['desifootprint'])
                         mock_args['args_draw_qso'] += " -rsd "+str(mock_args['rsd'])
-                        mock_args['args_draw_qso'] += " "+mock_args['seed']
+                        mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
                         mock_args['args_draw_qso'] += " -random True "
                         run_python_script(node, cid, "draw_qso", mock_args, sbatch_args, "randoms")
                     if run_args['make_spectra']:
@@ -910,14 +910,14 @@ def main():
     sbatch_args['account'] = args.account
     sbatch_args['email'] = args.email
     # Parameters for pk job:
-    sbatch_args['time_pk'] = "00:10:00"  # default "00:15:00"
+    sbatch_args['time_pk'] = "00:15:00"  # default "00:15:00"
     sbatch_args['queue_pk'] = "debug"  # default "regular"
     sbatch_args['name_pk'] = "saclay_pk"
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "02:00:00"  # default "01:30:00"
-    sbatch_args['queue_boxes'] = "regular"  # default "regular"
+    sbatch_args['time_boxes'] = "00:30:00"  # default "01:30:00"
+    sbatch_args['queue_boxes'] = "debug"  # default "regular"
     sbatch_args['name_boxes'] = "saclay_boxes"
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
@@ -925,8 +925,8 @@ def main():
     sbatch_args['time_chunk'] = "00:20:00"  # default "00:30:00"
     sbatch_args['queue_chunk'] = "debug"  # default "regular"
     sbatch_args['name_chunk'] = "saclay_chunk"
-    sbatch_args['threads_chunk'] = 32  # default 32
-    sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
+    sbatch_args['threads_chunk'] = 64  # default 32
+    sbatch_args['nodes_chunk'] = 1  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
     sbatch_args['time_mergechunks'] = "00:10:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
@@ -949,7 +949,7 @@ def main():
     mock_args['c'] = -1  # c paramter in FGPA; -1 is to read c(z) from etc/params.fits
     mock_args['zmin'] = 1.8  # minimal redshift to draw QSO
     mock_args['zmax'] = 3.6  # maximal redshift to draw QSO
-    mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
+    mock_args['zfix'] = "-zfix 2.4"  # "-zfix 2.6" to fix the redshift to a special value
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
     if args.seed is not None:
@@ -966,7 +966,7 @@ def main():
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
     mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
-    mock_args['burst_buffer'] = True  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
+    mock_args['burst_buffer'] = False  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
     mock_args['bb_size'] = "600GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
     mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+i_realisation
 
@@ -977,7 +977,7 @@ def main():
     # boxes:
     run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = False  # produce chunks
+    run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = True  # run draw_qso.py for randoms
     run_args['make_spectra'] = False  # run make_spectra.py
