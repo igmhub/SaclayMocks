@@ -188,6 +188,7 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     sigma_g = constant.sigma_g
     # Gaussian field threshold:
     nu_arr = nu_of_bD(dla_bias*sigma_g*D_cell)  # (npix)
+    nu_arr *= 3
     #Figure out cells that could host a DLA, based on Gaussian fluctuation
     flagged_cells = flag_DLA(zq,z_cell,deltas,nu_arr,sigma_g,zlow, dz_of_z, rand)
     flagged_cells[deltas==-1e6]=False  # don't draw DLA outside forest
@@ -275,10 +276,13 @@ else:
     print("Specified seed is {}".format(seed))
 
 print("Files will be read from {}".format(args.input_path))
-if not random_cond:
-    filename = args.output_path + "/dla.fits"
+if args.output_path.endswith('.fits') or args.output_path.endswith('.fits.gz'):
+    filename = args.output_path
 else:
-    filename = args.output_path + "/dla_randoms.fits"
+    if not random_cond:
+        filename = args.output_path + "/dla.fits"
+    else:
+        filename = args.output_path + "/dla_randoms.fits"
 print("Output will be written in {}".format(filename))
 flist = glob.glob(os.path.join(args.input_path,args.input_pattern))
 print('Will read', len(flist),' files')
