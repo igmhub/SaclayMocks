@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import norm
 from scipy.interpolate import interp1d, interp2d
 import astropy.table
-import os
+import os, sys
 import fitsio
 import time
 import glob
@@ -188,7 +188,6 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     sigma_g = constant.sigma_g
     # Gaussian field threshold:
     nu_arr = nu_of_bD(dla_bias*sigma_g*D_cell)  # (npix)
-    nu_arr *= 3
     #Figure out cells that could host a DLA, based on Gaussian fluctuation
     flagged_cells = flag_DLA(zq,z_cell,deltas,nu_arr,sigma_g,zlow, dz_of_z, rand)
     flagged_cells[deltas==-1e6]=False  # don't draw DLA outside forest
@@ -205,7 +204,10 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     p_nu_z = 1.0-norm.cdf(nu_arr)
 
     #Define mean of the Poisson distribution (per cell)
-    mu = mean_N_per_cell/p_nu_z * np.ones_like(flagged_cells)
+    mu = mean_N_per_cell * np.ones_like(flagged_cells)
+    # correct for the threshold dependency
+    if not rand:
+        mu /= p_nu_z
     # mu *= 20000  # incrase number of DLA
     # mu *= 6.4
     # mu = mean_N_per_cell*(1+bias*deltas)
@@ -276,13 +278,19 @@ else:
     print("Specified seed is {}".format(seed))
 
 print("Files will be read from {}".format(args.input_path))
-if args.output_path.endswith('.fits') or args.output_path.endswith('.fits.gz'):
-    filename = args.output_path
-else:
+if os.path.isdir(args.output_path):
     if not random_cond:
         filename = args.output_path + "/dla.fits"
     else:
         filename = args.output_path + "/dla_randoms.fits"
+else:
+    filename = args.output_path
+    try:
+        fits = fitsio.FITS(filename, 'rw', clobber=True)
+    except IOError:
+        print("Can't create or open file {}".format(filename))
+        print("Exiting!")
+        sys.exit()
 print("Output will be written in {}".format(filename))
 flist = glob.glob(os.path.join(args.input_path,args.input_pattern))
 print('Will read', len(flist),' files')
