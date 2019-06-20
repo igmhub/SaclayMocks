@@ -302,7 +302,6 @@ dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)
 dNdz_arr *= 20000.
 dNdz_arr *= 6.4
 if random_cond:
-    dNdz_arr /= 2.25  # approximate factor to get the right number of randoms
     dNdz_arr *= args.random_factor
 dNdz_arr /= (-0.01534254*z_cell + 0.0597803)*6.4 / 0.186  # correct the z dependency
 dz_of_z = dz_of_z(args.cell_size)
