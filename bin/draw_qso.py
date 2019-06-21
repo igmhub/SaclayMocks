@@ -231,7 +231,7 @@ def main():
         print("rho_sum = {} ; {} s".format(rho_sum, time()-t3))
         # apply a(z): P = exp(delta)**a(z) for each lognormal
         z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
-                    (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)        
+                    (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)
         p1 **= util.qso_a_of_z(z_box, z1)
         p2 **= util.qso_a_of_z(z_box, z2)
         p3 **= util.qso_a_of_z(z_box, z3)
