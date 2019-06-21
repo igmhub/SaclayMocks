@@ -30,34 +30,32 @@ def main():
     if (NX == NY and NX == NZ):
         outfits = FITS(outDir+'/P{}.fits'.format(NX), 'rw', clobber=True)
         infits = [FITS(inDir+'/P{}_{}_{}.fits'.format(NX, i, N_HDU)) for i in range(N_HDU)]
-        head = infits[0][0].read_header()
-        hdict = {'Dcell': head['Dcell'], 'NX': head['NX'], 'NY': head['NY'], 'NZ': head['NZ']}
-
-        Pln = [f[0].read() for f in infits]
-        Pln = np.concatenate(Pln, axis=0)
-        outfits.write(Pln, header=hdict)
-        del Pln
-
-        P0 = [f[1].read() for f in infits]
-        P0 = np.concatenate(P0, axis=0)
-        outfits.write(P0, header=hdict)
-        del P0
-
     else:
         outfits = FITS(outDir+'/P{}-{}-{}.fits'.format(NX, NY, NZ), 'rw', clobber=True)
         infits = [FITS(inDir+'/P{}-{}-{}_{}_{}.fits'.format(NX, NY, NZ, i, N_HDU)) for i in range(N_HDU)]
-        head = infits[0][0].read_header()
-        hdict = {'Dcell': head['Dcell'], 'NX': head['NX'], 'NY': head['NY'], 'NZ': head['NZ']}
 
-        Pln = [f[0].read() for f in infits]
-        Pln = np.concatenate(Pln, axis=0)
-        outfits.write(Pln, header=hdict)
-        del Pln
+    head = infits[0][0].read_header()
+    hdict = {'Dcell': head['Dcell'], 'NX': head['NX'], 'NY': head['NY'], 'NZ': head['NZ']}
 
-        P0 = [f[1].read() for f in infits]
-        P0 = np.concatenate(P0, axis=0)
-        outfits.write(P0, header=hdict)
-        del P0
+    Pln = [f['Pln1'].read() for f in infits]
+    Pln = np.concatenate(Pln, axis=0)
+    outfits.write(Pln, header=hdict, extname='Pln1')
+    del Pln
+
+    Pln = [f['Pln2'].read() for f in infits]
+    Pln = np.concatenate(Pln, axis=0)
+    outfits.write(Pln, header=hdict, extname='Pln2')
+    del Pln
+
+    Pln = [f['Pln3'].read() for f in infits]
+    Pln = np.concatenate(Pln, axis=0)
+    outfits.write(Pln, header=hdict, extname='Pln3')
+    del Pln
+
+    P0 = [f['P0'].read() for f in infits]
+    P0 = np.concatenate(P0, axis=0)
+    outfits.write(P0, header=hdict, extname='P0')
+    del P0
 
     print("Merged fits file written in {}".format(outDir))
     print("Took {}s".format(time.time()-t0))

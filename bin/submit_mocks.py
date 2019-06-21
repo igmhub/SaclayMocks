@@ -788,7 +788,7 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_draw_qso'] += " -zmax "+str(mock_args['zmax'])
                         mock_args['args_draw_qso'] += " -desi "+str(mock_args['desifootprint'])
                         mock_args['args_draw_qso'] += " -rsd "+str(mock_args['rsd'])
-                        mock_args['args_draw_qso'] += " "+mock_args['seed']
+                        mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
                         run_python_script(node, cid, "draw_qso", mock_args, sbatch_args)
                     if run_args['randoms']:
                         mock_args['args_draw_qso'] = "-Nslice "+str(mock_args['nslice'])
@@ -803,7 +803,7 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_draw_qso'] += " -zmax "+str(mock_args['zmax'])
                         mock_args['args_draw_qso'] += " -desi "+str(mock_args['desifootprint'])
                         mock_args['args_draw_qso'] += " -rsd "+str(mock_args['rsd'])
-                        mock_args['args_draw_qso'] += " "+mock_args['seed']
+                        mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
                         mock_args['args_draw_qso'] += " -random True "
                         run_python_script(node, cid, "draw_qso", mock_args, sbatch_args, "randoms")
                     if run_args['make_spectra']:
@@ -1046,7 +1046,7 @@ def main():
     sbatch_args['time_chunk'] = "00:40:00"  # default "00:30:00"
     sbatch_args['queue_chunk'] = "regular"  # default "regular"
     sbatch_args['name_chunk'] = "saclay_chunk"
-    sbatch_args['threads_chunk'] = 32  # default 32
+    sbatch_args['threads_chunk'] = 64  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
     sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
@@ -1087,8 +1087,8 @@ def main():
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
     mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
-    mock_args['burst_buffer'] = True  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
-    mock_args['bb_size'] = "5000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
+    mock_args['burst_buffer'] = False  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
+    mock_args['bb_size'] = "600GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
     mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+i_realisation
 
     ### Code to runs:
