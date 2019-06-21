@@ -15,7 +15,7 @@ manualy in the main function.
 
 At the end, this code produces a bash file: submit.sh, for each mock realisation.
 You need to run this bash file in order to send the jobs to cori nodes.
-08/04/2019 - Thomas Etournea
+08/04/2019 - Thomas Etourneau
 thomas.etouneau@cea.fr
 """
 
@@ -76,6 +76,38 @@ def create_reservation(mock_args):
         script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#BB create_persistent name={name} capacity={size} access_mode=striped type=scratch\n".format(name=mock_args['bb_name'], size=mock_args['bb_size'])
+    # script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
+    # script += "#DW stage_in source={path} destination=$DW_PERSISTENT_STRIPED_{name}/pk type=directory\n".format(path=mock_args['dir_pk'], name=mock_args['bb_name'])
+    # script += "#DW stage_in source={path} destination=$DW_PERSISTENT_STRIPED_{name}/mock_{i} type=directory\n".format(path=mock_args['base_dir'], name=mock_args['bb_name'], i=mock_args['imock'])
+
+    # script += "echo $DW_PERSISTENT_STRIPED_{}\n".format(mock_args['bb_name'])
+    # script += "echo '--'\n"
+    # script += "ls -ahls $DW_PERSISTENT_STRIPED_{}\n".format(mock_args['bb_name'])
+    # script += "echo '--'\n"
+    # script += "ls -ls $DW_PERSISTENT_STRIPED_{}/pk\n".format(mock_args['bb_name'])
+    # script += "echo '--'\n"
+    # script += "ls -ls $DW_PERSISTENT_STRIPED_{}/mock_*\n".format(mock_args['bb_name'])
+    # script += "echo '--'\n"
+    # script += "echo 'number of files:'\n"
+    # script += "ls -ls $DW_PERSISTENT_STRIPED_{}/* | wc -l \n".format(mock_args['bb_name'])
+    script += "echo 'END'\n"
+
+    filename = mock_args['run_dir']+'/create_reservation.sh'
+    fout = open(filename, 'w')
+    fout.write(script)
+    fout.close()
+
+
+def stage_in(mock_args):
+    '''
+    This functions stages in the mock files on the burst buffer nodes.
+    '''
+    script = "#!/bin/bash\n"
+    script += "#SBATCH -N 1\n"
+    script += "#SBATCH -C haswell\n"
+    script += "#SBATCH -J saclay_stagein_{}\n".format(mock_args['imock'])
+    script += "#SBATCH -q regular\n"
+    script += "#SBATCH -t 00:05:00\n"
     script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
     script += "#DW stage_in source={path} destination=$DW_PERSISTENT_STRIPED_{name}/pk type=directory\n".format(path=mock_args['dir_pk'], name=mock_args['bb_name'])
     script += "#DW stage_in source={path} destination=$DW_PERSISTENT_STRIPED_{name}/mock_{i} type=directory\n".format(path=mock_args['base_dir'], name=mock_args['bb_name'], i=mock_args['imock'])
@@ -92,10 +124,46 @@ def create_reservation(mock_args):
     script += "ls -ls $DW_PERSISTENT_STRIPED_{}/* | wc -l \n".format(mock_args['bb_name'])
     script += "echo 'END'\n"
 
-    filename = mock_args['run_dir']+'/create_reservation.sh'
+    filename = mock_args['run_dir']+'/stage_in.sh'
     fout = open(filename, 'w')
     fout.write(script)
     fout.close()
+
+
+def stage_out_dir(mock_args):
+    '''
+    This function returns the bash lines to stage_out the specified directories
+    '''
+    script = ''
+    # stage_out everything
+    if 'all' in mock_args['stage_out_dir']:
+        script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i} destination={path}/mock_{i} type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], path=mock_args['mock_dir'])
+        return script
+
+    # stage_out only some particular directories
+    # output dir
+    script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/output destination={path}/mock_{i}/output type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], path=mock_args['mock_dir'])
+    # boxes
+    if 'boxes' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/boxes destination={path}/mock_{i}/chunk_{j}/boxes type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # qso
+    if 'qso' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/qso destination={path}/mock_{i}/chunk_{j}/qso type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # randoms
+    if 'randoms' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/randoms destination={path}/mock_{i}/chunk_{j}/randoms type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # spectra
+    if 'spectra' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/spectra destination={path}/mock_{i}/chunk_{j}/spectra type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # spectra_merged
+    if 'spectra_merged' in mock_args['stage_out_dir']:
+        for j in mock_args['chunkid']:
+            script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/spectra_merged destination={path}/mock_{i}/chunk_{j}/spectra_merged type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    return script
 
 
 def stage_out(mock_args):
@@ -109,11 +177,10 @@ def stage_out(mock_args):
     script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
-    script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i} destination={path2} type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], path2=mock_args['mock_dir']+"/mock_"+str(mock_args['imock']))
-    # script += "echo 'BB nodes:'\n"
-    # script += "du -sh $DW_PERSISTENT_STRIPED_{name}/mock_{i}\n".format(name=mock_args['bb_name'], i=mock_args['imock'])
-    # script += "echo 'staged out:'\n"
-    # script += "du -sh {}\n".format(mock_args['mock_dir']+"/mock_"+str(mock_args['imock']))
+    # add the #DW stage_out lines for each directory to stage out
+    script += stage_out_dir(mock_args)
+    script += "echo 'This will stage out:'\n"
+    script += "echo '{}'\n".format(mock_args['stage_out_dir'])
     script += "echo 'END'\n"
 
     filename = mock_args['run_dir']+'/stage_out.sh'
@@ -146,14 +213,14 @@ def change_permission():
     aa #prov
 
 
-def get_errors(code, start):
+def get_errors(code, start, pids=None):
     '''
     returns the bash lines to get potential errors in job runs
     '''
     errors="""
 error=0
 i=<start>
-for p in $pids; do
+for p in $<pids>; do
     if wait $p; then
 	echo "<code>-$i OK"
     else
@@ -168,8 +235,11 @@ if [ $error -ne 0 ]; then
 fi
 """
 
+    if pids is None:
+        pids = 'pids'
     errors = errors.replace('<code>', str(code))
     errors = errors.replace('<start>', str(start))
+    errors = errors.replace('<pids>', pids)
     return errors
 
 
@@ -187,9 +257,6 @@ def run_bash_script(codename, mock_args, sbatch_args):
     script = """echo -e "*** Running <codename> <nslice> times ***"\n"""
     script += """pids=""\n"""
     for node in range(sbatch_args['nodes_chunk']):
-        imin = node*sbatch_args['threads_chunk']
-        imax = (node+1)*sbatch_args['threads_chunk'] - 1
-        if imax >= mock_args['nslice']: imax=mock_args['nslice']-1
         if mock_args['sbatch']:
             script += "srun "
             if mock_args['verbosity'] is not None:
@@ -348,46 +415,69 @@ fi
 
     if "compute_dla" in todo:
         script += """echo -e "*** Producing DLA ***"\n"""
-        script += "pids=''\n"
+        script += "pids_dla=''\n"
         for cid in mock_args['chunkid']:
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_file {base}/chunk_{i}/dla.fits --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
             script += "&> {path}/dla-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
-            script += """pids+=" $!"\n"""
-        script += get_errors("dla_saclay", 0)
+            script += """pids_dla+=" $!"\n"""
+
+    if "dla_randoms" in todo:
+        script += """echo -e "*** Producing DLA randoms ***"\n"""
+        script += "pids_rand=''\n"
+        for cid in mock_args['chunkid']:
+            if mock_args['use_time']:
+                script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
+            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} -random True ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            script += "&> {path}/dla_rand-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
+            script += """pids_rand+=" $!"\n"""
+
+    if "compute_dla" in todo:
+        script += get_errors("dla", 0, pids="pids_dla")
+    if "dla_randoms" in todo:
+        script += get_errors("dla", 0, pids="pids_rand")
+    if "compute_dla" in todo or "dla_randoms" in todo:
         script += """echo -e "==> dla_saclay done. $(( SECONDS - start )) s"\n"""
 
     if "merge_dla" in todo:
         script += """echo -e "*** Merging DLA ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "merge_dla.py -indir {base} -outfile {outpath}/master_DLA.fits ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
-        script += "&> {path}/merge_dla.log\n".format(path=mock_args['logs_dir_mergechunks'])
-        script += """
-if [ $? -ne 0 ]; then
-    echo "==> Error in merge_dla ...   Abort!"
-    exit 1
-else
-    echo -e "==> merge_dla done. $(( SECONDS - start )) s"
-fi
-"""
+        script += "merge_dla.py -indir {base} -outdir {outpath} ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
+        script += "&> {path}/merge_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_dla=$!\n"
 
-    if "dla_randoms" in todo:
-        script += """echo -e "*** Producing randoms DLA ***"\n"""
+    if "merge_rand_dla" in todo:
+        script += """echo -e "*** Merging DLA randoms ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "dla_randoms.py -infile {path}/master_DLA.fits -outfile {path}/master_DLA_randoms.fits ".format(path=mock_args['out_dir'])
-        script += "&> {path}/dla_randoms.log\n".format(path=mock_args['logs_dir_mergechunks'])
-        script += """
-if [ $? -ne 0 ]; then
-    echo "==> Error in dla_rand ...   Abort!"
-    exit 1
-else
-    echo -e "==> dla_rand done. $(( SECONDS - start )) s"
-fi
+        script += "merge_dla.py -indir {base} -outdir {outpath} -random True ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
+        script += "&> {path}/merge_rand_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_dla_rand=$!\n"
 
+    if "merge_dla" in todo:
+        script += """
+if wait $pid_dla; then
+    echo "merge_dla OK"
+else
+    echo "Error in merge_dla"
+    exit 1
+fi
 """
+
+    if "merge_rand_dla" in todo:
+        script += """
+if wait $pid_dla_rand; then
+    echo "merge_dla randoms OK"
+else
+    echo "Error in merge_dla randoms"
+    exit 1
+fi
+"""
+
+    if "merge_dla" in todo or "merge_rand_dla" in todo:
+        script += """echo -e "==> DLA catalogs done. $(( SECONDS - start )) s"\n"""
 
     if "transmissions" in todo:
         script += """echo -e "*** Running make_transmissions {threads} times ***"\n""".format(threads=sbatch_args['threads_mergechunks'])
@@ -659,6 +749,8 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
             mock_args['bb_name'] = mock_args['bb_name']+"_"+str(imock)
         if run_args['run_create']:
             create_reservation(mock_args)
+        if run_args['run_stagein']:
+            stage_in(mock_args)
         if run_args['run_stageout']:
             stage_out(mock_args)
         if run_args['run_delete']:
@@ -669,6 +761,8 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                 if k == 'mock_dir' or k == 'out_dir_no_bb':
                     continue
                 if 'run' in k or 'log' in k or 'python' in k:
+                    continue
+                if 'stage_out' in k:
                     continue
                 mock_args[k] = mock_args[k].replace(mock_args['mock_dir'], "$DW_PERSISTENT_STRIPED_{name}".format(name=mock_args['bb_name']))
 
@@ -751,11 +845,13 @@ def submit(mock_args, run_args):
     path = mock_args['run_dir']
     script = "#!/bin/bash\n"
     if mock_args['sbatch']:
+        # Pk
         if run_args['run_pk']:
             script += "run_pk=$(sbatch --parsable "
             script += "--output "+mock_args['dir_pk_logs']+"/run_pk.log "
             script += mock_args['dir_pk_run']+"/run_pk.sh)\n"
             script += """echo "run_pk.sh: "$run_pk\n"""
+        # run create
         if mock_args['burst_buffer'] and run_args['run_create']:
             script += "run_create=$(sbatch --parsable "
             if run_args['run_pk']:
@@ -763,6 +859,17 @@ def submit(mock_args, run_args):
             script += "--output "+mock_args['logs_dir']+"/run_create.log "
             script += path+"/create_reservation.sh)\n"
             script += """echo "run_create.sh: "$run_create \n"""
+        # run stage in
+        if mock_args['burst_buffer'] and run_args['run_stagein']:
+            script += "run_stagein=$(sbatch --parsable "
+            script += "--output "+mock_args['logs_dir']+"/run_stagein.log "
+            if  run_args['run_create'] and mock_args['burst_buffer']:
+                script += "--dependency=afterok:$run_create "
+            elif run_args['run_pk']:
+                script += "--dependency=afterok:$run_pk "
+            script += path+"/stage_in.sh)\n"
+            script += """echo "stage_in.sh: "$run_stagein \n"""
+        # run boxes and chunks
         for i, cid in enumerate(mock_args['chunkid']):
             if run_args['run_boxes']:
                 script += "run_boxes_{i}=$(sbatch --parsable ".format(i=cid)
@@ -772,34 +879,44 @@ def submit(mock_args, run_args):
                     if run_args['run_pk']:
                         afterok += "$run_pk,"
                     if mock_args['burst_buffer']:
-                        afterok += "$run_create "
+                        if run_args['run_create']:
+                            afterok += "$run_create,"
+                        if run_args['run_stagein']:
+                            afterok += '$run_stagein,'
                     script += afterok[:-1]
                 script += " --output "+mock_args['logs_dir']+"/run_boxes-{i}.log ".format(i=cid)
                 script += path+"/run_boxes-{i}.sh)\n".format(i=cid)
                 script += """echo "run_boxes-{i}.sh: "$run_boxes_{i}\n""".format(i=cid)
             if run_args['run_chunks']:
                 script += "run_chunk_{i}=$(sbatch --parsable ".format(i=cid)
-                if run_args['run_boxes'] or run_args['run_create']:
+                if run_args['run_boxes'] or run_args['run_create'] or run_args['run_stagein']:
                     script += "-d afterok:"
                     afterok = ""
                     if run_args['run_boxes']:
                         afterok += "$run_boxes_{i},".format(i=cid)
                     if mock_args['burst_buffer']:
-                        afterok += "$run_create "
+                        if run_args['run_create']:
+                            afterok += "$run_create,"
+                        if run_args['run_stagein']:
+                            afterok += "$run_stagein,"
                     script += afterok[:-1]
                 script += " --output "+mock_args['logs_dir']+"/run_chunks-{i}.log ".format(i=cid)
                 script += path+"/run_chunk-{i}.sh)\n".format(i=cid)
                 script += """echo "run_chunk-{i}.sh: "$run_chunk_{i}\n""".format(i=cid)
+        # run mergechunks
         if run_args['run_mergechunks']:
             script += "run_mergechunks=$(sbatch --parsable "
-            if run_args['run_chunks'] or run_args['run_create']:
+            if run_args['run_chunks'] or run_args['run_create'] or run_args['run_stagein']:
                 script += "-d afterok:"
                 afterok = ""
                 if run_args['run_chunks']:
                     for cid in mock_args['chunkid']:
                         afterok += "$run_chunk_{i},".format(i=cid)
-                if run_args['run_create']:
-                    afterok += "$run_create "
+                if mock_args['burst_buffer']:
+                    if run_args['run_create']:
+                        afterok += "$run_create,"
+                    if run_args['run_stagein']:
+                        afterok += "$run_stagein,"
                 script += afterok[:-1]
             script += " --output "+mock_args['logs_dir']+"/run_mergechunks.log "
             script += path+"/run_mergechunks.sh)\n"
@@ -890,6 +1007,10 @@ def main():
     parser.add_argument("--mock-realisation", type=int, default=None, required=False,
         help="Specify a particular realisation to be produced (optional)")
 
+    parser.add_argument("--stage-out", type=str, nargs="*", default='all', required=False,
+        help="Specify what output you want to save to your scratch directory when using the burst buffer (optional)\n"+
+                        "you can backup among: 'boxes qso randoms spectra spectra_merged' or just 'all'")
+
     parser.add_argument("--seed", type=int, default=None, required=False,
         help="Specify a particular seed (optional)")
 
@@ -910,13 +1031,13 @@ def main():
     sbatch_args['account'] = args.account
     sbatch_args['email'] = args.email
     # Parameters for pk job:
-    sbatch_args['time_pk'] = "00:15:00"  # default "00:15:00"
+    sbatch_args['time_pk'] = "00:20:00"  # default "00:15:00"
     sbatch_args['queue_pk'] = "debug"  # default "regular"
     sbatch_args['name_pk'] = "saclay_pk"
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "02:00:00"  # default "01:30:00"
+    sbatch_args['time_boxes'] = "01:30:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "saclay_boxes"
     sbatch_args['threads_boxes'] = 64  # default 64
@@ -986,12 +1107,14 @@ def main():
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = True  # Compute master_randoms.fits file
-    run_args['compute_dla'] = True  # Compute dla catalog or each chunks
+    run_args['compute_dla'] = True  # Compute dla catalog of each chunks
+    run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
     run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['dla_randoms'] = True  # Compute master_DLA_randoms.fits file
+    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
     run_args['run_create'] = True  # Create persistent reservation
+    run_args['run_stagein'] = True  # Stage in the init files (pk, directories, ...) (from scratch to BB)
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
     run_args['run_delete'] = True  # delete the persistent reservation
 
@@ -1024,8 +1147,9 @@ def main():
     if run_args['merge_qso']: run_args['todo_mergechunks'] += "merge_qso "
     if run_args['merge_randoms']: run_args['todo_mergechunks'] += "merge_randoms "
     if run_args['compute_dla']: run_args['todo_mergechunks'] += "compute_dla "
-    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
     if run_args['dla_randoms']: run_args['todo_mergechunks'] += "dla_randoms "
+    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
+    if run_args['merge_rand_dla']: run_args['todo_mergechunks'] += "merge_rand_dla "
     if run_args['transmissions']: run_args['todo_mergechunks'] += "transmissions "
 
     if mock_args['burst_buffer']:
@@ -1035,10 +1159,12 @@ def main():
         if 'cscratch1' not in args.mock_dir:
             print("--mock-dir option should point to /global/cscratch1 when using the burst buffer mode !")
             sys.exit(1)
+        mock_args['stage_out_dir'] = args.stage_out
     else:
         run_args['run_create'] = False
         run_args['run_stageout'] = False
         run_args['run_delete'] = False
+
     print("Writting scripts for {} realisations".format(nmocks))
     print("Mock files will be written in {}".format(mock_dir))
     if args.out_dir is not None:
@@ -1048,11 +1174,12 @@ def main():
         print("Outputs will be written in {}".format(mock_args['special_out']))
     print("It will run:")
     if mock_args['burst_buffer'] and run_args['run_create']: print("- run_create")
+    if mock_args['burst_buffer'] and run_args['run_stagein']: print("- run_stagein")
     if run_args['run_pk']: print("- Pk")
     if run_args['run_boxes']: print("- Boxes")
     if run_args['run_chunks']: print("- Chunks: {}".format(run_args['todo_chunk']))
     if run_args['run_mergechunks']: print("- Merge Chunks: {}".format(run_args['todo_mergechunks']))
-    if mock_args['burst_buffer'] and run_args['run_stageout']: print("-run stageout")
+    if mock_args['burst_buffer'] and run_args['run_stageout']: print("- run_stageout")
     if mock_args['burst_buffer'] and run_args['run_delete']: print("- run_delete")
 
     ### Define chunks parameters :

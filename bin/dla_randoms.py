@@ -23,6 +23,8 @@ def generate_rnd(factor=3, infile=None, outfile=None):
     data = fitsio.read(infile)
     zvec = data['Z_DLA_RSD']
     ntot = int(len(data)*factor)
+    print(len(data))
+    print(ntot)
 
     # z_rnd = np.random.choice(zvec,size=ntot)+0.0025*np.random.normal(size=ntot)
     z_rnd = np.random.choice(zvec,size=ntot)
@@ -35,10 +37,21 @@ def generate_rnd(factor=3, infile=None, outfile=None):
     Z_QSO_RSD_rnd = data['Z_QSO_RSD'][qso_rnd]
     Z_QSO_NO_RSD_rnd = data['Z_QSO_NO_RSD'][qso_rnd]
 
+    # Check if z_DLA_rand > z_QSO
+    msk = np.where(z_rnd > Z_QSO_RSD_rnd)[0]
+    # for i in range(100):
+    while len(msk) > ntot/5000.:
+        print(len(msk))
+        z_rnd[msk] = np.random.choice(zvec, size=len(msk))
+        msk = np.where(z_rnd > Z_QSO_RSD_rnd)[0]
+    z_rnd[msk] = np.random.choice(zvec[zvec < Z_QSO_RSD_rnd[msk].min()], size=len(msk))
+    msk = np.where(z_rnd > Z_QSO_RSD_rnd)[0]
+    print(len(msk))
+
     if outfile is not None:
         outfits = fitsio.FITS(outfile, 'rw', clobber=True)
-        table = [ra_rnd,dec_rnd,z_rnd,Z_QSO_NO_RSD_rnd,Z_QSO_RSD_rnd,MOCKID_rnd]
-        names=['RA','DEC','Z','Z_QSO_NO_RSD','Z_QSO_RSD','MOCKID']
+        table = [ra_rnd, dec_rnd, z_rnd, Z_QSO_NO_RSD_rnd, Z_QSO_RSD_rnd, MOCKID_rnd]
+        names = ['RA','DEC','Z','Z_QSO_NO_RSD','Z_QSO_RSD','MOCKID']
         outfits.write(table, names=names, extname='DLACAT')
         outfits[-1].write_key("x", factor, comment="Nrand is x times Ndata")
 

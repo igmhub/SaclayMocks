@@ -184,7 +184,6 @@ def main():
     lya = constant.lya
     lylimit = constant.lylimit
     lambda_min = constant.lambda_min
-    lyb = constant.lyb
     Om = constant.omega_M_0
     OL = constant.omega_lambda_0
     Ok = constant.omega_k_0
