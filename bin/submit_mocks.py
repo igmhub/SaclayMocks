@@ -996,7 +996,7 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = False  # Produce Pk
+    run_args['run_pk'] = True  # Produce Pk
     # boxes:
     run_args['run_boxes'] = True  # Produce GRF boxes
     # chunks:
