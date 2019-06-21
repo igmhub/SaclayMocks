@@ -124,7 +124,10 @@ class P_ln() :
 #  r_max = PI nk / kmax
 # xi(r) = - 1/(2r PI^2) \im FFT kP(k)
 # dr = pi / kmax    r_max = N dr / 2 = N pi/ 2 k_max
-#  kmax = 10 -> dr = 0.314 and N >= 1000 advisable
+#  kmax = 10 -> dr = 0.314
+#  rmax = 1000 -> dk = 0.00314
+# since rmax * kmax = N pi / 2, this ensures N > 20000/pi
+# should use FFTlog instead <==
 def xi_from_pk(k,pk,nk=32*1024,direct=True):
     if (k[0] != 0) :
         k = np.append([0],k)
@@ -137,6 +140,15 @@ def xi_from_pk(k,pk,nk=32*1024,direct=True):
         rmax = np.pi * nk / kmax
         if (rmax < 1000) :
             print "**** WARNING rmax=",rmax," while rmax >= 1000 advised ****"
+        #print direct,kmax, 2*kmax/nk, rmax, 2*rmax/nk
+    else:
+        myrmax = kmax   # in this case variable kmax is actually rmax
+        mykmax = np.pi * nk / myrmax
+        if (mykmax < 10) :
+            print "**** WARNING rmax=",mykmax," while kmax >= 10 advised ****"
+        if (myrmax < 1000) :
+            print "**** WARNING rmax=",myrmax," while rmax >= 1000 advised ****"
+        #print direct,mykmax, 2*mykmax/nk, myrmax, 2*myrmax/nk
     kIn=np.linspace(0,kmax,nk)
     pkIn=pkInter(kIn)
     r=2.*np.pi*np.arange(nk)/kmax
@@ -156,8 +168,8 @@ def xi_from_pk(k,pk,nk=32*1024,direct=True):
 #  xi(r) = (2 pi)^{-3} \int exp(ikr) Pk) dk
 #  P(k) = \int exp(ikr) Pk) dk
 #  so for xi -> P same function as for P -> xi but multiply by (2 pi)^3
-def pk_from_xi(r,xi,nr=32*1024,direct=False):
-    k, Pk = xi_from_pk(r,xi,nr)
+def pk_from_xi(r,xi,nr=32*1024):
+    k, Pk = xi_from_pk(r,xi,nr,direct=False)
     Pk *= (2 * np.pi)**3
     return k, Pk
 
@@ -216,7 +228,7 @@ def xi_predicted(xi_g, f, dfbar, delta_s=False, sigma=np.inf):
     # This function returns the predicted xi after applying f to a GRF g
     # g should be normalized such that sigma_g=1, which implies |xi_g| <1
     # see eq 2.6 in Font et al. 2012
-    # the numerical integral is not reliable for 0.005 < x_g < 1
+    # the numerical integral is not reliable for 0.995 < x_g < 1
     # delta_s = True => add small scales in prediction
     if delta_s == True:
         def integrand(dl1, dl2, ds1, ds2):
