@@ -448,17 +448,35 @@ def convert1DTo2D(array1D,nbX=None,nbY=None):
         array2D[i][j] = array1D[k]
     return array2D
 
-def bias_qso(redshift, bins=10000, zmin=0., zmax=10.):
+
+def bias_qso(redshift):
     '''
     This function return the bias of QSO for a given redshift
     The parametrisation comes from P. Laurent et al (2017)
     '''
-    if redshift.min() < zmin:
-        raise ValueError("Error! Redshift out of range: {} < z_min = {}".format(redshift.min(),zmin))
-    if redshift.max() > zmax:
-        raise ValueError("Error! Redshift out of range: {} > z_max = {}".format(redshift.max(),zmax))
-    z = np.linspace(zmin,zmax,bins)
-    # bias = 0.278*(1+z)**2 + 0.57
-    bias = 3.7 * ((1+z)/(1+2.33))**1.7
-    b_interp = interpolate.interp1d(z, bias)
-    return b_interp(redshift)
+    return 3.7 * ((1+redshift)/(1+2.33))**1.7
+
+
+def qso_a_of_z(redshift, z_qso_bias):
+    return bias_qso(redshift)*(1+z_qso_bias)/(bias_qso(z_qso_bias)*(1+redshift))
+
+
+def qso_lognormal_coef(redshift):
+    '''
+    This function returns the interpolated coefficient for computing the
+    interpolation between the 3 different lognormal fields
+    '''
+    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/qso_lognormal_coef.txt")
+    data = np.loadtxt(filename)
+    z = data[:,0]
+    coef = data[:,1]
+    if (redshift > z.max()).sum():
+        print("input redshift > {} ; setting coef = 0 for these values".format(z.max()))
+        z = np.append(z, redshift.max())
+        coef = np.append(coef, 0)
+    if (redshift < z.min()).sum():
+        print("input redshift < {} ; setting coef = 1 for these values".format(z.min()))
+        z = np.append(redshift.min(), z)
+        coef = np.append(1, coef)
+    f = interpolate.interp1d(z, coef)
+    return f(redshift)
