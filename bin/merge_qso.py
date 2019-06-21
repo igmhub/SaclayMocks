@@ -20,8 +20,8 @@ def main():
     parser.add_argument("-nest", help="If True, healpix scheme is nest. Default True", default='True')
     parser.add_argument("-random", type=str, help="If True, generate randoms. Default: False", default='False')
     parser.add_argument("-prod", help="True: use mock prod architecture ; False: use a special directory. Default is True", default='True')
-    parser.add_argument("-zmin", type=float, help="minimal redshift for drawing QSO, default is 0", default=0)
-    parser.add_argument("-zmax", type=float, help="maximal redshift for drawing QSO, default is 10", default=10)
+    parser.add_argument("-zmin", type=float, help="minimal redshift for drawing QSO, default is 1.8", default=1.8)
+    parser.add_argument("-zmax", type=float, help="maximal redshift for drawing QSO, default is 3.6", default=3.6)
     parser.add_argument("-dgrowthfile", help="dD/dz file, default etc/dgrowth.fits", default=None)
 
     args = parser.parse_args()
@@ -45,7 +45,7 @@ def main():
         else:
             files = glob.glob(args.inDir+"/*/qso/QSO*.fits")
     else:
-        files = os.listdir(args.inDir)
+        files = glob.glob(args.inDir+"/*.fits")
 
     ra = []
     dec = []

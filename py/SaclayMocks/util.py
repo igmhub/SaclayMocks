@@ -447,3 +447,18 @@ def convert1DTo2D(array1D,nbX=None,nbY=None):
         j = k%nbY
         array2D[i][j] = array1D[k]
     return array2D
+
+def bias_qso(redshift, bins=10000, zmin=0., zmax=10.):
+    '''
+    This function return the bias of QSO for a given redshift
+    The parametrisation comes from P. Laurent et al (2017)
+    '''
+    if redshift.min() < zmin:
+        raise ValueError("Error! Redshift out of range: {} < z_min = {}".format(redshift.min(),zmin))
+    if redshift.max() > zmax:
+        raise ValueError("Error! Redshift out of range: {} > z_max = {}".format(redshift.max(),zmax))
+    z = np.linspace(zmin,zmax,bins)
+    # bias = 0.278*(1+z)**2 + 0.57
+    bias = 3.7 * ((1+z)/(1+2.33))**1.7
+    b_interp = interpolate.interp1d(z, bias)
+    return b_interp(redshift)
