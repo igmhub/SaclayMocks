@@ -13,14 +13,21 @@ def main():
     t_init = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument("-indir", help="Root directory of the various Chunks")
-    parser.add_argument("-outfile", help="Path to out file")
+    parser.add_argument("-outdir", help="Path to out directory")
     parser.add_argument("-nside", type=int, help="nside for healpix. Default 16", default=16)
     parser.add_argument("-nest", help="If True, healpix scheme is nest. Default True", default='True')
+    parser.add_argument("-random",type = str, default='False', help="If True, generate randoms")
 
     args = parser.parse_args()
     nside = args.nside
     nest_option = util.str2bool(args.nest)
-    files = glob.glob(args.indir+"/*/dla.fits")
+    random_cond = util.str2bool(args.random)
+    if not random_cond:
+        print("Merging DLA files ...")
+        files = glob.glob(args.indir+"/*/dla.fits")
+    else:
+        print("Merging DLA randoms files ...")
+        files = glob.glob(args.indir+"/*/dla_randoms.fits")
 
     # Read files
     print("Reading files...")
@@ -77,11 +84,17 @@ def main():
     # Write DLA catalog
     t2 = time.time()
     print("Writting merged file...")
-    outfits = fitsio.FITS(args.outfile, 'rw', clobber=True)
-    table = [ra, dec, z_qso, z_qso_rsd, z, z_rsd, nhi, mockid, dla_id, pixnum]
-    names = ['RA', 'DEC', 'Z_QSO_NO_RSD', 'Z_QSO_RSD', 'Z_DLA_NO_RSD', 'Z_DLA_RSD', 'N_HI_DLA', 'MOCKID', 'DLAID', 'PIXNUM']
+    if not random_cond:
+        filename = args.outdir + "/master_DLA.fits"
+        table = [ra, dec, z_qso, z_qso_rsd, z, z_rsd, nhi, mockid, dla_id, pixnum]
+        names = ['RA', 'DEC', 'Z_QSO_NO_RSD', 'Z_QSO_RSD', 'Z_DLA_NO_RSD', 'Z_DLA_RSD', 'N_HI_DLA', 'MOCKID', 'DLAID', 'PIXNUM']
+    else:
+        filename = args.outdir + "/master_DLA_randoms.fits"
+        table = [ra, dec, z_qso, z_qso_rsd, z, mockid]
+        names = ['RA', 'DEC', 'Z_QSO_NO_RSD', 'Z_QSO_RSD', 'Z', 'MOCKID']
+    outfits = fitsio.FITS(filename, 'rw', clobber=True)
     outfits.write(table, names=names, extname='DLACAT')
-    print("Done. {} s. Written {} DLAs".format(time.time()-t2, len(ra)))
+    print("Done. {} s. Written {} DLAs in {}".format(time.time()-t2, len(ra), filename))
     print("Took {} s".format(time.time()-t_init))
 
 
