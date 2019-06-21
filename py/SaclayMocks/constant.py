@@ -6,7 +6,7 @@ import scipy.constants
 c = scipy.constants.speed_of_light / 1000.  # in km/s
 
 n_qso_exp = 100.  # expected number of qso per square degrees
-qso_nz_adhoc = 1.  # adhoc factor to have the right number of QSO per square degrees
+qso_nz_adhoc = 1/6.  # adhoc factor to have the right number of QSO per square degrees
 
 lya = 1215.67 ## angstrom https://en.wikipedia.org/wiki/Lyman-alpha_line  1215.668 and 1215.674
 lylimit = lya * 3 /4. # 911.75  ok with https://en.wikipedia.org/wiki/Hydrogen_spectral_series
