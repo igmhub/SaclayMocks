@@ -173,7 +173,7 @@ def main():
     else:
         out_file = args.outpath+'/QSO-{}-{}.fits'.format(i_slice, Nslice)
 
-    if (not random_cond):
+    if not random_cond:
         t0=time()
         rho = boxfits[0].read()
         boxfits.close()
@@ -203,6 +203,16 @@ def main():
     z_axis = (sp.arange(NZ)+0.5)*DZ + R0 - LZ/2     # Z at cell center
     z_edges = sp.arange(NZ+1)*DZ + R0 - LZ/2        # Z at edges
     dz = z_of_R(z_edges[1:]/h) - z_of_R(z_edges[0:-1]/h)   #  z_of_R[m+1] - z_of_R[m]
+
+    # add z dependence
+    if not random_cond:
+        print("Computing exp(a(z)*g)...")
+        t3 = time()
+        z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
+                    (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)
+        az = util.bias_qso(z_box)*(1+constant.z_QSO_bias)/(constant.QSO_bias*(1+z_box))
+        exprho **= az
+        print("Done. {} s".format(time() - t3))
 
     # margin of dmax cells
     print LX,LY,LZ,R0,dmax*DX # prov

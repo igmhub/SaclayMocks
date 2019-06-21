@@ -70,7 +70,10 @@ def create_reservation(mock_args):
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
     script += "#SBATCH -J saclay_create_{}\n".format(mock_args['imock'])
-    script += "#SBATCH -q regular\n"
+    if len(mock_args['chunkid']) < 2:
+        script += "#SBATCH -q debug\n"
+    else:
+        script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#BB create_persistent name={name} capacity={size} access_mode=striped type=scratch\n".format(name=mock_args['bb_name'], size=mock_args['bb_size'])
     # script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
@@ -210,14 +213,14 @@ def change_permission():
     aa #prov
 
 
-def get_errors(code, start):
+def get_errors(code, start, pids=None):
     '''
     returns the bash lines to get potential errors in job runs
     '''
     errors="""
 error=0
 i=<start>
-for p in $pids; do
+for p in $<pids>; do
     if wait $p; then
 	echo "<code>-$i OK"
     else
@@ -232,8 +235,11 @@ if [ $error -ne 0 ]; then
 fi
 """
 
+    if pids is None:
+        pids = 'pids'
     errors = errors.replace('<code>', str(code))
     errors = errors.replace('<start>', str(start))
+    errors = errors.replace('<pids>', pids)
     return errors
 
 
@@ -251,9 +257,6 @@ def run_bash_script(codename, mock_args, sbatch_args):
     script = """echo -e "*** Running <codename> <nslice> times ***"\n"""
     script += """pids=""\n"""
     for node in range(sbatch_args['nodes_chunk']):
-        imin = node*sbatch_args['threads_chunk']
-        imax = (node+1)*sbatch_args['threads_chunk'] - 1
-        if imax >= mock_args['nslice']: imax=mock_args['nslice']-1
         if mock_args['sbatch']:
             script += "srun "
             if mock_args['verbosity'] is not None:
@@ -377,8 +380,9 @@ def mergechunks(todo, mock_args, sbatch_args):
         script += """echo -e "*** Running merge_qso ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax}".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
+        script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax} ".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
         script += "&> {path}/merge_qso.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_qso=$!\n"
 
     if "merge_randoms" in todo:
         script += """echo -e "*** Running merge_qso for randoms ***"\n"""
@@ -386,49 +390,94 @@ def mergechunks(todo, mock_args, sbatch_args):
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
         script += "merge_qso.py -inDir {inpath} -outDir {outpath} -nside {nside} -nest {nest} -zmin {zmin} -zmax {zmax} -random True ".format(inpath=mock_args['base_dir'], outpath=mock_args['out_dir'], nside=mock_args['nside'], nest=mock_args['nest'], zmin=mock_args['zmin'], zmax=mock_args['zmax'])
         script += "&> {path}/merge_randoms.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_rand=$!\n"
+
+    if "merge_qso" in todo:
+        script += """
+if wait $pid_qso; then
+    echo "merge_qso OK"
+else
+    echo "Error in merge_qso"
+    exit 1
+fi
+"""
+    if "merge_randoms" in todo:
+        script += """
+if wait $pid_rand; then
+    echo "merge_randoms OK"
+else
+    echo "Error in merge_randoms"
+    exit 1
+fi
+"""
+    if "merge_qso" in todo or "merge_randoms" in todo:
+        script += """echo -e "==> QSO catalogs done. $(( SECONDS - start )) s"\n"""
 
     if "compute_dla" in todo:
         script += """echo -e "*** Producing DLA ***"\n"""
-        script += "pids=''\n"
+        script += "pids_dla=''\n"
         for cid in mock_args['chunkid']:
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_file {base}/chunk_{i}/dla.fits --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
             script += "&> {path}/dla-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
-            script += """pids+=" $!"\n"""
-        script += get_errors("dla_saclay", 0)
+            script += """pids_dla+=" $!"\n"""
+
+    if "dla_randoms" in todo:
+        script += """echo -e "*** Producing DLA randoms ***"\n"""
+        script += "pids_rand=''\n"
+        for cid in mock_args['chunkid']:
+            if mock_args['use_time']:
+                script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
+            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} -random True ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            script += "&> {path}/dla_rand-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
+            script += """pids_rand+=" $!"\n"""
+
+    if "compute_dla" in todo:
+        script += get_errors("dla", 0, pids="pids_dla")
+    if "dla_randoms" in todo:
+        script += get_errors("dla", 0, pids="pids_rand")
+    if "compute_dla" in todo or "dla_randoms" in todo:
         script += """echo -e "==> dla_saclay done. $(( SECONDS - start )) s"\n"""
 
     if "merge_dla" in todo:
         script += """echo -e "*** Merging DLA ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "merge_dla.py -indir {base} -outfile {outpath}/master_DLA.fits ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
-        script += "&> {path}/merge_dla.log\n".format(path=mock_args['logs_dir_mergechunks'])
-        script += """
-if [ $? -ne 0 ]; then
-    echo "==> Error in merge_dla ...   Abort!"
-    exit 1
-else
-    echo -e "==> merge_dla done. $(( SECONDS - start )) s"
-fi
-"""
+        script += "merge_dla.py -indir {base} -outdir {outpath} ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
+        script += "&> {path}/merge_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_dla=$!\n"
 
-    if "dla_randoms" in todo:
-        script += """echo -e "*** Producing randoms DLA ***"\n"""
+    if "merge_rand_dla" in todo:
+        script += """echo -e "*** Merging DLA randoms ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "dla_randoms.py -infile {path}/master_DLA.fits -outfile {path}/master_DLA_randoms.fits ".format(path=mock_args['out_dir'])
-        script += "&> {path}/dla_randoms.log\n".format(path=mock_args['logs_dir_mergechunks'])
-        script += """
-if [ $? -ne 0 ]; then
-    echo "==> Error in dla_rand ...   Abort!"
-    exit 1
-else
-    echo -e "==> dla_rand done. $(( SECONDS - start )) s"
-fi
+        script += "merge_dla.py -indir {base} -outdir {outpath} -random True ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
+        script += "&> {path}/merge_rand_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
+        script += "pid_dla_rand=$!\n"
 
+    if "merge_dla" in todo:
+        script += """
+if wait $pid_dla; then
+    echo "merge_dla OK"
+else
+    echo "Error in merge_dla"
+    exit 1
+fi
 """
+
+    if "merge_rand_dla" in todo:
+        script += """
+if wait $pid_dla_rand; then
+    echo "merge_dla randoms OK"
+else
+    echo "Error in merge_dla randoms"
+    exit 1
+fi
+"""
+
+    if "merge_dla" in todo or "merge_rand_dla" in todo:
+        script += """echo -e "==> DLA catalogs done. $(( SECONDS - start )) s"\n"""
 
     if "transmissions" in todo:
         script += """echo -e "*** Running make_transmissions {threads} times ***"\n""".format(threads=sbatch_args['threads_mergechunks'])
@@ -805,9 +854,9 @@ def submit(mock_args, run_args):
         # run create
         if mock_args['burst_buffer'] and run_args['run_create']:
             script += "run_create=$(sbatch --parsable "
-            script += "--output "+mock_args['logs_dir']+"/run_create.log "
             if run_args['run_pk']:
                 script += "--dependency=afterok:$run_pk "
+            script += "--output "+mock_args['logs_dir']+"/run_create.log "
             script += path+"/create_reservation.sh)\n"
             script += """echo "run_create.sh: "$run_create \n"""
         # run stage in
@@ -860,8 +909,9 @@ def submit(mock_args, run_args):
             if run_args['run_chunks'] or run_args['run_create'] or run_args['run_stagein']:
                 script += "-d afterok:"
                 afterok = ""
-                for cid in mock_args['chunkid']:
-                    afterok += "$run_chunk_{i},".format(i=cid)
+                if run_args['run_chunks']:
+                    for cid in mock_args['chunkid']:
+                        afterok += "$run_chunk_{i},".format(i=cid)
                 if mock_args['burst_buffer']:
                     if run_args['run_create']:
                         afterok += "$run_create,"
@@ -890,9 +940,20 @@ def submit(mock_args, run_args):
             script += """echo "run_stageout.sh: "$run_stageout \n"""
         if mock_args['burst_buffer'] and run_args['run_delete']:
             script += "run_delete=$(sbatch --parsable "
-            if run_args['run_stageout']:
-                script += "--dependency=afterok:$run_stageout "
-            script += "--output "+mock_args['logs_dir']+"/run_delete.log "
+            if run_args['run_boxes'] or run_args['run_chunks'] or run_args['run_mergechunks'] or run_args['run_stageout']:
+                script += "-d afterok:"
+                afterok = ""
+                for cid in mock_args['chunkid']:
+                    if run_args['run_boxes']:
+                        afterok += "$run_boxes_{i},".format(i=cid)
+                    if run_args['run_chunks']:
+                        afterok += "$run_chunk_{i},".format(i=cid)
+                if run_args['run_mergechunks']:
+                    afterok += "$run_mergechunks,"
+                if run_args['run_stageout']:
+                    afterok += "$run_stageout "
+                script += afterok[:-1]
+            script += " --output "+mock_args['logs_dir']+"/run_delete.log "
             script += path+"/delete_reservation.sh)\n"
             script += """echo "run_delete.sh: "$run_delete \n"""
     else:
@@ -970,7 +1031,7 @@ def main():
     sbatch_args['account'] = args.account
     sbatch_args['email'] = args.email
     # Parameters for pk job:
-    sbatch_args['time_pk'] = "00:10:00"  # default "00:15:00"
+    sbatch_args['time_pk'] = "00:20:00"  # default "00:15:00"
     sbatch_args['queue_pk'] = "debug"  # default "regular"
     sbatch_args['name_pk'] = "saclay_pk"
     sbatch_args['threads_pk'] = 16  # default 16
@@ -1046,9 +1107,10 @@ def main():
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = True  # Compute master_randoms.fits file
-    run_args['compute_dla'] = True  # Compute dla catalog or each chunks
+    run_args['compute_dla'] = True  # Compute dla catalog of each chunks
+    run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
     run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['dla_randoms'] = True  # Compute master_DLA_randoms.fits file
+    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
     run_args['run_create'] = True  # Create persistent reservation
@@ -1085,8 +1147,9 @@ def main():
     if run_args['merge_qso']: run_args['todo_mergechunks'] += "merge_qso "
     if run_args['merge_randoms']: run_args['todo_mergechunks'] += "merge_randoms "
     if run_args['compute_dla']: run_args['todo_mergechunks'] += "compute_dla "
-    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
     if run_args['dla_randoms']: run_args['todo_mergechunks'] += "dla_randoms "
+    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
+    if run_args['merge_rand_dla']: run_args['todo_mergechunks'] += "merge_rand_dla "
     if run_args['transmissions']: run_args['todo_mergechunks'] += "transmissions "
 
     if mock_args['burst_buffer']:
@@ -1097,6 +1160,11 @@ def main():
             print("--mock-dir option should point to /global/cscratch1 when using the burst buffer mode !")
             sys.exit(1)
         mock_args['stage_out_dir'] = args.stage_out
+    else:
+        run_args['run_create'] = False
+        run_args['run_stageout'] = False
+        run_args['run_delete'] = False
+
     print("Writting scripts for {} realisations".format(nmocks))
     print("Mock files will be written in {}".format(mock_dir))
     if args.out_dir is not None:
