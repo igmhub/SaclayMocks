@@ -471,11 +471,11 @@ def qso_lognormal_coef(redshift):
     z = data[:,0]
     coef = data[:,1]
     if (redshift > z.max()).sum():
-        print("input redshift > {} ; setting coef = 0 for these values".format(z.max()))
+        # print("input redshift > {} ; setting coef = 0 for these values".format(z.max()))
         z = np.append(z, redshift.max())
         coef = np.append(coef, 0)
     if (redshift < z.min()).sum():
-        print("input redshift < {} ; setting coef = 1 for these values".format(z.min()))
+        # print("input redshift < {} ; setting coef = 1 for these values".format(z.min()))
         z = np.append(redshift.min(), z)
         coef = np.append(1, coef)
     f = interpolate.interp1d(z, coef)
