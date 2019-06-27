@@ -222,7 +222,7 @@ def main():
     # we then build the probability ptot = c*p12 + (1-c)*p23
     # where c is a coefficient, store in etc/qso_lognormal_coef.txt
     if not random_cond:
-        print("Computing exp(a(z)*g) for the 2 lognormal fields and interpolating...")
+        print("Computing exp(a(z)*g) for the 3 lognormal fields and interpolating...")
         t3 = time()
         z1 = constant.z_QSO_bias_1
         z2 = constant.z_QSO_bias_2
@@ -433,9 +433,9 @@ def main():
             redshift = args.zfix*np.ones_like(RR)
         if redshift.min() > z_max +1.: continue
         if not random_cond and rsd:
-            vpar = (XX.reshape(-1,1)*vx[:, :, mz]
-                  + YY*vy[:, :, mz]
-                  + ZZ*vz[:, :, mz]) / RR
+            vpar = (XXX*vx[:, :, mz]
+                  + YYY*vy[:, :, mz]
+                  + ZZZ*vz[:, :, mz]) / RR
             msk = np.where(redshift < z_max + 1.)  # don't go above z=5
             if args.zfix is None:
                 RR_RSD = RR.copy()
@@ -476,16 +476,6 @@ def main():
         ra = ra[iqso]
         dec = dec[iqso]
 
-        # # Draw random xyz in the cell
-        # X = x_axis[iqso[0]] + np.random.uniform(-DX/2, DX/2, len(iqso[0]))
-        # Y = y_axis[iqso[1]] + np.random.uniform(-DY/2, DY/2, len(iqso[0]))
-        # Z = ZZ + np.random.uniform(-DZ/2, DZ/2, len(iqso[0]))
-        # zzz = z_of_R(np.sqrt(X*X+Y*Y+Z*Z)/h)
-
-        # ra, dec, _ = box.ComputeRaDecR2(XX, YY, ZZ, np.radians(ra0), np.radians(dec0))  # (NQS0_)
-        # ra = np.degrees(ra)
-        # dec = np.degrees(dec)
-
         # Select desi footprint
         if desi:
             msk = util.desi_footprint(ra, dec)
@@ -507,15 +497,16 @@ def main():
         zz_list.append(ZZ)
 
     # end of loop on qso
-    ra_list = np.concatenate(ra_list)
-    dec_list = np.concatenate(dec_list)
-    z_list = np.concatenate(z_list)
-    z_rsd_list = np.concatenate(z_rsd_list)
-    xx_list = np.concatenate(xx_list)
-    yy_list = np.concatenate(yy_list)
-    zz_list = np.concatenate(zz_list)
     t5 = time()
     print("End of loop on QSO. Took {} s".format(t5 - t4))
+    if len(ra_list) > 0:
+	ra_list = np.concatenate(ra_list)
+	dec_list = np.concatenate(dec_list)
+	z_list = np.concatenate(z_list)
+	z_rsd_list = np.concatenate(z_rsd_list)
+	xx_list = np.concatenate(xx_list)
+	yy_list = np.concatenate(yy_list)
+	zz_list = np.concatenate(zz_list)
     # write to fits file
     un = np.ones(nQSO)
     thing_id = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO) + 1).astype(int)  # start at 1
