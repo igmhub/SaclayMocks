@@ -142,6 +142,7 @@ def stage_out_dir(mock_args):
 
     # stage_out only some particular directories
     # output dir
+    # if 'output' in mock_args['stage_out_dir']:
     script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/output destination={path}/mock_{i}/output type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], path=mock_args['mock_dir'])
     # boxes
     if 'boxes' in mock_args['stage_out_dir']:
@@ -163,9 +164,11 @@ def stage_out_dir(mock_args):
     if 'spectra_merged' in mock_args['stage_out_dir']:
         for j in mock_args['chunkid']:
             script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/spectra_merged destination={path}/mock_{i}/chunk_{j}/spectra_merged type=directory\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # dla
     if 'dla' in mock_args['stage_out_dir']:
         for j in mock_args['chunkid']:
             script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/dla.fits destination={path}/mock_{i}/chunk_{j}/ type=file\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
+    # random dla
     if 'dla_randoms' in mock_args['stage_out_dir']:
         for j in mock_args['chunkid']:
             script += "#DW stage_out source=$DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/dla_randoms.fits destination={path}/mock_{i}/chunk_{j}/ type=file\n".format(name=mock_args['bb_name'], i=mock_args['imock'], j=j, path=mock_args['mock_dir'])
@@ -430,11 +433,6 @@ fi
             script += "&> {path}/dla-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids_dla+=" $!"\n"""
 
-    if "compute_dla" in todo:
-        script += get_errors("dla", 0, pids="pids_dla")
-    if "compute_dla" in todo or "dla_randoms" in todo:
-        script += """echo -e "==> dla_saclay done. $(( SECONDS - start )) s"\n"""
-
     if "dla_randoms" in todo:
         script += """echo -e "*** Producing DLA randoms ***"\n"""
         script += "pids_rand=''\n"
@@ -445,6 +443,8 @@ fi
             script += "&> {path}/dla_rand-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids_rand+=" $!"\n"""
 
+    if "compute_dla" in todo:
+        script += get_errors("dla", 0, pids="pids_dla")
     if "dla_randoms" in todo:
         script += get_errors("dla", 0, pids="pids_rand")
     if "compute_dla" in todo or "dla_randoms" in todo:
@@ -1047,19 +1047,19 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "02:00:00"  # default "01:30:00"
-    sbatch_args['queue_boxes'] = "regular"  # default "regular"
+    sbatch_args['time_boxes'] = "00:10:00"  # default "01:30:00"
+    sbatch_args['queue_boxes'] = "debug"  # default "regular"
     sbatch_args['name_boxes'] = "saclay_boxes"
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:40:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "regular"  # default "regular"
+    sbatch_args['time_chunk'] = "00:20:00"  # default "00:30:00"
+    sbatch_args['queue_chunk'] = "debug"  # default "regular"
     sbatch_args['name_chunk'] = "saclay_chunk"
     sbatch_args['threads_chunk'] = 32  # default 32
-    sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
+    sbatch_args['nodes_chunk'] = 1  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "0:30:00"  # default "01:30:00"
+    sbatch_args['time_mergechunks'] = "00:20:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
     sbatch_args['name_mergechunks'] = "saclay_mergechunks"
     sbatch_args['threads_mergechunks'] = 64  # default 64
@@ -1082,7 +1082,7 @@ def main():
     mock_args['zmax'] = 3.6  # maximal redshift to draw QSO
     mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
     # mock options:
-    mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
+    mock_args['seed'] = "-seed 123"  # "-seed 10" to specify a seed, "" to specify nothing
     if args.seed is not None:
         mock_args['seed'] = "-seed "+str(args.seed)
     mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
@@ -1097,30 +1097,30 @@ def main():
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
     mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
-    mock_args['burst_buffer'] = True  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
+    mock_args['burst_buffer'] = False  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
     mock_args['bb_size'] = "6000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
     mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+i_realisation
 
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = False  # Produce Pk
+    run_args['run_pk'] = True  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = False  # Produce GRF boxes
+    run_args['run_boxes'] = True  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = False  # produce chunks
+    run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = True  # run draw_qso.py for randoms
     run_args['make_spectra'] = True  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
-    run_args['run_mergechunks'] = False  # Gather outputs from all chunks and write in desi format
-    run_args['merge_qso'] = False  # Compute master.fits file
-    run_args['merge_randoms'] = False  # Compute master_randoms.fits file
-    run_args['compute_dla'] = False  # Compute dla catalog of each chunks
-    run_args['dla_randoms'] = False  # Compute dla randoms catalogs of each chunks
+    run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
+    run_args['merge_qso'] = True  # Compute master.fits file
+    run_args['merge_randoms'] = True  # Compute master_randoms.fits file
+    run_args['compute_dla'] = True  # Compute dla catalog of each chunks
+    run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
     run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['merge_rand_dla'] = False  # Compute master_DLA_randoms.fits file
+    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
     run_args['run_create'] = False  # Create persistent reservation
