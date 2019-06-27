@@ -366,11 +366,19 @@ def main():
     if (not random_cond):
         nnQSO=0
     qsofits = FITS(out_file, 'rw', clobber=True)  # output file
+    z_list = []
+    z_rsd_list = []
+    ra_list = []
+    dec_list = []
+    xx_list = []
+    yy_list = []
+    zz_list = []
     if not random_cond:
         names = ["Z_QSO_NO_RSD", "Z_QSO_RSD", "RA", "DEC", "HDU", "THING_ID", "PLATE", "MJD", "FIBERID", "PMF", "XX", "YY", "ZZ"] # , "XGRID", "YGRID", "ZGRID"]
     else:
         names = ["Z", "RA", "DEC", "HDU", "THING_ID", "PLATE", "MJD", "FIBERID", "PMF", "XX", "YY", "ZZ"] # , "XGRID", "YGRID", "ZGRID"]
 
+    t4 = time()
     for mz in range(NZ):
         XX = x_axis
         YY = y_axis
@@ -489,49 +497,51 @@ def main():
             ZZ = ZZ[msk]
             zzz_RSD = zzz_RSD[msk]
 
-        un = np.ones(len(zzz)).astype(int)
-        # XGRID = np.array(iqso[0]) + i_slice*NX
-        # YGRID = np.array(iqso[1])
-        # ZGRID = un * mz
-        #if (len(XGRID)>0):
-        #    print ( np.mean(np.log(ptot[XGRID,YGRID,ZGRID])) )
-        THING_ID = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO, nQSO+len(zzz)) + 1).astype(int)  # start at 1
-        HDU = un * i_slice  # QSOhdu
-        plate = THING_ID
-        mjd = np.random.randint(51608, high=57521, size=len(zzz))
-        fiberid = np.random.randint(1,high=1001, size=len(zzz))
-        # pmf = np.array([plate[i].astype(str)+'-'+mjd[i].astype(str)+'-'+fiberid[i].astype(str) for i in range(len(zzz))])
-        pmf = np.empty((len(zzz)), dtype='|S21')
-        for i in range(len(zzz)):
-            l_tmp = plate[i].astype(str)+'-'+mjd[i].astype(str)+'-'+fiberid[i].astype(str)
-            pmf[i] = l_tmp
         nQSO += len(zzz)
-        # print(mz)
-        # print(len(zzz), len(tanx), len(X))
-        #print (len(zzz),len(ra),len(dec))
-        if not random_cond:
-            array_list = [np.float32(zzz), np.float32(zzz_RSD), np.float32(ra), np.float32(dec), np.int32(HDU), THING_ID, plate, np.int32(mjd), np.int32(fiberid), pmf, np.float32(XX), np.float32(YY), np.float32(ZZ)]  # , XGRID, YGRID, ZGRID]
-        else:
-            array_list = [np.float32(zzz), np.float32(ra), np.float32(dec), np.int32(HDU), THING_ID, plate, np.int32(mjd), np.int32(fiberid), pmf, np.float32(XX), np.float32(YY), np.float32(ZZ)]  # , XGRID, YGRID, ZGRID]
+        ra_list.append(ra)
+        dec_list.append(dec)
+        z_list.append(zzz)
+        z_rsd_list.append(zzz_RSD)
+        xx_list.append(XX)
+        yy_list.append(YY)
+        zz_list.append(ZZ)
 
-        # print("MZ : {}".format(mz))
-        # print(array_list)
+    # end of loop on qso
+    ra_list = np.concatenate(ra_list)
+    dec_list = np.concatenate(dec_list)
+    z_list = np.concatenate(z_list)
+    z_rsd_list = np.concatenate(z_rsd_list)
+    xx_list = np.concatenate(xx_list)
+    yy_list = np.concatenate(yy_list)
+    zz_list = np.concatenate(zz_list)
+    t5 = time()
+    print("End of loop on QSO. Took {} s".format(t5 - t4))
+    # write to fits file
+    un = np.ones(nQSO)
+    thing_id = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO) + 1).astype(int)  # start at 1
+    hdu = un * i_slice  # QSOhdu
+    plate = thing_id
+    mjd = np.random.randint(51608, high=57521, size=nQSO)
+    fiberid = np.random.randint(1,high=1001, size=nQSO)
+    pmf = np.empty(nQSO, dtype='|S21')
+    for i in range(nQSO):
+        l_tmp = plate[i].astype(str)+'-'+mjd[i].astype(str)+'-'+fiberid[i].astype(str)
+        pmf[i] = l_tmp
+    if not random_cond:
+        array_list = [np.float32(z_list), np.float32(z_rsd_list), np.float32(ra_list), np.float32(dec_list), np.int32(hdu), thing_id, plate, np.int32(mjd), np.int32(fiberid), pmf, np.float32(xx_list), np.float32(yy_list), np.float32(zz_list)]
+    else:
+        array_list = [np.float32(z_list), np.float32(ra_list), np.float32(dec_list), np.int32(hdu), thing_id, plate, np.int32(mjd), np.int32(fiberid), pmf, np.float32(xx_list), np.float32(yy_list), np.float32(zz_list)]
 
-        if (len(qsofits) == 1):
-            qsofits.write(array_list, names=names)
-            #exit(0)
-        else:
-            qsofits[-1].append(array_list, names=names)
-        #   this is not making a new HDU, this is appending to last hdu, i.e. hdu=1
+    qsofits.write(array_list, names=names)
 
-    if len(qsofits) == 1:
-        print("No QSO drawn, creating a null table")
-        if not random_cond:
-            null_table = [np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.int32), np.array([], dtype=np.int64), np.array([], dtype=np.int64), np.array([], dtype=np.int32), np.array([], dtype=np.int32), np.array([], dtype='|S21'), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32)]
-        else:
-            null_table = [np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.int32), np.array([], dtype=np.int64), np.array([], dtype=np.int64), np.array([], dtype=np.int32), np.array([], dtype=np.int32), np.array([], dtype='|S21'), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32)]
+    # if len(qsofits) == 1:
+    #     print("No QSO drawn, creating a null table")
+    #     if not random_cond:
+    #         null_table = [np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.int32), np.array([], dtype=np.int64), np.array([], dtype=np.int64), np.array([], dtype=np.int32), np.array([], dtype=np.int32), np.array([], dtype='|S21'), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32)]
+    #     else:
+    #         null_table = [np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.int32), np.array([], dtype=np.int64), np.array([], dtype=np.int64), np.array([], dtype=np.int32), np.array([], dtype=np.int32), np.array([], dtype='|S21'), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32)]
 
-        qsofits.write(null_table, names=names)
+    #     qsofits.write(null_table, names=names)
 
     qsofits[1].write_key("seed", np.int32(seed), comment="seed used to generate randoms")
     qsofits[1].write_key("ra0", ra0, comment="right ascension of the box center")
@@ -548,15 +558,11 @@ def main():
     qsofits[1].write_key("XX", None, comment="position on X axis in Mpc/h")
     qsofits[1].write_key("YY", None, comment="position on Y axis in Mpc/h")
     qsofits[1].write_key("ZZ", None, comment="position on Z axis in Mpc/h")
-    # qsofits[1].write_key("XGRID", None, comment="index on X axis")
-    # qsofits[1].write_key("YGRID", None, comment="index on Y axis")
-    # qsofits[1].write_key("ZGRID", None, comment="index on Z axis")
-
     qsofits.close()
+    print("File {} written in {} s".format(out_file, time() - t5))
     print nQSO, "QSOs drawn"
     if (not random_cond):
         print nnQSO, "QSOs in the full box" # prov
-    print out_file, "file written"
     print("Took {}s".format(time()-t_init))
 
     if drawPlot : plt.show()
