@@ -405,7 +405,7 @@ def main():
             # sometime get 2 QSO in a cell
             nnQSO += np.size(np.where(cond1)[0])
         else:
-            cond1 = rnd1 > (1.-0.006)
+            cond1 = rnd1 > (1. - constant.rand_qso_nb)
 
         cond2 = density_max * sp.random.ranf(size=(NX,NY)) < density	# (NX,NY)	
 
