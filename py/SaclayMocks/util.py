@@ -483,7 +483,7 @@ def qso_lognormal_coef(redshift):
     return f(redshift)
 
 
-def extract_h5file(filename):
+def extract_h5file(fname):
     '''
     This function is taken from picca
     https://github.com/igmhub/picca/blob/master/py/picca/fitter2/effective-bins.py
