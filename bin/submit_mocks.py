@@ -689,8 +689,8 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
             # Define directories
             chunk_dir = base_dir+"/chunk_"+cid
             dir_boxes = chunk_dir+"/boxes"
-            dir_qso = chunk_dir+"/qso_test/"
-            dir_rand = chunk_dir+"/randoms_test/"
+            dir_qso = chunk_dir+"/qso/"
+            dir_rand = chunk_dir+"/randoms/"
             dir_spectra = chunk_dir+"/spectra"
             dir_spectra_merged = chunk_dir+"/spectra_merged"
             logs_dir_chunk = logs_dir+"/chunk_"+cid
