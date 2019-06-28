@@ -1053,14 +1053,14 @@ def main():
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:30:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "debug"  # default "regular"
+    sbatch_args['time_chunk'] = "00:40:00"  # default "00:30:00"
+    sbatch_args['queue_chunk'] = "regular"  # default "regular"
     sbatch_args['name_chunk'] = "saclay_chunk"
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "0:10:00"  # default "01:30:00"
-    sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
+    sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
+    sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
     sbatch_args['name_mergechunks'] = "saclay_mergechunks"
     sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
@@ -1104,29 +1104,29 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = False  # Produce Pk
+    run_args['run_pk'] = True  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = False  # Produce GRF boxes
+    run_args['run_boxes'] = True  # Produce GRF boxes
     # chunks:
     run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = True  # run draw_qso.py for randoms
-    run_args['make_spectra'] = False  # run make_spectra.py
-    run_args['merge_spectra'] = False  # run merge_spectra.py
+    run_args['make_spectra'] = True  # run make_spectra.py
+    run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
-    run_args['run_mergechunks'] = False  # Gather outputs from all chunks and write in desi format
+    run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = True  # Compute master_randoms.fits file
-    run_args['compute_dla'] = False  # Compute dla catalog of each chunks
-    run_args['dla_randoms'] = False  # Compute dla randoms catalogs of each chunks
-    run_args['merge_dla'] = False  # Compute master_DLA.fits file
-    run_args['merge_rand_dla'] = False  # Compute master_DLA_randoms.fits file
-    run_args['transmissions'] = False  # Write transmissions files
+    run_args['compute_dla'] = True  # Compute dla catalog of each chunks
+    run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
+    run_args['merge_dla'] = True  # Compute master_DLA.fits file
+    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
+    run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
-    run_args['run_create'] = False  # Create persistent reservation
-    run_args['run_stagein'] = False  # Stage in the init files (pk, directories, ...) (from scratch to BB)
-    run_args['run_stageout'] = False  # Stage out the produced files (from BB to scratch)
-    run_args['run_delete'] = False  # delete the persistent reservation
+    run_args['run_create'] = True  # Create persistent reservation
+    run_args['run_stagein'] = True  # Stage in the init files (pk, directories, ...) (from scratch to BB)
+    run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
+    run_args['run_delete'] = True  # delete the persistent reservation
 
     # -------------------------- Nothing to change bellow
     ### Define directories
