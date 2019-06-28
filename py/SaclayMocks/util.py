@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 import fitsio
 from fitsio import FITS
 from SaclayMocks import constant
+import h5py
 
 
 PI = np.pi
@@ -480,3 +481,22 @@ def qso_lognormal_coef(redshift):
         coef = np.append(1, coef)
     f = interpolate.interp1d(z, coef)
     return f(redshift)
+
+
+def extract_h5file(filename):
+    '''
+    This function is taken from picca
+    https://github.com/igmhub/picca/blob/master/py/picca/fitter2/effective-bins.py
+    '''
+    f = h5py.File(os.path.expandvars(fname),'r')
+
+    free_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of free pars'] ]
+    fixed_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of fixed pars'] ]
+    pars = { el:f['best fit'].attrs[el][0] for el in free_p }
+    err_pars = { el:f['best fit'].attrs[el][1] for el in free_p }
+    pars.update({ el:f['best fit'].attrs[el][0] for el in fixed_p })
+    err_pars.update({ el:0. for el in fixed_p })
+
+    f.close()
+
+    return free_p, fixed_p, pars, err_pars
