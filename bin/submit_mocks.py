@@ -176,6 +176,18 @@ def stage_out_dir(mock_args):
     return script
 
 
+def discard_boxes(mock_args):
+    script = ''
+    script += "echo 'Boxes will be discarded. Only boxk.npy will be staged out.'\n"
+    script += 'timer=$SECONDS\n'
+    script += 'mkdir $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard\n'.format(name=mock_args['bb_name'], i=mock_args['imock'])
+    for j in mock_args['chunkid']:
+        script += 'mkdir $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard/boxes_{j}\n'.format(name=mock_args['bb_name'], i=mock_args['imock'], j=j)
+        script += 'mv $DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/boxes/*.fits $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard/boxes_{j}\n'.format(name=mock_args['bb_name'], i=mock_args['imock'], j=j)
+    script += "echo 'Boxes moved. Took $(( SECONDS - start )) s'\n"
+    return script
+
+
 def stage_out(mock_args):
     '''
     This functions stages out the mock outputs written on the burst buffer nodes.
@@ -191,6 +203,8 @@ def stage_out(mock_args):
     script += stage_out_dir(mock_args)
     script += "echo 'This will stage out:'\n"
     script += "echo '{}'\n".format(mock_args['stage_out_dir'])
+    if mock_args['discard_boxes']:
+        script += discard_boxes(mock_args)
     script += "echo 'END'\n"
 
     filename = mock_args['run_dir']+'/stage_out.sh'
@@ -883,7 +897,7 @@ def submit(mock_args, run_args):
         for i, cid in enumerate(mock_args['chunkid']):
             if run_args['run_boxes']:
                 script += "run_boxes_{i}=$(sbatch --parsable ".format(i=cid)
-                if run_args['run_pk'] or run_args['run_create']:
+                if run_args['run_pk'] or run_args['run_create'] or run_args['run_stagein']:
                     script += "-d afterok:"
                     afterok = ""
                     if run_args['run_pk']:
@@ -1014,12 +1028,15 @@ def main():
     parser.add_argument("--realisation-number", type=int, default=1, required=False,
         help="The number of realisation to be produced (optional)")
 
-    parser.add_argument("--mock-realisation", type=int, default=None, required=False,
+    parser.add_argument("--realisation-id", type=int, default=None, required=False,
         help="Specify a particular realisation to be produced (optional)")
 
     parser.add_argument("--stage-out", type=str, nargs="*", default='all', required=False,
         help="Specify what output you want to save to your scratch directory when using the burst buffer (optional)\n"+
                         "you can backup among: 'boxes qso randoms spectra spectra_merged dla dla_randoms' or just 'all'")
+
+    parser.add_argument("--discard-boxes", action='store_true', required=False,
+        help="Do not stage_out the boxes (stage_out only boxk.npy); only usable in BurstBuffer mode")
 
     parser.add_argument("--seed", type=int, default=None, required=False,
         help="Specify a particular seed (optional)")
@@ -1053,7 +1070,7 @@ def main():
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:40:00"  # default "00:30:00"
+    sbatch_args['time_chunk'] = "0:45:00"  # default "00:30:00"
     sbatch_args['queue_chunk'] = "regular"  # default "regular"
     sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
@@ -1083,8 +1100,6 @@ def main():
     mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
-    if args.seed is not None:
-        mock_args['seed'] = "-seed "+str(args.seed)
     mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
     mock_args['NQSO'] = -1  # If >0, limit the number of QSO treated in make_spectra
     mock_args['small_scales'] = True  # If True, add small scales in FGPA
@@ -1170,6 +1185,9 @@ def main():
             print("Error: --mock-dir option should point to /global/cscratch1 when using the burst buffer mode !")
             sys.exit(1)
         mock_args['stage_out_dir'] = args.stage_out
+        mock_args['discard_boxes'] = args.discard_boxes
+        if mock_args['discard_boxes']:
+            print("WARNING: boxes will be discarded.")
         if ' ' in mock_args['stage_out_dir'][0] or ',' in mock_args['stage_out_dir'][0]:
             print("Error: --stage-out option should be given as: --stage-out boxes qso ... (without global quotes)")
             sys.exit(1)
@@ -1196,6 +1214,8 @@ def main():
     if mock_args['burst_buffer'] and run_args['run_delete']: print("- Delete reservation")
 
     ### Define chunks parameters :
+    if args.seed is not None:
+        mock_args['seed'] = "-seed "+str(args.seed)
     if args.box_size < 2560:
         mock_args['desifootprint'] = False
     ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size)
@@ -1224,8 +1244,8 @@ def main():
         pk(mock_args, sbatch_args)
 
     # Write scripts for all realisations
-    if args.mock_realisation is not None:
-        make_realisation(args.mock_realisation, mock_args, run_args, sbatch_args)
+    if args.realisation_id is not None:
+        make_realisation(args.realisation_id, mock_args, run_args, sbatch_args)
     else:
         for imock in range(nmocks):  # loop over realisations
             make_realisation(imock, mock_args, run_args, sbatch_args)
