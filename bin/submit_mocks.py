@@ -112,6 +112,14 @@ def stage_in(mock_args):
     script += "#DW stage_in source={path} destination=$DW_PERSISTENT_STRIPED_{name}/pk type=directory\n".format(path=mock_args['dir_pk'], name=mock_args['bb_name'])
     script += "#DW stage_in source={path} destination=$DW_PERSISTENT_STRIPED_{name}/mock_{i} type=directory\n".format(path=mock_args['base_dir'], name=mock_args['bb_name'], i=mock_args['imock'])
 
+    script += "echo 'moving runs directory out (avoid stagin it out)'\n"
+    script += '''
+if [ ! -d "$DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard" ]; then
+    mkdir $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard
+fi
+'''.format(name=mock_args['bb_name'], i=mock_args['imock'])
+    script += "mv $DW_PERSISTENT_STRIPED_{name}/mock_{i}/output/runs $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard/runs\n".format(name=mock_args['bb_name'], i=mock_args['imock'])
+    script += "mv $DW_PERSISTENT_STRIPED_{name}/mock_{i}/output/logs $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard/logs\n".format(name=mock_args['bb_name'], i=mock_args['imock'])
     script += "echo $DW_PERSISTENT_STRIPED_{}\n".format(mock_args['bb_name'])
     script += "echo '--'\n"
     script += "ls -ahls $DW_PERSISTENT_STRIPED_{}\n".format(mock_args['bb_name'])
@@ -119,6 +127,10 @@ def stage_in(mock_args):
     script += "ls -ls $DW_PERSISTENT_STRIPED_{}/pk\n".format(mock_args['bb_name'])
     script += "echo '--'\n"
     script += "ls -ls $DW_PERSISTENT_STRIPED_{}/mock_*\n".format(mock_args['bb_name'])
+    script += "echo '--'\n"
+    script += "ls -ls $DW_PERSISTENT_STRIPED_{}/mock_*/output\n".format(mock_args['bb_name'])
+    script += "echo '--'\n"
+    script += "ls -ls $DW_PERSISTENT_STRIPED_{}/mock_*_discard\n".format(mock_args['bb_name'])
     script += "echo '--'\n"
     script += "echo 'number of files:'\n"
     script += "ls -ls $DW_PERSISTENT_STRIPED_{}/* | wc -l \n".format(mock_args['bb_name'])
@@ -180,13 +192,18 @@ def discard_boxes(mock_args):
     script = ''
     script += "echo 'Boxes will be discarded. Only boxk.npy will be staged out.'\n"
     script += 'timer=$SECONDS\n'
-    script += 'mkdir $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard\n'.format(name=mock_args['bb_name'], i=mock_args['imock'])
+    script += '''
+if [ ! -d "$DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard" ]; then
+    mkdir $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard
+fi
+'''.format(name=mock_args['bb_name'], i=mock_args['imock'])
+    # script += 'mkdir $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard\n'.format(name=mock_args['bb_name'], i=mock_args['imock'])
     for j in mock_args['chunkid']:
         # script += 'mkdir $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard/boxes_{j}\n'.format(name=mock_args['bb_name'], i=mock_args['imock'], j=j)
         script += 'mv $DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/boxes $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard/boxes_{j}\n'.format(name=mock_args['bb_name'], i=mock_args['imock'], j=j)
         script += 'mkdir $DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/boxes\n'.format(name=mock_args['bb_name'], i=mock_args['imock'], j=j)
         script += 'mv $DW_PERSISTENT_STRIPED_{name}/mock_{i}_discard/boxes_{j}/boxk.npy $DW_PERSISTENT_STRIPED_{name}/mock_{i}/chunk_{j}/boxes\n'.format(name=mock_args['bb_name'], i=mock_args['imock'], j=j)
-    script += "echo 'Boxes moved. Took $(( SECONDS - start )) s'\n"
+    script += '''echo "Boxes moved. Took $(( SECONDS - timer )) s"\n'''
     return script
 
 
@@ -198,7 +215,7 @@ def stage_out(mock_args):
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
     script += "#SBATCH -J stageout_saclay_{}\n".format(mock_args['imock'])
-    script += "#SBATCH -q debug\n"
+    script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
     # add the #DW stage_out lines for each directory to stage out
@@ -1143,7 +1160,7 @@ def main():
     run_args['run_create'] = True  # Create persistent reservation
     run_args['run_stagein'] = True  # Stage in the init files (pk, directories, ...) (from scratch to BB)
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
-    run_args['run_delete'] = False  # delete the persistent reservation
+    run_args['run_delete'] = True  # delete the persistent reservation
 
     # -------------------------- Nothing to change bellow
     ### Define directories
