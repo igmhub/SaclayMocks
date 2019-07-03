@@ -61,7 +61,7 @@ def main():
         return lcells, weight
 
     #*************************************************************
-    #@jit   # @jit degrades from 22 to 27 ms
+    @jit   # @jit degrades from 22 to 27 ms
     def computeRho(myrho,weight) :
         return (weight*myrho).sum() / weight.sum()
         #sumweight = weight.sum()
