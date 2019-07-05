@@ -547,7 +547,7 @@ def main():
     #             np.save(args.outDir+"/velo.npy", velo_list)
 
     for ID in np.unique(QSOhdu_list):
-        outfits = fitsio.FITS(args.outDir+'/spectra-{}-{}.fits'.format(iSlice, ID), 'rw', clobber=True)
+        outfits = fitsio.FITS(args.outDir+'/spectra-{}-{}.fits.gz'.format(iSlice, ID), 'rw', clobber=True)
         msk = (QSOhdu_list == ID)
         table = [np.array(ra_list)[msk], np.array(dec_list)[msk],
                  np.array(zQSO_norsd_list)[msk], np.array(zQSO_rsd_list)[msk],
