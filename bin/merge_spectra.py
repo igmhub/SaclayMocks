@@ -351,7 +351,7 @@ def main():
                 if len(msk) > 1:
                     cpt2 += 1
         if len(ra_list) == 0: continue
-        outfits = fitsio.FITS(outpath+'/spectra_merged-{}-{}.fits'.format(pix, islice), 'rw', clobber=True)
+        outfits = fitsio.FITS(outpath+'/spectra_merged-{}-{}.fits.gz'.format(pix, islice), 'rw', clobber=True)
         table = [np.array(ra_list), np.array(dec_list),
                  np.array(Z_QSO_NO_RSD_list), np.array(Z_QSO_RSD_list),
                  np.array(HDU_list), np.array(ID_list),
