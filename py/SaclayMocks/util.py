@@ -334,7 +334,7 @@ class desi_footprint():
         self.healpix_weight = healpix_weight
     def selection(self, ra, dec):
         healpix = radec2pix(desi_nside, ra, dec)
-        return np.where(healpix_weight[healpix] > 0.99)[0]
+        return np.where(self.healpix_weight[healpix] > 0.99)[0]
 
 
 def sigma_p1d(p1d, pixel=0.2, N=10000):
