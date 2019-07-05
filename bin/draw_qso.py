@@ -227,6 +227,7 @@ def main():
         z1 = constant.z_QSO_bias_1
         z2 = constant.z_QSO_bias_2
         z3 = constant.z_QSO_bias_3
+        qso_lognormal_coef = util.qso_lognormal_coef()
         rho_sum = constant.rho_sum
         print("rho_sum = {} ; {} s".format(rho_sum, time()-t3))
         # apply a(z): P = exp(delta)**a(z) for each lognormal
@@ -240,7 +241,7 @@ def main():
         p12 = p1*(z2 - z_box)/(z2-z1) + p2*(z_box-z1)/(z2-z1)
         p23 = p2*(z3 - z_box)/(z3-z2) + p3*(z_box-z2)/(z3-z2)
         del p1, p2, p3
-        ptot = util.qso_lognormal_coef(z_box)*(p12 - p23) + p23
+        ptot = qso_lognormal_coef(z_box)*(p12 - p23) + p23
         del p12, p23, z_box
         gc.collect()
         print("Interpolations done. {} s".format(time() - t3))
@@ -305,11 +306,11 @@ def main():
     mmm = (dz_interp>z_min) & (dz_interp<z_max)
     if not random_cond:
         mean_rho_interp = dn_cell[mmm] / (
-            util.qso_lognormal_coef(dz_interp[mmm])*(
+            qso_lognormal_coef(dz_interp[mmm])*(
             np.exp((util.qso_a_of_z(dz_interp[mmm], z1)*sigma_p_1)**2/2)*(z2-dz_interp[mmm])/(z2-z1) +
             np.exp((util.qso_a_of_z(dz_interp[mmm], z2)*sigma_p_2)**2/2)*(dz_interp[mmm]-z1)/(z2-z1)
             )
-            + (1-util.qso_lognormal_coef(dz_interp[mmm]))*(
+            + (1-qso_lognormal_coef(dz_interp[mmm]))*(
             np.exp((util.qso_a_of_z(dz_interp[mmm], z2)*sigma_p_2)**2/2)*(z3-dz_interp[mmm])/(z3-z2) +
             np.exp((util.qso_a_of_z(dz_interp[mmm], z3)*sigma_p_3)**2/2)*(dz_interp[mmm]-z2)/(z3-z2)
             )
@@ -361,6 +362,10 @@ def main():
             print "k exp(rho) > 1 in ", np.size(np.where(kk*ptot>1)[0]),"cells"
             print "sum min(k exp(rho) , 1) =", np.minimum(kk*ptot,1).sum()
 
+    # Apply desi footprint
+    if desi:
+        desi_footprint = util.desi_footprint()
+
     #.........................................................    loop on cells
     nQSO = 0
     if (not random_cond):
@@ -394,11 +399,11 @@ def main():
         density = dn_cell[iz]
         # correct the z dependence in cond1 (due to a(z))
         if not random_cond:
-            density /= (util.qso_lognormal_coef(redshift)*(
+            density /= (qso_lognormal_coef(redshift)*(
             np.exp((util.qso_a_of_z(redshift, z1)*sigma_p_1)**2/2)*(z2-redshift)/(z2-z1) +
             np.exp((util.qso_a_of_z(redshift, z2)*sigma_p_2)**2/2)*(redshift-z1)/(z2-z1)
             )
-            + (1-util.qso_lognormal_coef(redshift))*(
+            + (1-qso_lognormal_coef(redshift))*(
             np.exp((util.qso_a_of_z(redshift, z2)*sigma_p_2)**2/2)*(z3-redshift)/(z3-z2) +
             np.exp((util.qso_a_of_z(redshift, z3)*sigma_p_3)**2/2)*(redshift-z2)/(z3-z2)
             )
@@ -436,7 +441,7 @@ def main():
             vpar = (XXX*vx[:, :, mz]
                   + YYY*vy[:, :, mz]
                   + ZZZ*vz[:, :, mz]) / RR
-            msk = np.where(redshift < z_max + 1.)  # don't go above z=5
+            msk = redshift < z_max + 1.  # dont' go above z=5
             if args.zfix is None:
                 RR_RSD = RR.copy()
             else:
@@ -478,7 +483,7 @@ def main():
 
         # Select desi footprint
         if desi:
-            msk = util.desi_footprint(ra, dec)
+            msk = desi_footprint.selection(ra,dec)
             ra = ra[msk]
             dec = dec[msk]
             zzz = zzz[msk]
