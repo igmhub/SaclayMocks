@@ -477,9 +477,9 @@ fi
             script += """pids_rand+=" $!"\n"""
 
     if "compute_dla" in todo:
-        script += get_errors("dla", 0, pids="pids_dla")
+        script += get_errors("dla", 1, pids="pids_dla")
     if "dla_randoms" in todo:
-        script += get_errors("dla", 0, pids="pids_rand")
+        script += get_errors("dla_rand", 1, pids="pids_rand")
     if "compute_dla" in todo or "dla_randoms" in todo:
         script += """echo -e "==> dla_saclay done. $(( SECONDS - start )) s"\n"""
 
