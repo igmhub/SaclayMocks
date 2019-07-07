@@ -256,19 +256,30 @@ def change_permission():
     aa #prov
 
 
-def get_errors(code, start, pids=None):
+def get_errors(code, start, pids=None, threads_num=None):
     '''
     returns the bash lines to get potential errors in job runs
     '''
-    errors="""
+    errors = """
 error=0
 i=<start>
 for p in $<pids>; do
     if wait $p; then
 	echo "<code>-$i OK"
-    else
+    else"""
+    if threads_num is not None:
+        errors += """
+        if $((i % < {})); then
+            echo "Error in <code>-$i but continue"
+        else
+	    echo "Error in <code>-$i"
+	    let "error=$error+1"
+        fi""".format(threads_num)
+    else:
+        errors += '''
 	echo "Error in <code>-$i"
-	let "error=$error+1"
+	let "error=$error+1"'''
+    errors += """
     fi
     let "i=$i+1"
 done
@@ -462,7 +473,7 @@ fi
         for cid in mock_args['chunkid']:
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
             script += "&> {path}/dla-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids_dla+=" $!"\n"""
 
@@ -472,7 +483,7 @@ fi
         for cid in mock_args['chunkid']:
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --input_pattern spectra_merged*.fits --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} -random True ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} -random True ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
             script += "&> {path}/dla_rand-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids_rand+=" $!"\n"""
 
@@ -561,7 +572,7 @@ def run_python_script(i_node, i_chunk, codename, mock_args, sbatch_args, name=No
         script += mock_args['args_{}'.format(codename)]
         script += " &> {path}/{name}-{job}.log &\n".format(path=mock_args['logs_dir_chunk-'+i_chunk], name=name, job=job)
         script += """pids+=" $!"\n"""
-    script += get_errors(codename, imin)
+    script += get_errors(codename, imin, threads_num=sbatch_args['threads_chunk'])
 
     filename = mock_args['run_dir_chunk-'+i_chunk]+'/run_{name}-{i_chunk}-{i_node}.sh'.format(
         name=name, i_chunk=i_chunk, i_node=i_node)
@@ -916,7 +927,7 @@ def submit(mock_args, run_args):
         for i, cid in enumerate(mock_args['chunkid']):
             if run_args['run_boxes']:
                 script += "run_boxes_{i}=$(sbatch --parsable ".format(i=cid)
-                if run_args['run_pk'] or run_args['run_create'] or run_args['run_stagein']:
+                if run_args['run_pk'] or ((run_args['run_create'] or run_args['run_stagein']) and mock_args['burst_buffer']):
                     script += "-d afterok:"
                     afterok = ""
                     if run_args['run_pk']:
@@ -932,7 +943,7 @@ def submit(mock_args, run_args):
                 script += """echo "run_boxes-{i}.sh: "$run_boxes_{i}\n""".format(i=cid)
             if run_args['run_chunks']:
                 script += "run_chunk_{i}=$(sbatch --parsable ".format(i=cid)
-                if run_args['run_boxes'] or run_args['run_create'] or run_args['run_stagein']:
+                if run_args['run_boxes'] or ((run_args['run_create'] or run_args['run_stagein']) and mock_args['burst_buffer']):
                     script += "-d afterok:"
                     afterok = ""
                     if run_args['run_boxes']:
@@ -949,7 +960,7 @@ def submit(mock_args, run_args):
         # run mergechunks
         if run_args['run_mergechunks']:
             script += "run_mergechunks=$(sbatch --parsable "
-            if run_args['run_chunks'] or run_args['run_create'] or run_args['run_stagein']:
+            if run_args['run_chunks'] or ((run_args['run_create'] or run_args['run_stagein']) and mock_args['burst_buffer']):
                 script += "-d afterok:"
                 afterok = ""
                 if run_args['run_chunks']:
@@ -1077,26 +1088,26 @@ def main():
     sbatch_args['account'] = args.account
     sbatch_args['email'] = args.email
     # Parameters for pk job:
-    sbatch_args['time_pk'] = "00:10:00"  # default "00:15:00"
+    sbatch_args['time_pk'] = "00:20:00"  # default "00:15:00"
     sbatch_args['queue_pk'] = "debug"  # default "regular"
     sbatch_args['name_pk'] = "pk_saclay"
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "00:10:00"  # default "01:30:00"
-    sbatch_args['queue_boxes'] = "debug"  # default "regular"
+    sbatch_args['time_boxes'] = "01:30:00"  # default "01:30:00"
+    sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "0:15:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "debug"  # default "regular"
+    sbatch_args['time_chunk'] = "00:45:00"  # default "00:30:00"
+    sbatch_args['queue_chunk'] = "regular"  # default "regular"
     sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
-    sbatch_args['nodes_chunk'] = 1  # nodes * threads should be = nslice, default 16
+    sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "00:15:00"  # default "01:30:00"
-    sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
+    sbatch_args['time_mergechunks'] = "01:00:00"  # default "01:30:00"
+    sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
     sbatch_args['name_mergechunks'] = "mergechunks_saclay"
     sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
@@ -1131,8 +1142,8 @@ def main():
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
     mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
-    mock_args['burst_buffer'] = False  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
-    mock_args['bb_size'] = "6000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
+    mock_args['burst_buffer'] = True  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
+    mock_args['bb_size'] = "5000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
     mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+i_realisation
 
     ### Code to runs:

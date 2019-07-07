@@ -111,7 +111,7 @@ def main():
 
     for f in os.listdir(inpath):
         index = f[8:].find('-')+1
-        if f[8+index:] == str(islice)+'.fits':
+        if f[8+index:8+index+len(str(islice))] == str(islice):
             try:
                 fits.append(fitsio.FITS(inpath+'/'+f))
                 print("{} opened".format(f))
