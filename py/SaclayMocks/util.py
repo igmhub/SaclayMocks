@@ -323,6 +323,7 @@ class desi_footprint():
         from quickquasars script (desisim)
         '''
         desi_nside =256  # same resolution as original map (cf quickquasars)
+        self.desi_nside = desi_nside
         if filename is None:
             filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/desi-healpix-weights.fits")
         pixmap = fitsio.read(filename, ext=0)
@@ -333,7 +334,7 @@ class desi_footprint():
         healpix_weight = hp.pixelfunc.ud_grade(pixmap, desi_nside, order_in='NESTED', order_out='NESTED')
         self.healpix_weight = healpix_weight
     def selection(self, ra, dec):
-        healpix = radec2pix(desi_nside, ra, dec)
+        healpix = radec2pix(self.desi_nside, ra, dec)
         return np.where(self.healpix_weight[healpix] > 0.99)[0]
 
 
@@ -474,10 +475,10 @@ def qso_lognormal_coef(filename='$SACLAYMOCKS_BASE/etc/qso_lognormal_coef.txt'):
     z = data[:,0]
     coef = data[:,1]
     # Set coef=0 for redshift values above z.max() in txt file
-    z = np.append(z, redshift.max())
+    z = np.append(z, 10)
     coef = np.append(coef, 0)
     # Set coef=1 for redshift values below z.min() in txt file
-    z = np.append(redshift.min(), z)
+    z = np.append(0, z)
     coef = np.append(1, coef)
     f = interpolate.interp1d(z, coef)
     return f
