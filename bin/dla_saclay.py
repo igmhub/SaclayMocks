@@ -254,8 +254,6 @@ def main():
                         help='Path to input directory tree to explore, e.g., /global/cscratch1/sd/*/spectra/*')
     parser.add_argument('--output_path', type = str, default = None, required = True,
                         help='Output path')
-    parser.add_argument('--input_pattern', type = str, default = 'spectra_merged*.fits',
-                        help='Filename pattern')
     parser.add_argument('--nmin', type = float, default=17.2,
                         help='Minimum value of log(NHI) to consider')
     parser.add_argument('--nmax', type = float, default=22.5,
@@ -298,7 +296,7 @@ def main():
         print("Exiting!")
         sys.exit()
     print("Output will be written in {}".format(filename))
-    flist = glob.glob(os.path.join(args.input_path,args.input_pattern))
+    flist = glob.glob(args.input_path+"/*")
     print('Will read', len(flist),' files')
     hdulist = fitsio.FITS(flist[0])
     lam = hdulist[2].read()
