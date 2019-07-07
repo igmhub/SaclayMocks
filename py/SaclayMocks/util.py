@@ -316,23 +316,26 @@ def zeff(filename, rmin=80., rmax=120.):
     return np.sum(z[msk]*we[msk]) / np.sum(we[msk])
 
 
-def desi_footprint(ra, dec, filename=None):
-    '''
-    return a mask to select only desi footprint
-    from quickquasars script (desisim)
-    '''
-    desi_nside =256  # same resolution as original map (cf quickquasars)
-    healpix = radec2pix(desi_nside, ra, dec)
-    if filename is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/desi-healpix-weights.fits")
-    pixmap = fitsio.read(filename, ext=0)
-    npix = len(pixmap)
-    truenside = hp.npix2nside(npix)
-    if truenside < desi_nside:
-        print("Warning downsampling is fuzzy...Passed nside={}, but file {} is stored at nside={}".format(truenside, filename, desi_nside))
-    healpix_weight = hp.pixelfunc.ud_grade(pixmap, desi_nside, order_in='NESTED', order_out='NESTED')
-    selection = np.where(healpix_weight[healpix] > 0.99)[0]
-    return selection
+class desi_footprint():
+    def __init__(self, filename="$SACLAYMOCKS_BASE/etc/desi-healpix-weights.fits"):
+        '''
+        return a mask to select only desi footprint
+        from quickquasars script (desisim)
+        '''
+        desi_nside =256  # same resolution as original map (cf quickquasars)
+        self.desi_nside = desi_nside
+        if filename is None:
+            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/desi-healpix-weights.fits")
+        pixmap = fitsio.read(filename, ext=0)
+        npix = len(pixmap)
+        truenside = hp.npix2nside(npix)
+        if truenside < desi_nside:
+            print("Warning downsampling is fuzzy...Passed nside={}, but file {} is stored at nside={}".format(truenside, filename, desi_nside))
+        healpix_weight = hp.pixelfunc.ud_grade(pixmap, desi_nside, order_in='NESTED', order_out='NESTED')
+        self.healpix_weight = healpix_weight
+    def selection(self, ra, dec):
+        healpix = radec2pix(self.desi_nside, ra, dec)
+        return np.where(self.healpix_weight[healpix] > 0.99)[0]
 
 
 def sigma_p1d(p1d, pixel=0.2, N=10000):
@@ -462,25 +465,23 @@ def qso_a_of_z(redshift, z_qso_bias):
     return bias_qso(redshift)*(1+z_qso_bias)/(bias_qso(z_qso_bias)*(1+redshift))
 
 
-def qso_lognormal_coef(redshift):
+def qso_lognormal_coef(filename='$SACLAYMOCKS_BASE/etc/qso_lognormal_coef.txt'):
     '''
     This function returns the interpolated coefficient for computing the
     interpolation between the 3 different lognormal fields
     '''
-    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/qso_lognormal_coef.txt")
+    filename = os.path.expandvars(filename)
     data = np.loadtxt(filename)
     z = data[:,0]
     coef = data[:,1]
-    if (redshift > z.max()).sum():
-        # print("input redshift > {} ; setting coef = 0 for these values".format(z.max()))
-        z = np.append(z, redshift.max())
-        coef = np.append(coef, 0)
-    if (redshift < z.min()).sum():
-        # print("input redshift < {} ; setting coef = 1 for these values".format(z.min()))
-        z = np.append(redshift.min(), z)
-        coef = np.append(1, coef)
+    # Set coef=0 for redshift values above z.max() in txt file
+    z = np.append(z, 10)
+    coef = np.append(coef, 0)
+    # Set coef=1 for redshift values below z.min() in txt file
+    z = np.append(0, z)
+    coef = np.append(1, coef)
     f = interpolate.interp1d(z, coef)
-    return f(redshift)
+    return f
 
 
 def extract_h5file(fname):
