@@ -59,7 +59,7 @@ def main():
     t0 = time()
     fits = []
     fits_pixels = []
-    files = glob.glob(args.inDir+"/*/spectra_merged/spectra_merged*.fits")
+    files = glob.glob(args.inDir+"/*/spectra_merged/spectra_merged*")
     for f in files:
         i = int(f[:].find('spectra_merged-')) + 15
         j = i + int(f[i:].find('-'))
@@ -97,8 +97,7 @@ def main():
         n_hi_dla = []
         mock_id = []
         dla_id = []
-        files = glob.glob(args.inDir+"/*/spectra_merged/spectra_merged-{}-*.fits".format(pix))
-        print(len(files))
+        files = glob.glob(args.inDir+"/*/spectra_merged/spectra_merged-{}-*".format(pix))
         first = True
         for f in files:
             try :
