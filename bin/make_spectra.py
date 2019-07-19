@@ -19,9 +19,6 @@ import cosmolopy.distance as dist
 import os
 import time
 from numba import jit
-import pyfftw.interfaces.numpy_fft as fft
-import pyfftw
-import json
 import argparse
 import scipy.stats as stats
 import matplotlib.pyplot as plt
@@ -30,7 +27,6 @@ from memory_profiler import profile
 
 
 #@profile   # memory profile
-#@jit
 def main():
 # if True:
     #  .................... hardcoded param
@@ -38,13 +34,10 @@ def main():
     plotPkMis = False
 
     #*************************************************************
-    #@jit(nopython=True)       #    @jit improves from 73 to 32 ms
-    #@jit('(float64,float64,float64,float64)',nopython=True)
-    #def ComputeWeight(X,Y,Z, sig2) : 
+    #@jit(nopython=True)
     @jit('Tuple((int64[:,:],float64[:])) (float64,float64,float64,float64,float64[:,:],int64[:,:], float64,float64,float64,float64,float64,float64,float64)',nopython=True)
     def ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0) : 
         # returns local cells around (X,Y,Z) and Gaussian weights
-        # also uses constants grid,cells,LX,LY,LZ,DX,DY,DZ,R0
         # dmax=3 cell = array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
         #   ...,   [ 3,  3,  1], [ 3,  3,  2], [ 3,  3,  3]])   (343,3)
         # grid idem multiplied by DX,DY,DZ
@@ -68,9 +61,7 @@ def main():
         return lcells, weight
 
     #*************************************************************
-    #@jit degrades from 22 to 27 ms
     #@jit('(float64[:],float64[:])',nopython=True)
-    #@jit
     @jit(nopython=True)
     def computeRho(myrho,weight) :
         return (weight*myrho).sum() / weight.sum()
@@ -80,43 +71,34 @@ def main():
 
     #*************************************************************
     # this seems marginally faster, significant ? 
-    def computeRhob(rho,lcells,weight) :
-        return (weight*rho[lcells[:,0],lcells[:,1],lcells[:,2]]).sum() / weight.sum()
+    #def computeRhob(rho,lcells,weight) :
+        #return (weight*rho[lcells[:,0],lcells[:,1],lcells[:,2]]).sum() / weight.sum()
 
     #*************************************************************
-    jit('(float64[:](float32[:,:,:],int64[:,:]))')
-    def selectCells(fullrho,lcells):
-        #print (fullrho[lcells[:,0],lcells[:,1],lcells[:,2]][0:10])
-        nx=fullrho.shape[0]
-        ny=fullrho.shape[1]
-        nz=fullrho.shape[2]
-        fullrho=fullrho.ravel()
-        #print( fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]][0:10] )
-        return fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+    #jit('(float64[:](float32[:,:,:],int64[:,:]))')
+    #def selectCells(fullrho,lcells):
+        print (fullrho[lcells[:,0],lcells[:,1],lcells[:,2]][0:10])
+        #nx=fullrho.shape[0]
+        #ny=fullrho.shape[1]
+        #nz=fullrho.shape[2]
+        #fullrho=fullrho.ravel()
+        #return fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
 
     #*************************************************************
-    @jit('(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64)',nopython=True)    # int32[:,:] ?
+    @jit('(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64)',nopython=True)    # int32[:,:] ? <==
     #@jit(nopython=True)
     def ReadSpecNo(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,imin=0, imax=sys.maxint):
 
         spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
         imax = np.minimum(imax,XvecSlice.size)
         sig2=2*DX*DX
-        localrho = fullrho.ravel()
         for icell in range(imin,imax):
             X = XvecSlice[icell]
             Xtrue = Xvec[icell]
             Y = Yvec[icell]
             Z = Zvec[icell]
             lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
-            #myrho = fullrho[lcells[:,0],lcells[:,1],lcells[:,2]]
-            #myrho = selectCells(fullrho,lcells)
-
-            #myrho = fullrho.ravel()[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
-            myrho = localrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
-            #myrho = np.zeros(len(lcells[:,0]))
-
-            #if ( (myrho-myrho2).any() ): print (myrho-myrho2)
+            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
             spectrum[icell] = computeRho(myrho,weight)
         return spectrum
 
@@ -134,7 +116,7 @@ def main():
         # function also uses cosntants LX,LY,LZ,DX,DY,DZ
 
         spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
-        rsd=True    # the 5 lines below should be parameters
+        rsd=True    # the 5 lines below should be parameters   <==
         dla=True
         if rsd:
             eta_par = sp.zeros_like(XvecSlice)
@@ -179,7 +161,7 @@ def main():
                     vpar[icell] = (vx_*Xtrue + vy_*Y + vz_*Z)/np.sqrt(RR)
         
         return spectrum, eta_par, vpar
-        #if rsd:
+        #if rsd:            <==
             #if dla:
                 #return spectrum, eta_par, vpar
             #else:
@@ -235,7 +217,6 @@ def main():
     lya = constant.lya
     lylimit = constant.lylimit
     lambda_min = constant.lambda_min
-    lyb = constant.lyb
     Om = constant.omega_M_0
     OL = constant.omega_lambda_0
     Ok = constant.omega_k_0
@@ -525,9 +506,8 @@ def main():
         # Read boxes along l.o.s and apply smoothing
         if rsd:
             if dla:
-                #continue # prov
                 delta_l, eta_par, velo_par = ReadSpec(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx, eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=imin, imax=imax)
-                #try:
+                #try:           <==
                      #delta_l, eta_par, velo_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
                 #except:
                     #print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
@@ -616,7 +596,7 @@ def main():
     #             np.save(args.outDir+"/velo.npy", velo_list)
 
     for ID in np.unique(QSOhdu_list):
-        outfits = fitsio.FITS(args.outDir+'/spectra-{}-{}.fits'.format(iSlice, ID), 'rw', clobber=True)
+        outfits = fitsio.FITS(args.outDir+'/spectra-{}-{}.fits.gz'.format(iSlice, ID), 'rw', clobber=True)
         msk = (QSOhdu_list == ID)
         table = [np.array(ra_list)[msk], np.array(dec_list)[msk],
                  np.array(zQSO_norsd_list)[msk], np.array(zQSO_rsd_list)[msk],
