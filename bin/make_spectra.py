@@ -36,7 +36,7 @@ def main():
     #  .................... hardcoded param
     PI = np.pi
     plotPkMis = False
-    
+
     #*************************************************************
     #@jit(nopython=True)       #    @jit improves from 73 to 32 ms
     #@jit('(float64,float64,float64,float64)',nopython=True)
@@ -48,14 +48,14 @@ def main():
         # dmax=3 cell = array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
         #   ...,   [ 3,  3,  1], [ 3,  3,  2], [ 3,  3,  3]])   (343,3)
         # grid idem multiplied by DX,DY,DZ
-    
+
         #  .......  cell that contains (X,Y,Z) and surrounding cells
         ix = int((X +LX/2)/DX)  # -LX/2 < X < -LX/2 + LX/Nslice so 0 < ix < NX/Nslice
         iy = int((Y +LY/2)/DY)  # -LY/2 < Y < LY/2 so 0 < iy < NY
         iz = int((Z +LZ/2 -R0)/DZ)
         ixyz = sp.array([ix,iy,iz])  	# (3,)
         lcells = cells + ixyz   # surrounding cells (343,3) 
-    
+
         # weights
         cell_center = sp.array([(ix+0.5)*DX-LX/2,(iy+0.5)*DY-LY/2,
                 (iz+0.5)*DZ-LZ/2+R0])  # (3,)
@@ -66,9 +66,9 @@ def main():
         # equivalent, but longer !!  (time for full MakeSpectra)
         weight = sp.exp(-Delta_r2 / sig2)
         return lcells, weight
-    
+
     #*************************************************************
-    # @jit degrades from 22 to 27 ms
+    #@jit degrades from 22 to 27 ms
     #@jit('(float64[:],float64[:])',nopython=True)
     #@jit
     @jit(nopython=True)
@@ -77,26 +77,11 @@ def main():
         #sumweight = weight.sum()
         #sumrho = (weight*myrho).sum()
         #return sumrho / sumweight
-    
+
     #*************************************************************
     # this seems marginally faster, significant ? 
     def computeRhob(rho,lcells,weight) :
         return (weight*rho[lcells[:,0],lcells[:,1],lcells[:,2]]).sum() / weight.sum()
-
-#@jit('(float64[:](float64[:,:,:],int64[:]))' )
-#def selectCells2(fullrho,ii):
-    #nx=fullrho.shape[0]
-    #ny=fullrho.shape[1]
-    #nz=fullrho.shape[2]
-    #fullrho = fullrho.ravel()
-    #return fullrho[ny*nz*ii +nz*ii +2-ii]
-
-#@jit('float64[:](float64[:,:,:])',nopython=True) 
-#def ReadSpec2(fullrho):
-    #ii=np.array([1, 2, 1, 0, 1])
-    #myrho = selectCells2(fullrho,ii)
-    #return myrho
-
 
     #*************************************************************
     jit('(float64[:](float32[:,:,:],int64[:,:]))')
@@ -107,12 +92,12 @@ def main():
         nz=fullrho.shape[2]
         fullrho=fullrho.ravel()
         #print( fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]][0:10] )
-        return fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
-    
+        return fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+
     #*************************************************************
-    #@jit('(float32[:,:,:],float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64)',nopython=True) 
-    @jit(nopython=True)
-    def ReadSpec(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,imin=0, imax=sys.maxint):
+    #@jit('(float32[:,:,:],float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64)',nopython=True)    # int32[:,:] ?
+    #@jit(nopython=True)
+    def ReadSpecNo(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,imin=0, imax=sys.maxint):
 
         spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
         imax = np.minimum(imax,XvecSlice.size)
@@ -127,40 +112,58 @@ def main():
             Y = Yvec[icell]
             Z = Zvec[icell]
             lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
-            #myrho2 = fullrho[lcells[:,0],lcells[:,1],lcells[:,2]]
+            #myrho = fullrho[lcells[:,0],lcells[:,1],lcells[:,2]]
             #myrho = selectCells(fullrho,lcells)
-            
-            #myrho = fullrho2[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
-            myrho = localrho.ravel()[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
-            
+
+            #myrho = fullrho.ravel()[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
+            myrho = localrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
+            #myrho = np.zeros(len(lcells[:,0]))
+
             #if ( (myrho-myrho2).any() ): print (myrho-myrho2)
             spectrum[icell] = computeRho(myrho,weight)
         return spectrum
 
+
     #*************************************************************
     #   @jit + python -m cProfile fails
     #   @jit degrades from 80 t0 94 for the full treatment of a QSO
-    #@jit(nopython=True) 
-    #@jit('(float64[:,:,:],float64[:],float64[:],float64[:],float64[:], float64[:,:],int32[:,:],float64,float64,float64,float64,float64,float64,float64,int32,int32)',nopython=True) 
+    #@jit(nopython=True)
+    @jit('Tuple((float64[:],float64[:],float64[:]))(float32[:,:,:],float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],int64,int64)',nopython=True)
     #=> Untyped global name 'eta_xx': cannot determine Numba type of value <object object at 0x1002d00f0>
     #def ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=0, imax=sys.maxint):
-    def ReadSpecRSDDLA(fullrho,Xvec, XvecSlice, Yvec, Zvec, cells,LX,LY,LZ,DX,DY,DZ,imin=0, imax=sys.maxint, eta_xx=0,eta_yy=0, eta_zz=0, eta_xy=0,eta_xz=0, eta_yz=0, velo_x=0,velo_y=0,velo_z=0):
+    def ReadSpec(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxint):
         # reads spectrum for (Xvec, Yvec, Zvec)
         # XvecSlice is in [-LX/2, -LX/2 + LX/NSlice]
         # cells is the list of indices used for G.S. around (0,0,0),
         # and grid its value in Mpc/h, both shapes are (343,3)
         # imin imax are the indices delimiting the lya forest
         # function also uses cosntants LX,LY,LZ,DX,DY,DZ
-    
+
         spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
+        rsd=True
+        dla=True
         if rsd:
             eta_par = sp.zeros_like(XvecSlice)
             if dla:
                 vpar = sp.zeros_like(XvecSlice)
-    
-        spectrum = -1000000 * sp.ones_like(XvecSlice)
+
         imax = np.minimum(imax,XvecSlice.size)
         sig2=2*DX*DX
+        nx=fullrho.shape[0]
+        ny=fullrho.shape[1]
+        nz=fullrho.shape[2]
+        fullrho_ = fullrho.ravel()
+        if rsd:
+            eta_xx_ = eta_xx.ravel()
+            eta_yy_ = eta_yy.ravel()
+            eta_zz_ = eta_zz.ravel()
+            eta_xy_ = eta_xy.ravel()
+            eta_xz_ = eta_xz.ravel()
+            eta_yz_ = eta_yz.ravel()
+            if dla:
+                velo_x_ = velo_x.ravel()
+                velo_y_ = velo_y.ravel()
+                velo_z_ = velo_z.ravel()
         for icell in range(imin,imax):
             X = XvecSlice[icell]
             Xtrue = Xvec[icell]
@@ -168,43 +171,46 @@ def main():
             Z = Zvec[icell]
             #lcells, weight = ComputeWeight(X,Y,Z, sig2)
             lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
-            myrho = fullrho[lcells[:,0],lcells[:,1],lcells[:,2]]
+            #myrho = fullrho[lcells[:,0],lcells[:,1],lcells[:,2]]
+            myrho = fullrho_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
             spectrum[icell] = computeRho(myrho,weight)
             if rsd:
                 RR = Xtrue**2+Y**2+Z**2
-                myeta_xx = eta_xx[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_yy = eta_yy[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_zz = eta_zz[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_xy = eta_xy[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_xz = eta_xz[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_yz = eta_yz[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_xx = computeRho(myeta_xx, weight)
-                myeta_yy = computeRho(myeta_yy, weight)
-                myeta_zz = computeRho(myeta_zz, weight)
-                myeta_xy = computeRho(myeta_xy, weight)
-                myeta_xz = computeRho(myeta_xz, weight)
-                myeta_yz = computeRho(myeta_yz, weight)
-                eta_par[icell] = (Xtrue*myeta_xx*Xtrue + Y*myeta_yy*Y
-                                  + Z*myeta_zz*Z + 2*Xtrue*myeta_xy*Y
-                                 + 2*Xtrue*myeta_xz*Z + 2*Y*myeta_yz*Z) / RR
+                myeta_xx = eta_xx_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_yy = eta_yy_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_zz = eta_zz_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_xy = eta_xy_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_xz = eta_xz_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_yz = eta_yz_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_xx_ = computeRho(myeta_xx, weight)
+                myeta_yy_ = computeRho(myeta_yy, weight)
+                myeta_zz_ = computeRho(myeta_zz, weight)
+                myeta_xy_ = computeRho(myeta_xy, weight)
+                myeta_xz_ = computeRho(myeta_xz, weight)
+                myeta_yz_ = computeRho(myeta_yz, weight)
+                eta_par[icell] = (Xtrue*myeta_xx_*Xtrue + Y*myeta_yy_*Y
+                                  + Z*myeta_zz_*Z + 2*Xtrue*myeta_xy_*Y
+                                 + 2*Xtrue*myeta_xz_*Z + 2*Y*myeta_yz_*Z) / RR
                 if dla:
-                    vx = velo_x[lcells[:,0],lcells[:,1], lcells[:,2]]
-                    vy = velo_y[lcells[:,0],lcells[:,1], lcells[:,2]]
-                    vz = velo_z[lcells[:,0],lcells[:,1], lcells[:,2]]
-                    vx = computeRho(vx, weight)
-                    vy = computeRho(vy, weight)
-                    vz = computeRho(vz, weight)
-                    vpar[icell] = (vx*Xtrue + vy*Y + vz*Z)/np.sqrt(RR)
-    
-        if rsd:
-            if dla:
-                return spectrum, eta_par, vpar
-            else:
-                return spectrum, eta_par
-        else:
-            return spectrum
-    
-    
+                    vx = velo_x_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                    vy = velo_y_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                    vz = velo_z_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                    vx_ = computeRho(vx, weight)
+                    vy_ = computeRho(vy, weight)
+                    vz_ = computeRho(vz, weight)
+                    vpar[icell] = (vx_*Xtrue + vy_*Y + vz_*Z)/np.sqrt(RR)
+        
+        return spectrum, eta_par, vpar
+        #if rsd:
+            #if dla:
+                #return spectrum, eta_par, vpar
+            #else:
+                #return spectrum, eta_par
+        #else:
+            #return spectrum
+        #return spectrum
+
+
     #************************************************************* main
     #..................  PARAMETERS
     t_init = time.time()
@@ -429,7 +435,7 @@ def main():
 
         fits.close()
     qsos = np.concatenate(qsos)
-    #qsos=qsos[0:50] # prov
+    #qsos = qsos[0:50] # prov
     if len(qsos) == 0:
         print("No QSO read. ==> Exit.")
         sys.exit(0)
@@ -529,21 +535,22 @@ def main():
         # Read boxes along l.o.s and apply smoothing
         if rsd:
             if dla:
-                delta_l, eta_par, velo_par = ReadSpec(fullrho,Xvec, XvecSlice, Yvec, Zvec,cells,LX,LY,LZ,DX,DY,DZ, imin=imin, imax=imax, eta_xx=eta_xx, eta_yy=eta_yy, eta_zz=eta_zz, eta_xy=eta_xy,eta_xz=eta_xz, eta_yz=eta_yz, velo_x=velo_x,velo_y=velo_y,velo_z=velo_z)
+                #continue # prov
+                delta_l, eta_par, velo_par = ReadSpec(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx, eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=imin, imax=imax)
                 #try:
                      #delta_l, eta_par, velo_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
                 #except:
                     #print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
                     #continue
-            else:
-                try:
-                    delta_l, eta_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
-                except:
-                    print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
-                    continue
+            #else:
+                #try:
+                    #delta_l, eta_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
+                #except:
+                    #print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
+                    #continue
         else:
             #delta_l = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
-            delta_l = ReadSpec(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, imin=imin, imax=imax)
+            delta_l = ReadSpecNo(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, imin=imin, imax=imax)
 
         # LX,LY,LZ,DX,DY,DZ are hidden parameters,
         # as well as fullrho and eta_x, eta_y eta_z
