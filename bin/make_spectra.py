@@ -95,16 +95,13 @@ def main():
         return fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
 
     #*************************************************************
-    #@jit('(float32[:,:,:],float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64)',nopython=True)    # int32[:,:] ?
+    @jit('(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64)',nopython=True)    # int32[:,:] ?
     #@jit(nopython=True)
-    def ReadSpecNo(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,imin=0, imax=sys.maxint):
+    def ReadSpecNo(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,imin=0, imax=sys.maxint):
 
         spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
         imax = np.minimum(imax,XvecSlice.size)
         sig2=2*DX*DX
-        nx=fullrho.shape[0]
-        ny=fullrho.shape[1]
-        nz=fullrho.shape[2]
         localrho = fullrho.ravel()
         for icell in range(imin,imax):
             X = XvecSlice[icell]
@@ -125,13 +122,10 @@ def main():
 
 
     #*************************************************************
-    #   @jit + python -m cProfile fails
-    #   @jit degrades from 80 t0 94 for the full treatment of a QSO
+    #   @jit + python -m cProfile -s tottime fails
     #@jit(nopython=True)
-    @jit('Tuple((float64[:],float64[:],float64[:]))(float32[:,:,:],float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],float32[:,:,:],int64,int64)',nopython=True)
-    #=> Untyped global name 'eta_xx': cannot determine Numba type of value <object object at 0x1002d00f0>
-    #def ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=0, imax=sys.maxint):
-    def ReadSpec(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxint):
+    @jit('Tuple((float64[:],float64[:],float64[:]))(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],int64,int64)',nopython=True)
+    def ReadSpec(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxint):
         # reads spectrum for (Xvec, Yvec, Zvec)
         # XvecSlice is in [-LX/2, -LX/2 + LX/NSlice]
         # cells is the list of indices used for G.S. around (0,0,0),
@@ -140,7 +134,7 @@ def main():
         # function also uses cosntants LX,LY,LZ,DX,DY,DZ
 
         spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
-        rsd=True
+        rsd=True    # the 5 lines below should be parameters
         dla=True
         if rsd:
             eta_par = sp.zeros_like(XvecSlice)
@@ -149,21 +143,6 @@ def main():
 
         imax = np.minimum(imax,XvecSlice.size)
         sig2=2*DX*DX
-        nx=fullrho.shape[0]
-        ny=fullrho.shape[1]
-        nz=fullrho.shape[2]
-        fullrho_ = fullrho.ravel()
-        if rsd:
-            eta_xx_ = eta_xx.ravel()
-            eta_yy_ = eta_yy.ravel()
-            eta_zz_ = eta_zz.ravel()
-            eta_xy_ = eta_xy.ravel()
-            eta_xz_ = eta_xz.ravel()
-            eta_yz_ = eta_yz.ravel()
-            if dla:
-                velo_x_ = velo_x.ravel()
-                velo_y_ = velo_y.ravel()
-                velo_z_ = velo_z.ravel()
         for icell in range(imin,imax):
             X = XvecSlice[icell]
             Xtrue = Xvec[icell]
@@ -171,17 +150,16 @@ def main():
             Z = Zvec[icell]
             #lcells, weight = ComputeWeight(X,Y,Z, sig2)
             lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
-            #myrho = fullrho[lcells[:,0],lcells[:,1],lcells[:,2]]
-            myrho = fullrho_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
+            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
             spectrum[icell] = computeRho(myrho,weight)
             if rsd:
                 RR = Xtrue**2+Y**2+Z**2
-                myeta_xx = eta_xx_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
-                myeta_yy = eta_yy_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
-                myeta_zz = eta_zz_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
-                myeta_xy = eta_xy_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
-                myeta_xz = eta_xz_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
-                myeta_yz = eta_yz_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_xx = eta_xx[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_yy = eta_yy[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_zz = eta_zz[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_xy = eta_xy[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_xz = eta_xz[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_yz = eta_yz[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
                 myeta_xx_ = computeRho(myeta_xx, weight)
                 myeta_yy_ = computeRho(myeta_yy, weight)
                 myeta_zz_ = computeRho(myeta_zz, weight)
@@ -192,9 +170,9 @@ def main():
                                   + Z*myeta_zz_*Z + 2*Xtrue*myeta_xy_*Y
                                  + 2*Xtrue*myeta_xz_*Z + 2*Y*myeta_yz_*Z) / RR
                 if dla:
-                    vx = velo_x_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
-                    vy = velo_y_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
-                    vz = velo_z_[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                    vx = velo_x[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                    vy = velo_y[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                    vz = velo_z[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
                     vx_ = computeRho(vx, weight)
                     vy_ = computeRho(vy, weight)
                     vz_ = computeRho(vz, weight)
@@ -297,6 +275,7 @@ def main():
         fullrho.append(fitsio.read(boxdir+"/box-{}.fits".format(iX), ext=0))
 
     fullrho = np.concatenate(fullrho)
+    NX=fullrho.shape[0]
     print("Done. {} s".format(time.time() - t0))
 
     if rsd:
@@ -353,7 +332,18 @@ def main():
     print("Box {} - {} - {} with LX = {}, LY = {}, LZ = {}".format(nHDU, NY, NZ, LX, LY, LZ))
     print ("slice #",iSlice,"of box: ", xSlicemin," < x < ",xSlicemax,)
     print (",  due to dmax=",dmax,"requires", iXmin,"<= ix <",iXmax,fullrho.shape,"   ")
-    #fullrho=fullrho.ravel()
+    fullrho = fullrho.ravel()
+    if rsd:
+        eta_xx = eta_xx.ravel()
+        eta_yy = eta_yy.ravel()
+        eta_zz = eta_zz.ravel()
+        eta_xy = eta_xy.ravel()
+        eta_xz = eta_xz.ravel()
+        eta_yz = eta_yz.ravel()
+        if dla:
+            velo_x = velo_x.ravel()
+            velo_y = velo_y.ravel()
+            velo_z = velo_z.ravel()
 
     #.................................................  	set the box at z0
     # http://roban.github.io/CosmoloPy/docAPI/cosmolopy.distance-module.html
@@ -536,7 +526,7 @@ def main():
         if rsd:
             if dla:
                 #continue # prov
-                delta_l, eta_par, velo_par = ReadSpec(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx, eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=imin, imax=imax)
+                delta_l, eta_par, velo_par = ReadSpec(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx, eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=imin, imax=imax)
                 #try:
                      #delta_l, eta_par, velo_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
                 #except:
@@ -550,7 +540,7 @@ def main():
                     #continue
         else:
             #delta_l = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
-            delta_l = ReadSpecNo(fullrho,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, imin=imin, imax=imax)
+            delta_l = ReadSpecNo(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, imin=imin, imax=imax)
 
         # LX,LY,LZ,DX,DY,DZ are hidden parameters,
         # as well as fullrho and eta_x, eta_y eta_z
@@ -591,7 +581,7 @@ def main():
     hlist = [{'name':"z0", 'value':z0, 'comment':"redshift of box center"},
                   {'name':"pixel", 'value':DeltaR},
                   {'name':"Npixel", 'value':npixeltot},
-                  {'name':"NX", 'value':NX},
+                  {'name':"NX", 'value':1},         # useless !  <==
                   {'name':"dmax", 'value':dmax},
                   {'name':"ra0", 'value':ra0, 'comment':"right ascension of box center"},
                   {'name':"dec0", 'value':dec0, 'comment':"declination of box center"}]
