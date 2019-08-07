@@ -151,6 +151,7 @@ def main():
         np.random.seed(seed)
         print("Seed has not been specified. Seed is set to {}".format(seed))
     else:
+        seed = seed + i_slice
         np.random.seed(seed)
         print("Specified seed is {}".format(seed))
 

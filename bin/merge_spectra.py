@@ -74,6 +74,7 @@ def main():
         np.random.seed(seed)
         print("Seed has not been specified. Seed is set to {}".format(seed))
     else:
+        seed = seed + islice
         np.random.seed(seed)
         print("Specified seed is {}".format(seed))
 
@@ -275,6 +276,7 @@ def main():
                     z = np.concatenate(redshift[cut][msk])[arg_wav_sorted]
                 if args.aa <= 0:
                     aa = a_of_z.interp(z)
+                    # aa = a_of_z.interp(2.28)  # prov
                 if args.cc <= 0:
                     cc = c_of_z.interp(z)
                 growthf_tmp = growthf_24*(1+2.4) / (1+z)
@@ -302,6 +304,7 @@ def main():
                         delta_s = fft.irfftn(delta_sk, threads=ncpu)
                         delta_s = delta_s[0:len(wav_tmp)]
                         delta = delta_l_tmp + delta_s
+                        # delta = delta_l_tmp  # prov
                     else:
                         delta = delta_l_tmp
                     timer += time.time() - timer_init
