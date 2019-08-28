@@ -360,9 +360,13 @@ def fgpa(delta, eta_par, growthf, a, b, c):  #, redshift, taubar_over_a=None):
     # tau_over_a = np.exp(b*growthf*delta) - c*(1+redshift)*taubar_over_a*eta_par
     # method 2:
     # tau_over_a = np.exp(b*(growthf*delta - c*(1+redshift)*eta_par))
+    # FGPA:
     tau_over_a = np.exp(b*growthf*(delta + c*eta_par))
-
     flux = np.exp(-a*tau_over_a)
+    # flux = np.exp(-1*tau_over_a)  # prov
+
+    # flux = 1 + a*b*growthf*(delta + c*eta_par)
+
     return flux
 
 

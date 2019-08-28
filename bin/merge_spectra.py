@@ -10,6 +10,7 @@ from SaclayMocks import util, constant
 import pyfftw
 import pyfftw.interfaces.numpy_fft as fft
 import glob
+# import matplotlib.pyplot as plt
 
 
 # @profile
@@ -254,6 +255,7 @@ def main():
             eta_list = []
             noise_list = []
         for ID in np.unique(IDs[cut]):
+            # if ID != 3134001249: continue
             msk = np.where((IDs[cut] == ID))[0]
             if len(msk) > 0:
                 if check_id:
@@ -274,12 +276,19 @@ def main():
                     z = args.zfix * np.ones_like(wav_tmp)
                 else:
                     z = np.concatenate(redshift[cut][msk])[arg_wav_sorted]
+                    # z_0 = np.ones_like(z) * 2.2466318099484273  # prov
                 if args.aa <= 0:
                     aa = a_of_z.interp(z)
-                    # aa = a_of_z.interp(2.28)  # prov
+                    # aa = a_of_z.interp(z_0)  # prov
+                    # aa = np.ones_like(z, dtype=np.float64) # prov
+                    # aa = a_of_z.interp(2.2466318099484273)  # prov
                 if args.cc <= 0:
                     cc = c_of_z.interp(z)
+                    # cc = c_of_z.interp(z_0)  # prov
+                    # cc = c_of_z.interp(2.2466318099484273)  # prov
                 growthf_tmp = growthf_24*(1+2.4) / (1+z)
+                # growthf_tmp = growthf_24*(1+2.4) / (1+z_0)  # prov
+                # growthf_tmp = growthf_24 * np.ones_like(z) # prov
                 if rsd:
                     eta_par_tmp = np.concatenate(eta_par[cut][msk])[arg_wav_sorted]
                 delta_l_tmp = np.concatenate(delta_l[cut][msk])[arg_wav_sorted]
@@ -313,7 +322,29 @@ def main():
 
                 # Apply FGPA:
                 if rsd:
+                    # f, ax = plt.subplots()
+                    # ax.plot(delta_l_tmp)
+                    # ax.set_title('delta_l')
+                    # plt.grid()
+                    # f, ax = plt.subplots()
+                    # ax.plot(delta_s)
+                    # ax.set_title('delta_s')
+                    # plt.grid()
+                    # f, ax = plt.subplots()
+                    # ax.plot(eta_par_tmp)
+                    # ax.set_title('eta_par')
+                    # plt.grid()
+                    # f, ax = plt.subplots()
+                    # ax.plot(growthf_tmp)
+                    # ax.set_title('growthf')
+                    # plt.grid()
                     spec = util.fgpa(delta, eta_par_tmp, growthf_tmp, aa, bb, cc)
+                    # spec = 1 + delta + cc*eta_par_tmp
+                    # f, ax = plt.subplots()
+                    # ax.plot(spec)
+                    # ax.set_title('spec {}'.format(ID))
+                    # plt.grid()
+                    # plt.show()
                 else:
                     spec = np.exp(-aa * np.exp(bb * growthf_tmp * delta))
 
