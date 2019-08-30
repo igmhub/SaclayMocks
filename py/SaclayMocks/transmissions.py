@@ -41,9 +41,10 @@ class ReadTransmission(object):
         self.metadata = np.concatenate(metadata)
         self.wavelength = wav
         self.transmission = ma.concatenate(transmission)  # (nspec, npix)
-        self.dla = np.concatenate(dla)
         self.nspec = len(self.transmission)
         self.npix = len(self.wavelength)
+        if read_dla:
+            self.dla = np.concatenate(dla)
 
     def comp_wav_rf(self):
         print("Computing wavelength in rest frame")
