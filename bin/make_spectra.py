@@ -36,7 +36,7 @@ def main():
     #*************************************************************
     #@jit(nopython=True)
     @jit('Tuple((int64[:,:],float64[:])) (float64,float64,float64,float64,float64[:,:],int64[:,:], float64,float64,float64,float64,float64,float64,float64)',nopython=True)
-    def ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0) : 
+    def ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0) :
         # returns local cells around (X,Y,Z) and Gaussian weights
         # dmax=3 cell = array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
         #   ...,   [ 3,  3,  1], [ 3,  3,  2], [ 3,  3,  3]])   (343,3)
@@ -77,7 +77,7 @@ def main():
     #*************************************************************
     #jit('(float64[:](float32[:,:,:],int64[:,:]))')
     #def selectCells(fullrho,lcells):
-        print (fullrho[lcells[:,0],lcells[:,1],lcells[:,2]][0:10])
+        ##print (fullrho[lcells[:,0],lcells[:,1],lcells[:,2]][0:10])
         #nx=fullrho.shape[0]
         #ny=fullrho.shape[1]
         #nz=fullrho.shape[2]
@@ -94,7 +94,7 @@ def main():
         sig2=2*DX*DX
         for icell in range(imin,imax):
             X = XvecSlice[icell]
-            Xtrue = Xvec[icell]
+            #Xtrue = Xvec[icell]
             Y = Yvec[icell]
             Z = Zvec[icell]
             lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
@@ -132,7 +132,7 @@ def main():
             Z = Zvec[icell]
             #lcells, weight = ComputeWeight(X,Y,Z, sig2)
             lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
-            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
+            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
             spectrum[icell] = computeRho(myrho,weight)
             if rsd:
                 RR = Xtrue**2+Y**2+Z**2
@@ -159,7 +159,7 @@ def main():
                     vy_ = computeRho(vy, weight)
                     vz_ = computeRho(vz, weight)
                     vpar[icell] = (vx_*Xtrue + vy_*Y + vz_*Z)/np.sqrt(RR)
-        
+
         return spectrum, eta_par, vpar
         #if rsd:            <==
             #if dla:
