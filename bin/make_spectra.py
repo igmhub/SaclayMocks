@@ -8,7 +8,7 @@
 from __future__ import division, print_function
 from SaclayMocks import box
 from SaclayMocks import constant
-from SaclayMocks import powerspectrum
+#from SaclayMocks import powerspectrum
 from SaclayMocks import util
 import fitsio
 from fitsio import FITS
@@ -20,18 +20,19 @@ import os
 import time
 from numba import jit
 import argparse
-import scipy.stats as stats
-import matplotlib.pyplot as plt
-from scipy import interpolate, integrate
-from memory_profiler import profile
+#import scipy.stats as stats
+#import matplotlib.pyplot as plt
+#from scipy import interpolate, integrate
+from scipy import interpolate
+#from memory_profiler import profile
 
 
 #@profile   # memory profile
 def main():
 # if True:
     #  .................... hardcoded param
-    PI = np.pi
-    plotPkMis = False
+    #PI = np.pi
+    #plotPkMis = False
 
     #*************************************************************
     #@jit(nopython=True)
@@ -47,7 +48,7 @@ def main():
         iy = int((Y +LY/2)/DY)  # -LY/2 < Y < LY/2 so 0 < iy < NY
         iz = int((Z +LZ/2 -R0)/DZ)
         ixyz = sp.array([ix,iy,iz])  	# (3,)
-        lcells = cells + ixyz   # surrounding cells (343,3) 
+        lcells = cells + ixyz   # surrounding cells (343,3)
 
         # weights
         cell_center = sp.array([(ix+0.5)*DX-LX/2,(iy+0.5)*DY-LY/2,
@@ -70,7 +71,7 @@ def main():
         #return sumrho / sumweight
 
     #*************************************************************
-    # this seems marginally faster, significant ? 
+    # this seems marginally faster, significant ?
     #def computeRhob(rho,lcells,weight) :
         #return (weight*rho[lcells[:,0],lcells[:,1],lcells[:,2]]).sum() / weight.sum()
 
@@ -98,7 +99,7 @@ def main():
             Y = Yvec[icell]
             Z = Zvec[icell]
             lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
-            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]] 
+            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
             spectrum[icell] = computeRho(myrho,weight)
         return spectrum
 
@@ -469,8 +470,8 @@ def main():
             continue
 
         # Next lines can be optimized by regrouping all cuts into one
-        sinx = np.sign(tanx) * np.sqrt(tanx*tanx/(1+tanx*tanx))
-        siny = np.sign(tany) * np.sqrt(tany*tany/(1+tany*tany))
+        #sinx = np.sign(tanx) * np.sqrt(tanx*tanx/(1+tanx*tanx))
+        #siny = np.sign(tany) * np.sqrt(tany*tany/(1+tany*tany))
         cut = (R_vec * X_QSO/R_QSO > xSlicemin) # Xvec > xSlicemin
         Rvec=R_vec[cut]
         mylambda = lambda_vec[cut]
