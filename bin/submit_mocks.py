@@ -269,7 +269,7 @@ for p in $<pids>; do
     else"""
     if threads_num is not None:
         errors += """
-        if $((i % < {})); then
+        if [ $((i % {})) -eq 0 ]; then
             echo "Error in <code>-$i but continue"
         else
 	    echo "Error in <code>-$i"
@@ -1068,6 +1068,9 @@ def main():
     parser.add_argument("--discard-boxes", action='store_true', required=False,
         help="Do not stage_out the boxes (stage_out only boxk.npy); only usable in BurstBuffer mode")
 
+    parser.add_argument("--bb-nodes", action='store_true', required=False,
+        help="use the BurstBuffer nodes")
+
     parser.add_argument("--seed", type=int, default=None, required=False,
         help="Specify a particular seed (optional)")
 
@@ -1094,7 +1097,7 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "01:30:00"  # default "01:30:00"
+    sbatch_args['time_boxes'] = "02:00:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
@@ -1106,7 +1109,7 @@ def main():
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "01:00:00"  # default "01:30:00"
+    sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
     sbatch_args['name_mergechunks'] = "mergechunks_saclay"
     sbatch_args['threads_mergechunks'] = 64  # default 64
@@ -1142,8 +1145,8 @@ def main():
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
     mock_args['sbatch'] = util.str2bool(args.cori_nodes)  # If True, jobs are sent to cori nodes (frontend nodes otherwise)
     # Burst buffer options:
-    mock_args['burst_buffer'] = True  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
-    mock_args['bb_size'] = "5000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
+    mock_args['burst_buffer'] = args.bb_nodes  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
+    mock_args['bb_size'] = "4000GB"  # A mock realisation at nominal size is 4Tb, so ask for 5
     mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+i_realisation
 
     ### Code to runs:
@@ -1157,9 +1160,9 @@ def main():
     run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = True  # run draw_qso.py for randoms
     run_args['make_spectra'] = True  # run make_spectra.py
-    run_args['merge_spectra'] = True  # run merge_spectra.py
+    run_args['merge_spectra'] = False  # run merge_spectra.py
     # merge chunks:
-    run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
+    run_args['run_mergechunks'] = False  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = True  # Compute master_randoms.fits file
     run_args['compute_dla'] = True  # Compute dla catalog of each chunks
@@ -1171,7 +1174,7 @@ def main():
     run_args['run_create'] = True  # Create persistent reservation
     run_args['run_stagein'] = True  # Stage in the init files (pk, directories, ...) (from scratch to BB)
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
-    run_args['run_delete'] = True  # delete the persistent reservation
+    run_args['run_delete'] = False  # delete the persistent reservation
 
     # -------------------------- Nothing to change bellow
     ### Define directories
