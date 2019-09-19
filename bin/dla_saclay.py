@@ -21,6 +21,7 @@ try:
     fN_default.zmnx = (0.,4)
     fN_cosmo = fN_default.cosmo
     use_pyigm = True
+    print("Using pyigm")
 except:
     use_pyigm = False
 
@@ -114,27 +115,29 @@ def dnHD_dz_cumlgN(z,logN):
     y = interp2d(tab['col1'],tab['col2'],tab['col3'],fill_value=None)
     return y(z,logN)
 
-# def dNdz(z, Nmin=20.0, Nmax=22.5):
-#     """ Get the column density distribution as a function of z,
-#     for a given range in N"""
-#     if use_pyigm:
-#         # get incidence rate per path length dX (in comoving coordinates)
-#         dNdX = fN_default.calculate_lox(z,Nmin,Nmax)
-#         # convert dX to dz
-#         dXdz = fN_cosmo.abs_distance_integrand(z)
-#         return dNdX * dXdz
-#     else:
-#         return dnHD_dz_cumlgN(z,Nmax)-dnHD_dz_cumlgN(z,Nmin)
 
-
-def dNdz(z, Nmin=20.0, Nmax=22.5, nsamp=100):
+def dNdz(z, Nmin=20.0, Nmax=22.5):
     """ Get the column density distribution as a function of z,
     for a given range in N"""
-    # get incidence rate per path length dX (in comoving coordinates)
-    nn = np.linspace(Nmin,Nmax,nsamp)
-    aux = fN_default.evaluate(nn, z)
-    dNdz = np.sum(np.exp(aux)*(nn[1]-nn[0]))
-    return dNdz
+    if use_pyigm:
+        # get incidence rate per path length dX (in comoving coordinates)
+        dNdX = fN_default.calculate_lox(z,Nmin,Nmax)
+        # convert dX to dz
+        dXdz = fN_cosmo.abs_distance_integrand(z)
+        dndz = dNdX * dXdz
+        return dndz
+    else:
+        return dnHD_dz_cumlgN(z,Nmax)-dnHD_dz_cumlgN(z,Nmin)
+
+
+# def dNdz(z, Nmin=20.0, Nmax=22.5, nsamp=100):
+#     """ Get the column density distribution as a function of z,
+#     for a given range in N"""
+#     # get incidence rate per path length dX (in comoving coordinates)
+#     nn = np.linspace(Nmin,Nmax,nsamp)
+#     aux = fN_default.evaluate(nn, z)
+#     dNdz = np.sum(np.exp(aux)*(nn[1]-nn[0]))
+#     return dNdz
 
 
 def get_N(z, Nmin=20.0, Nmax=22.5, nsamp=100):
@@ -303,12 +306,13 @@ def main():
     # cosmo_hdu = fitsio.FITS(args.fname_cosmo)[1].read_header()
     z_cell = lam / constant.lya - 1.
     dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)
-    dNdz_arr *= 20000.
-    dNdz_arr *= 6.4
+    # dNdz_arr *= 20000.
+    # dNdz_arr *= 6.4
     if random_cond:
         dNdz_arr *= args.random_factor
     dNdz_arr /= (-0.01534254*z_cell + 0.0597803)*6.4 / 0.186  # correct the z dependency
-    dz_of_z = dz_of_z_func(args.cell_size)
+    # dz_of_z = dz_of_z_func(args.cell_size)
+    dz_of_z = dz_of_z_func(0)  # don't remove DLA close to QSO
     ndlas = 0
     mockid = []
     z_dla = []
