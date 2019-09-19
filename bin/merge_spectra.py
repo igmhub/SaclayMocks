@@ -101,11 +101,12 @@ def main():
     if args.p1dfile is None:
         filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
     print("Reading P1D file {}".format(filename))
+    p1d_data = fitsio.read(filename, ext=1)
     if fit_p1d:
-        p1d_data = fitsio.read(filename, ext=1)
         p1dmiss = sp.interpolate.InterpolatedUnivariateSpline(p1d_data['k'], p1d_data['P1D'])
     else:
         p1dmiss = util.InterpP1Dmissing(filename)
+        sigma_s_interp = sp.interpolate.interp1d(p1d_data['z'], p1d_data['sigma'])
 
     # ........... Open fits files
     print("Opening fits files...")
@@ -276,19 +277,15 @@ def main():
                     z = args.zfix * np.ones_like(wav_tmp)
                 else:
                     z = np.concatenate(redshift[cut][msk])[arg_wav_sorted]
-                    # z_0 = np.ones_like(z) * 2.2466318099484273  # prov
+                    z_0 = np.ones_like(z) * 2.2466318099484273  # prov
                 if args.aa <= 0:
                     aa = a_of_z.interp(z)
                     # aa = a_of_z.interp(z_0)  # prov
-                    # aa = np.ones_like(z, dtype=np.float64) # prov
-                    # aa = a_of_z.interp(2.2466318099484273)  # prov
                 if args.cc <= 0:
                     cc = c_of_z.interp(z)
                     # cc = c_of_z.interp(z_0)  # prov
-                    # cc = c_of_z.interp(2.2466318099484273)  # prov
                 growthf_tmp = growthf_24*(1+2.4) / (1+z)
                 # growthf_tmp = growthf_24*(1+2.4) / (1+z_0)  # prov
-                # growthf_tmp = growthf_24 * np.ones_like(z) # prov
                 if rsd:
                     eta_par_tmp = np.concatenate(eta_par[cut][msk])[arg_wav_sorted]
                 delta_l_tmp = np.concatenate(delta_l[cut][msk])[arg_wav_sorted]
@@ -304,14 +301,16 @@ def main():
                         delta_s = np.random.normal(size=nz)   # latter, produce directly in k space
                         delta_sk = fft.rfftn(delta_s, threads=ncpu)
                         k = np.fft.rfftfreq(nz) * 2 * k_ny
+                        zeff = z[mmm].mean()
+                        # zeff = z_0[mmm].mean()  # prov
                         if fit_p1d:
                             pmis = p1dmiss(k)
                         else:
-                            zeff = z[mmm].mean()
                             pmis = p1dmiss(zeff, k)
                         delta_sk *= np.sqrt(pmis/pixsize)
                         delta_s = fft.irfftn(delta_sk, threads=ncpu)
                         delta_s = delta_s[0:len(wav_tmp)]
+                        delta_s *= sigma_s_interp(z[mmm]) / sigma_s_interp(zeff)
                         delta = delta_l_tmp + delta_s
                         # delta = delta_l_tmp  # prov
                     else:
