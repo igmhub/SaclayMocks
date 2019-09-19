@@ -307,10 +307,11 @@ def main():
                             pmis = p1dmiss(k)
                         else:
                             pmis = p1dmiss(zeff, k)
+                            pmis[pmis<0] = 0
                         delta_sk *= np.sqrt(pmis/pixsize)
                         delta_s = fft.irfftn(delta_sk, threads=ncpu)
                         delta_s = delta_s[0:len(wav_tmp)]
-                        delta_s *= sigma_s_interp(z[mmm]) / sigma_s_interp(zeff)
+                        delta_s *= sigma_s_interp(z) / sigma_s_interp(zeff)
                         delta = delta_l_tmp + delta_s
                         # delta = delta_l_tmp  # prov
                     else:
