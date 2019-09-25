@@ -662,6 +662,8 @@ def make_pk_dir(mock_args):
     except OSError:
         pass
     mock_args['dir_pk'] = dir_pk
+    if mock_args['burst_buffer']:
+        mock_args['dir_pk_no_bb'] = dir_pk
     # Create logs directory:
     dir_pk_logs = mock_args['dir_pk']+"/logs"
     try:
@@ -814,12 +816,13 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
             delete_reservation(mock_args)
         # Change the base directory to burst buffer directory:
         for k in mock_args.keys():
+            # this dir is not included in the next replace, so we do it by hand
+            mock_args['dir_pk'] = "$DW_PERSISTENT_STRIPED_{name}/pk".format(name=mock_args['bb_name'])
             if 'dir' in k:
-                if k == 'dir_pk':
-                    mock_args[k+'_no_bb'] = mock_args[k]
                 if k == 'mock_dir' or 'run' in k or 'log' in k or 'python' in k or 'stage_out' in k or 'no_bb' in k:
                     continue
                 mock_args[k] = mock_args[k].replace(mock_args['mock_dir'], "$DW_PERSISTENT_STRIPED_{name}".format(name=mock_args['bb_name']))
+                print(mock_args[k])
 
     ### Write scripts for each chunks:
     if run_args['run_boxes'] or run_args['run_chunks']:
@@ -1098,7 +1101,7 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "03:00:00"  # default "01:30:00"
+    sbatch_args['time_boxes'] = "03:30:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
