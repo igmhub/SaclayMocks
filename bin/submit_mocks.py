@@ -822,7 +822,6 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                 if k == 'mock_dir' or 'run' in k or 'log' in k or 'python' in k or 'stage_out' in k or 'no_bb' in k:
                     continue
                 mock_args[k] = mock_args[k].replace(mock_args['mock_dir'], "$DW_PERSISTENT_STRIPED_{name}".format(name=mock_args['bb_name']))
-                print(mock_args[k])
 
     ### Write scripts for each chunks:
     if run_args['run_boxes'] or run_args['run_chunks']:
