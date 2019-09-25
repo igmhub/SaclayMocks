@@ -102,6 +102,9 @@ def stage_in(mock_args):
     '''
     This functions stages in the mock files on the burst buffer nodes.
     '''
+    pkdir = 'dir_pk'
+    if mock_args['burst_buffer']:
+        pkdir += '_no_bb'
     script = "#!/bin/bash\n"
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
@@ -109,7 +112,7 @@ def stage_in(mock_args):
     script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
-    script += "#DW stage_in source={path} destination=$DW_PERSISTENT_STRIPED_{name}/pk type=directory\n".format(path=mock_args['dir_pk'], name=mock_args['bb_name'])
+    script += "#DW stage_in source={path} destination=$DW_PERSISTENT_STRIPED_{name}/pk type=directory\n".format(path=mock_args[pkdir], name=mock_args['bb_name'])
     script += "#DW stage_in source={path} destination=$DW_PERSISTENT_STRIPED_{name}/mock_{i} type=directory\n".format(path=mock_args['base_dir'], name=mock_args['bb_name'], i=mock_args['imock'])
 
     script += "echo 'moving runs directory out (avoid stagin it out)'\n"
@@ -812,11 +815,9 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
         # Change the base directory to burst buffer directory:
         for k in mock_args.keys():
             if 'dir' in k:
-                if k == 'mock_dir' or k == 'out_dir_no_bb':
-                    continue
-                if 'run' in k or 'log' in k or 'python' in k:
-                    continue
-                if 'stage_out' in k:
+                if k == 'dir_pk':
+                    mock_args[k+'_no_bb'] = mock_args[k]
+                if k == 'mock_dir' or 'run' in k or 'log' in k or 'python' in k or 'stage_out' in k or 'no_bb' in k:
                     continue
                 mock_args[k] = mock_args[k].replace(mock_args['mock_dir'], "$DW_PERSISTENT_STRIPED_{name}".format(name=mock_args['bb_name']))
 
