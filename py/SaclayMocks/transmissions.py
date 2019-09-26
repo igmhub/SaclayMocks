@@ -16,19 +16,21 @@ class ReadTransmission(object):
     to instance the class : the method will read directly the info,
     store them in attributes and close de fits files.
     '''
-    def __init__(self, inDir, read_dla=True):
+    def __init__(self, inDir, read_dla=True, nfiles=None):
         metadata = []
         transmission = []
         dla = []
         first = True
         files = glob.glob(inDir+"/*/*/transmission*")
+        if nfiles is not None and nfiles < len(files):
+            files = files[:np.int32(nfiles)]
         for f in files:
             print("Reading : {}".format(f))
             if first:
                 wav = fitsio.read(f, ext='WAVELENGTH')
                 first = False
             data = fitsio.read(f, ext='METADATA')
-            spec = fitsio.read(f, ext='TRANSMISSION')
+            spec = fitsio.read(f, ext=3)
             msk = wav/(1+data['Z']).reshape(-1,1)
             msk = ((msk <= constant.lylimit) | (msk >= constant.lya))
             metadata.append(data)
@@ -41,9 +43,10 @@ class ReadTransmission(object):
         self.metadata = np.concatenate(metadata)
         self.wavelength = wav
         self.transmission = ma.concatenate(transmission)  # (nspec, npix)
-        self.dla = np.concatenate(dla)
         self.nspec = len(self.transmission)
         self.npix = len(self.wavelength)
+        if read_dla:
+            self.dla = np.concatenate(dla)
 
     def comp_wav_rf(self):
         print("Computing wavelength in rest frame")

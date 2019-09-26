@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 import fitsio
 from fitsio import FITS
 from SaclayMocks import constant
+import h5py
 
 
 PI = np.pi
@@ -315,23 +316,26 @@ def zeff(filename, rmin=80., rmax=120.):
     return np.sum(z[msk]*we[msk]) / np.sum(we[msk])
 
 
-def desi_footprint(ra, dec, filename=None):
-    '''
-    return a mask to select only desi footprint
-    from quickquasars script (desisim)
-    '''
-    desi_nside =256  # same resolution as original map (cf quickquasars)
-    healpix = radec2pix(desi_nside, ra, dec)
-    if filename is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/desi-healpix-weights.fits")
-    pixmap = fitsio.read(filename, ext=0)
-    npix = len(pixmap)
-    truenside = hp.npix2nside(npix)
-    if truenside < desi_nside:
-        print("Warning downsampling is fuzzy...Passed nside={}, but file {} is stored at nside={}".format(truenside, filename, desi_nside))
-    healpix_weight = hp.pixelfunc.ud_grade(pixmap, desi_nside, order_in='NESTED', order_out='NESTED')
-    selection = np.where(healpix_weight[healpix] > 0.99)[0]
-    return selection
+class desi_footprint():
+    def __init__(self, filename="$SACLAYMOCKS_BASE/etc/desi-healpix-weights.fits"):
+        '''
+        return a mask to select only desi footprint
+        from quickquasars script (desisim)
+        '''
+        desi_nside =256  # same resolution as original map (cf quickquasars)
+        self.desi_nside = desi_nside
+        if filename is None:
+            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/desi-healpix-weights.fits")
+        pixmap = fitsio.read(filename, ext=0)
+        npix = len(pixmap)
+        truenside = hp.npix2nside(npix)
+        if truenside < desi_nside:
+            print("Warning downsampling is fuzzy...Passed nside={}, but file {} is stored at nside={}".format(truenside, filename, desi_nside))
+        healpix_weight = hp.pixelfunc.ud_grade(pixmap, desi_nside, order_in='NESTED', order_out='NESTED')
+        self.healpix_weight = healpix_weight
+    def selection(self, ra, dec):
+        healpix = radec2pix(self.desi_nside, ra, dec)
+        return np.where(self.healpix_weight[healpix] > 0.99)[0]
 
 
 def sigma_p1d(p1d, pixel=0.2, N=10000):
@@ -356,9 +360,13 @@ def fgpa(delta, eta_par, growthf, a, b, c):  #, redshift, taubar_over_a=None):
     # tau_over_a = np.exp(b*growthf*delta) - c*(1+redshift)*taubar_over_a*eta_par
     # method 2:
     # tau_over_a = np.exp(b*(growthf*delta - c*(1+redshift)*eta_par))
+    # FGPA:
     tau_over_a = np.exp(b*growthf*(delta + c*eta_par))
-
     flux = np.exp(-a*tau_over_a)
+    # flux = np.exp(-1*tau_over_a)  # prov
+
+    # flux = 1 + a*b*growthf*(delta + c*eta_par)
+
     return flux
 
 
@@ -447,3 +455,53 @@ def convert1DTo2D(array1D,nbX=None,nbY=None):
         j = k%nbY
         array2D[i][j] = array1D[k]
     return array2D
+
+
+def bias_qso(redshift):
+    '''
+    This function return the bias of QSO for a given redshift
+    The parametrisation comes from P. Laurent et al (2017)
+    '''
+    return 3.7 * ((1+redshift)/(1+2.33))**1.7
+
+
+def qso_a_of_z(redshift, z_qso_bias):
+    return bias_qso(redshift)*(1+z_qso_bias)/(bias_qso(z_qso_bias)*(1+redshift))
+
+
+def qso_lognormal_coef(filename='$SACLAYMOCKS_BASE/etc/qso_lognormal_coef.txt'):
+    '''
+    This function returns the interpolated coefficient for computing the
+    interpolation between the 3 different lognormal fields
+    '''
+    filename = os.path.expandvars(filename)
+    data = np.loadtxt(filename)
+    z = data[:,0]
+    coef = data[:,1]
+    # Set coef=0 for redshift values above z.max() in txt file
+    z = np.append(z, 10)
+    coef = np.append(coef, 0)
+    # Set coef=1 for redshift values below z.min() in txt file
+    z = np.append(0, z)
+    coef = np.append(1, coef)
+    f = interpolate.interp1d(z, coef)
+    return f
+
+
+def extract_h5file(fname):
+    '''
+    This function is taken from picca
+    https://github.com/igmhub/picca/blob/master/py/picca/fitter2/effective-bins.py
+    '''
+    f = h5py.File(os.path.expandvars(fname),'r')
+
+    free_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of free pars'] ]
+    fixed_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of fixed pars'] ]
+    pars = { el:f['best fit'].attrs[el][0] for el in free_p }
+    err_pars = { el:f['best fit'].attrs[el][1] for el in free_p }
+    pars.update({ el:f['best fit'].attrs[el][0] for el in fixed_p })
+    err_pars.update({ el:0. for el in fixed_p })
+
+    f.close()
+
+    return free_p, fixed_p, pars, err_pars

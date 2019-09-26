@@ -192,6 +192,7 @@ def main() :
   t0 = time.time()
   print(NX,NY,NZ)
   global boxk
+  boxkfile = outDir + "/boxk.npy"
   boxk, box_null = DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile)
   if box_null:
     print("Starting again DrawGRF_boxk...")
@@ -200,7 +201,6 @@ def main() :
     boxk, box_null = DrawGRF_boxk(NX, NY, NZ, ncpu, wisdomFile)
 
   t1 = time.time()
-  boxkfile = outDir + "/boxk.npy"
   np.save(boxkfile,boxk)
   t2 = time.time()
 
@@ -212,18 +212,29 @@ def main() :
     Pfilename = PkDir+"/P"+str(NX)+".fits"
   else :
     Pfilename = PkDir+"/P"+str(NX)+"-"+str(NY)+"-"+str(NZ)+".fits"
-  boxk *= fitsio.read(Pfilename, ext=0)
-  box_null = FFTandStore(Dcell, nHDU, outDir+'/boxln', ncpu, wisdomFile)
+  # First lognormal
+  boxk *= fitsio.read(Pfilename, ext='Pln1')
+  box_null = FFTandStore(Dcell, nHDU, outDir+'/boxln_1', ncpu, wisdomFile)
+  # This box_null thing is in case the FFT went bad with the wisdom file
   if box_null:
     print("Starting again FFTandStore...")
     print("Loading wisdom {}".format(wisdomFile))
     pyfftw.import_wisdom(sp.load(wisdomFile))
     boxk = np.load(boxkfile)
     boxk *= fitsio.read(Pfilename, ext=0)
-    FFTandStore(Dcell, nHDU, outDir+'/boxln', ncpu, wisdomFile, box_null)
+    FFTandStore(Dcell, nHDU, outDir+'/boxln_1', ncpu, wisdomFile, box_null)
+  # Second lognormal
+  boxk = np.load(boxkfile)
+  boxk *= fitsio.read(Pfilename, ext='Pln2')
+  box_null = FFTandStore(Dcell, nHDU, outDir+'/boxln_2', ncpu, wisdomFile)
+  # Third lognormal
+  boxk = np.load(boxkfile)
+  boxk *= fitsio.read(Pfilename, ext='Pln3')
+  box_null = FFTandStore(Dcell, nHDU, outDir+'/boxln_3', ncpu, wisdomFile)
+  # Density field
   boxk=np.load(boxkfile)
   nHDU_bis = NX   # we want 1 HDU per ix
-  boxk *= fitsio.read(Pfilename, ext=1)
+  boxk *= fitsio.read(Pfilename, ext='P0')
   np.save(boxkfile, boxk)
   FFTandStore(Dcell, nHDU_bis, outDir+'/box', ncpu, wisdomFile)
 
@@ -324,11 +335,6 @@ def main() :
   print("NX=", NX,"nCPU=", ncpu)  #, "use_pool=",  use_pool
   if (save_wisdom):
     sp.save(wisdomFile, pyfftw.export_wisdom())
-    # wisd=pyfftw.export_wisdom()
-    # f = open(wisdomFile, 'w')
-    # json.dump(wisd,f)
-    # f.close()
-    # pyfftw.forget_wisdom()
 
   print("Took {}s".format(time.time()-t_init))
 

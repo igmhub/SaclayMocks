@@ -8,7 +8,7 @@
 from __future__ import division, print_function
 from SaclayMocks import box
 from SaclayMocks import constant
-from SaclayMocks import powerspectrum
+#from SaclayMocks import powerspectrum
 from SaclayMocks import util
 import fitsio
 from fitsio import FITS
@@ -19,67 +19,111 @@ import cosmolopy.distance as dist
 import os
 import time
 from numba import jit
-import pyfftw.interfaces.numpy_fft as fft
-import pyfftw
-import json
 import argparse
-import scipy.stats as stats
-import matplotlib.pyplot as plt
-from scipy import interpolate, integrate
-from memory_profiler import profile
+#import scipy.stats as stats
+#import matplotlib.pyplot as plt
+#from scipy import interpolate, integrate
+from scipy import interpolate
+#from memory_profiler import profile
 
 
-# @profile
+#@profile   # memory profile
 def main():
 # if True:
     #  .................... hardcoded param
-    PI = np.pi
-    plotPkMis = False
+    #PI = np.pi
+    #plotPkMis = False
+
     #*************************************************************
-    @jit       #    @jit improves from 73 to 32 ms
-    def ComputeWeight(X,Y,Z,grid,cells,onesline, sig2) : # LX,LY,LZ,DX,DY,DZ
+    #@jit(nopython=True)
+    @jit('Tuple((int64[:,:],float64[:])) (float64,float64,float64,float64,float64[:,:],int64[:,:], float64,float64,float64,float64,float64,float64,float64)',nopython=True)
+    def ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0) :
+        # returns local cells around (X,Y,Z) and Gaussian weights
+        # dmax=3 cell = array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
+        #   ...,   [ 3,  3,  1], [ 3,  3,  2], [ 3,  3,  3]])   (343,3)
+        # grid idem multiplied by DX,DY,DZ
+
+        #  .......  cell that contains (X,Y,Z) and surrounding cells
         ix = int((X +LX/2)/DX)  # -LX/2 < X < -LX/2 + LX/Nslice so 0 < ix < NX/Nslice
         iy = int((Y +LY/2)/DY)  # -LY/2 < Y < LY/2 so 0 < iy < NY
         iz = int((Z +LZ/2 -R0)/DZ)
-        ixyz = sp.array([ix,iy,iz])      # (3,)
-        cell_center = sp.array([ix*DX-LX/2,iy*DY-LY/2,iz*DZ-LZ/2+R0])
-        XYZ = sp.array([X,Y,Z])
+        ixyz = sp.array([ix,iy,iz])  	# (3,)
+        lcells = cells + ixyz   # surrounding cells (343,3)
 
-        lgrid = grid + XYZ    # grid around XYZ
-        lcells = cells + ixyz
-        cell_center_line = cell_center * onesline
-        # (3,) * (343,1) => (343,3)     343= (2*dmax+1)**3
-        #    if (icell==0): print
-
-        xx = (cell_center_line-lgrid)**2
-        Delta_r2 = xx[:,0]+xx[:,1]+xx[:,2]    # Delta_r2 = ((cell_center_line-lgrid)**2).sum(axis=1)
+        # weights
+        cell_center = sp.array([(ix+0.5)*DX-LX/2,(iy+0.5)*DY-LY/2,
+                (iz+0.5)*DZ-LZ/2+R0])  # (3,)
+        xx = (grid+cell_center - sp.array([X,Y,Z]))**2  # (343,3)
+        Delta_r2 = xx[:,0]+xx[:,1]+xx[:,2]    # 41-46 s (343,)
+        #Delta_r2 = np.sum( ((XYZ-grid-cell_center)**2) ,axis=1 ) # 80-95 s
+        #Delta_r2 = ((XYZ-grid-cell_center)**2).sum(axis=1) # 69 - 74 s
+        # equivalent, but longer !!  (time for full MakeSpectra)
         weight = sp.exp(-Delta_r2 / sig2)
         return lcells, weight
 
     #*************************************************************
-    #@jit   # @jit degrades from 22 to 27 ms
+    #@jit('(float64[:],float64[:])',nopython=True)
+    @jit(nopython=True)
     def computeRho(myrho,weight) :
-        sumweight = weight.sum(axis=0)
-        sumrho = (weight*myrho).sum(axis=0)
-        return sumrho / sumweight
+        return (weight*myrho).sum() / weight.sum()
+        #sumweight = weight.sum()
+        #sumrho = (weight*myrho).sum()
+        #return sumrho / sumweight
 
     #*************************************************************
-    #   @jit + python -m cProfile fails
-    #   @jit degrades from 80 t0 94 for the full treatment of a QSO
-    #@jit
-    def ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=0, imax=sys.maxint):
-        # LX,LY,LZ,DX,DY,DZ
-        # (Xvec, Yvec, Zvec) is the vector along line of sight,
+    # this seems marginally faster, significant ?
+    #def computeRhob(rho,lcells,weight) :
+        #return (weight*rho[lcells[:,0],lcells[:,1],lcells[:,2]]).sum() / weight.sum()
+
+    #*************************************************************
+    #jit('(float64[:](float32[:,:,:],int64[:,:]))')
+    #def selectCells(fullrho,lcells):
+        ##print (fullrho[lcells[:,0],lcells[:,1],lcells[:,2]][0:10])
+        #nx=fullrho.shape[0]
+        #ny=fullrho.shape[1]
+        #nz=fullrho.shape[2]
+        #fullrho=fullrho.ravel()
+        #return fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+
+    #*************************************************************
+    @jit('(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64)',nopython=True)    # int32[:,:] ? <==
+    #@jit(nopython=True)
+    def ReadSpecNo(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,imin=0, imax=sys.maxint):
+
+        spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
+        imax = np.minimum(imax,XvecSlice.size)
+        sig2=2*DX*DX
+        for icell in range(imin,imax):
+            X = XvecSlice[icell]
+            #Xtrue = Xvec[icell]
+            Y = Yvec[icell]
+            Z = Zvec[icell]
+            lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
+            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+            spectrum[icell] = computeRho(myrho,weight)
+        return spectrum
+
+
+    #*************************************************************
+    #   @jit + python -m cProfile -s tottime fails
+    #@jit(nopython=True)
+    @jit('Tuple((float64[:],float64[:],float64[:]))(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],int64,int64)',nopython=True)
+    def ReadSpec(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxint):
+        # reads spectrum for (Xvec, Yvec, Zvec)
         # XvecSlice is in [-LX/2, -LX/2 + LX/NSlice]
         # cells is the list of indices used for G.S. around (0,0,0),
-        # and grid its value in Mpc/h,
+        # and grid its value in Mpc/h, both shapes are (343,3)
         # imin imax are the indices delimiting the lya forest
+        # function also uses cosntants LX,LY,LZ,DX,DY,DZ
+
+        spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
+        rsd=True    # the 5 lines below should be parameters   <==
+        dla=True
         if rsd:
-            eta_par = sp.zeros_like(XvecSlice)  # so that exp(-a(exp(b*g) + taubar_a*eta_par)) = 1
+            eta_par = sp.zeros_like(XvecSlice)
             if dla:
                 vpar = sp.zeros_like(XvecSlice)
 
-        spectrum = -1000000 * sp.ones_like(XvecSlice)
         imax = np.minimum(imax,XvecSlice.size)
         sig2=2*DX*DX
         for icell in range(imin,imax):
@@ -87,42 +131,45 @@ def main():
             Xtrue = Xvec[icell]
             Y = Yvec[icell]
             Z = Zvec[icell]
-            lcells, weight = ComputeWeight(X,Y,Z,grid,cells,onesline, sig2)
-            myrho = fullrho[lcells[:,0],lcells[:,1],lcells[:,2]]
+            #lcells, weight = ComputeWeight(X,Y,Z, sig2)
+            lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
+            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
             spectrum[icell] = computeRho(myrho,weight)
             if rsd:
                 RR = Xtrue**2+Y**2+Z**2
-                myeta_xx = eta_xx[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_yy = eta_yy[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_zz = eta_zz[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_xy = eta_xy[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_xz = eta_xz[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_yz = eta_yz[lcells[:,0],lcells[:,1],lcells[:,2]]
-                myeta_xx = computeRho(myeta_xx, weight)
-                myeta_yy = computeRho(myeta_yy, weight)
-                myeta_zz = computeRho(myeta_zz, weight)
-                myeta_xy = computeRho(myeta_xy, weight)
-                myeta_xz = computeRho(myeta_xz, weight)
-                myeta_yz = computeRho(myeta_yz, weight)
-                eta_par[icell] = (Xtrue*myeta_xx*Xtrue + Y*myeta_yy*Y
-                                  + Z*myeta_zz*Z + 2*Xtrue*myeta_xy*Y
-                                 + 2*Xtrue*myeta_xz*Z + 2*Y*myeta_yz*Z) / RR
+                myeta_xx = eta_xx[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_yy = eta_yy[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_zz = eta_zz[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_xy = eta_xy[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_xz = eta_xz[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_yz = eta_yz[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                myeta_xx_ = computeRho(myeta_xx, weight)
+                myeta_yy_ = computeRho(myeta_yy, weight)
+                myeta_zz_ = computeRho(myeta_zz, weight)
+                myeta_xy_ = computeRho(myeta_xy, weight)
+                myeta_xz_ = computeRho(myeta_xz, weight)
+                myeta_yz_ = computeRho(myeta_yz, weight)
+                eta_par[icell] = (Xtrue*myeta_xx_*Xtrue + Y*myeta_yy_*Y
+                                  + Z*myeta_zz_*Z + 2*Xtrue*myeta_xy_*Y
+                                 + 2*Xtrue*myeta_xz_*Z + 2*Y*myeta_yz_*Z) / RR
                 if dla:
-                    vx = velo_x[lcells[:,0],lcells[:,1], lcells[:,2]]
-                    vy = velo_y[lcells[:,0],lcells[:,1], lcells[:,2]]
-                    vz = velo_z[lcells[:,0],lcells[:,1], lcells[:,2]]
-                    vx = computeRho(vx, weight)
-                    vy = computeRho(vy, weight)
-                    vz = computeRho(vz, weight)
-                    vpar[icell] = (vx*Xtrue + vy*Y + vz*Z)/np.sqrt(RR)
+                    vx = velo_x[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                    vy = velo_y[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                    vz = velo_z[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
+                    vx_ = computeRho(vx, weight)
+                    vy_ = computeRho(vy, weight)
+                    vz_ = computeRho(vz, weight)
+                    vpar[icell] = (vx_*Xtrue + vy_*Y + vz_*Z)/np.sqrt(RR)
 
-        if rsd:
-            if dla:
-                return spectrum, eta_par, vpar
-            else:
-                return spectrum, eta_par
-        else:
-            return spectrum
+        return spectrum, eta_par, vpar
+        #if rsd:            <==
+            #if dla:
+                #return spectrum, eta_par, vpar
+            #else:
+                #return spectrum, eta_par
+        #else:
+            #return spectrum
+        #return spectrum
 
 
     #************************************************************* main
@@ -171,7 +218,6 @@ def main():
     lya = constant.lya
     lylimit = constant.lylimit
     lambda_min = constant.lambda_min
-    lyb = constant.lyb
     Om = constant.omega_M_0
     OL = constant.omega_lambda_0
     Ok = constant.omega_k_0
@@ -211,6 +257,7 @@ def main():
         fullrho.append(fitsio.read(boxdir+"/box-{}.fits".format(iX), ext=0))
 
     fullrho = np.concatenate(fullrho)
+    NX=fullrho.shape[0]
     print("Done. {} s".format(time.time() - t0))
 
     if rsd:
@@ -265,8 +312,20 @@ def main():
     xSlicemin = LX * iSlice / NSlice - LX/2
     xSlicemax = LX * (iSlice+1) / NSlice - LX/2
     print("Box {} - {} - {} with LX = {}, LY = {}, LZ = {}".format(nHDU, NY, NZ, LX, LY, LZ))
-    print("slice #",iSlice,"of box: ", xSlicemin," < x < ",xSlicemax,)
-    print(",  due to dmax=",dmax,"requires", iXmin,"<= ix <",iXmax,fullrho.shape,"   ")
+    print ("slice #",iSlice,"of box: ", xSlicemin," < x < ",xSlicemax,)
+    print (",  due to dmax=",dmax,"requires", iXmin,"<= ix <",iXmax,fullrho.shape,"   ")
+    fullrho = fullrho.ravel()
+    if rsd:
+        eta_xx = eta_xx.ravel()
+        eta_yy = eta_yy.ravel()
+        eta_zz = eta_zz.ravel()
+        eta_xy = eta_xy.ravel()
+        eta_xz = eta_xz.ravel()
+        eta_yz = eta_yz.ravel()
+        if dla:
+            velo_x = velo_x.ravel()
+            velo_y = velo_y.ravel()
+            velo_z = velo_z.ravel()
 
     #.................................................      set the box at z0
     # http://roban.github.io/CosmoloPy/docAPI/cosmolopy.distance-module.html
@@ -348,6 +407,7 @@ def main():
 
         fits.close()
     qsos = np.concatenate(qsos)
+    #qsos = qsos[0:50] # prov
     if len(qsos) == 0:
         print("No QSO read. ==> Exit.")
         sys.exit(0)
@@ -357,11 +417,10 @@ def main():
     #   for dmax=3 produce array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
     #       ...,        [ 3,  3,  1], [ 3,  3,  2], [ 3,  3,  3]])
     xx = 2 * dmax + 1
-    cells = sp.indices((xx,xx,xx)).reshape(3,-1) - dmax
+    cells = sp.indices((xx,xx,xx)).reshape(3,-1) - dmax  # (3,343)
     grid = sp.array([DX*cells[0],DY*cells[1],DZ*cells[2]])
-    cells = cells.T
+    cells = cells.T  # (343,3)
     grid = grid.T
-    onesline = sp.ones((xx**3,1))    # (343,1)
 
     iqso=0
     pixtot=0
@@ -411,8 +470,8 @@ def main():
             continue
 
         # Next lines can be optimized by regrouping all cuts into one
-        sinx = np.sign(tanx) * np.sqrt(tanx*tanx/(1+tanx*tanx))
-        siny = np.sign(tany) * np.sqrt(tany*tany/(1+tany*tany))
+        #sinx = np.sign(tanx) * np.sqrt(tanx*tanx/(1+tanx*tanx))
+        #siny = np.sign(tany) * np.sqrt(tany*tany/(1+tany*tany))
         cut = (R_vec * X_QSO/R_QSO > xSlicemin) # Xvec > xSlicemin
         Rvec=R_vec[cut]
         mylambda = lambda_vec[cut]
@@ -448,19 +507,21 @@ def main():
         # Read boxes along l.o.s and apply smoothing
         if rsd:
             if dla:
-                try:
-                    delta_l, eta_par, velo_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=imin, imax=imax)
-                except:
-                    print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
-                    continue
-            else:
-                try:
-                    delta_l, eta_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=imin, imax=imax)
-                except:
-                    print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
-                    continue
+                delta_l, eta_par, velo_par = ReadSpec(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx, eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=imin, imax=imax)
+                #try:           <==
+                     #delta_l, eta_par, velo_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
+                #except:
+                    #print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
+                    #continue
+            #else:
+                #try:
+                    #delta_l, eta_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
+                #except:
+                    #print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
+                    #continue
         else:
-            delta_l = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, grid, cells, onesline, imin=imin, imax=imax)
+            #delta_l = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
+            delta_l = ReadSpecNo(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, imin=imin, imax=imax)
 
         # LX,LY,LZ,DX,DY,DZ are hidden parameters,
         # as well as fullrho and eta_x, eta_y eta_z
@@ -501,7 +562,7 @@ def main():
     hlist = [{'name':"z0", 'value':z0, 'comment':"redshift of box center"},
                   {'name':"pixel", 'value':DeltaR},
                   {'name':"Npixel", 'value':npixeltot},
-                  {'name':"NX", 'value':NX},
+                  {'name':"NX", 'value':1},         # useless !  <==
                   {'name':"dmax", 'value':dmax},
                   {'name':"ra0", 'value':ra0, 'comment':"right ascension of box center"},
                   {'name':"dec0", 'value':dec0, 'comment':"declination of box center"}]
@@ -536,7 +597,7 @@ def main():
     #             np.save(args.outDir+"/velo.npy", velo_list)
 
     for ID in np.unique(QSOhdu_list):
-        outfits = fitsio.FITS(args.outDir+'/spectra-{}-{}.fits'.format(iSlice, ID), 'rw', clobber=True)
+        outfits = fitsio.FITS(args.outDir+'/spectra-{}-{}.fits.gz'.format(iSlice, ID), 'rw', clobber=True)
         msk = (QSOhdu_list == ID)
         table = [np.array(ra_list)[msk], np.array(dec_list)[msk],
                  np.array(zQSO_norsd_list)[msk], np.array(zQSO_rsd_list)[msk],

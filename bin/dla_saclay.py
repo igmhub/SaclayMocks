@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 from __future__ import print_function, division
 import numpy as np
-#import astropy.io.fits as fits
 from scipy.stats import norm
 from scipy.interpolate import interp1d, interp2d
 import astropy.table
-import os
+import os, sys
+import gc
 import fitsio
 import time
 import glob
-#import matplotlib.pyplot as plt
 import argparse
-from SaclayMocks import constant
+from SaclayMocks import constant, util
 import cosmolopy.distance as dist
+from memory_profiler import profile
+
 
 try:
     from pyigm.fN.fnmodel import FNModel
@@ -20,11 +21,12 @@ try:
     fN_default.zmnx = (0.,4)
     fN_cosmo = fN_default.cosmo
     use_pyigm = True
+    print("Using pyigm")
 except:
     use_pyigm = False
 
 
-def dz_of_z(cell_size=2.19, zmin=1.3, zmax=4., nbin=500):
+def dz_of_z_func(cell_size=2.19, zmin=1.3, zmax=4., nbin=500):
     h = constant.h
     Om = constant.omega_M_0
     Om = constant.omega_M_0
@@ -90,10 +92,13 @@ def nu_of_bD(b):
 #         skewers = fits.open(fname)[2].data
 #         return np.std(skewers,axis=0)
 
-def flag_DLA(zq,z_cells,deltas,nu_arr,sigma_g,zlow,dz_of_z):
+def flag_DLA(zq,z_cells,deltas,nu_arr,sigma_g,zlow,dz_of_z, rand=False):
     """ Flag the pixels in a skewer where DLAs are possible"""
     # find cells with density above threshold
-    flag = deltas > nu_arr*sigma_g  # (nspec, npix)
+    if not rand:
+        flag = deltas > nu_arr*sigma_g  # (nspec, npix)
+    else:
+        flag = np.bool_(np.ones_like(deltas))  # (nspec, npix)
     # mask cells with z > z_qso, where DLAs would not be observed
     Nq=len(zq)
     for i in range(Nq):
@@ -110,27 +115,29 @@ def dnHD_dz_cumlgN(z,logN):
     y = interp2d(tab['col1'],tab['col2'],tab['col3'],fill_value=None)
     return y(z,logN)
 
-# def dNdz(z, Nmin=20.0, Nmax=22.5):
-#     """ Get the column density distribution as a function of z,
-#     for a given range in N"""
-#     if use_pyigm:
-#         # get incidence rate per path length dX (in comoving coordinates)
-#         dNdX = fN_default.calculate_lox(z,Nmin,Nmax)
-#         # convert dX to dz
-#         dXdz = fN_cosmo.abs_distance_integrand(z)
-#         return dNdX * dXdz
-#     else:
-#         return dnHD_dz_cumlgN(z,Nmax)-dnHD_dz_cumlgN(z,Nmin)
 
-
-def dNdz(z, Nmin=20.0, Nmax=22.5, nsamp=100):
+def dNdz(z, Nmin=20.0, Nmax=22.5):
     """ Get the column density distribution as a function of z,
     for a given range in N"""
-    # get incidence rate per path length dX (in comoving coordinates)
-    nn = np.linspace(Nmin,Nmax,nsamp)
-    aux = fN_default.evaluate(nn, z)
-    dNdz = np.sum(np.exp(aux)*(nn[1]-nn[0]))
-    return dNdz
+    if use_pyigm:
+        # get incidence rate per path length dX (in comoving coordinates)
+        dNdX = fN_default.calculate_lox(z,Nmin,Nmax)
+        # convert dX to dz
+        dXdz = fN_cosmo.abs_distance_integrand(z)
+        dndz = dNdX * dXdz
+        return dndz
+    else:
+        return dnHD_dz_cumlgN(z,Nmax)-dnHD_dz_cumlgN(z,Nmin)
+
+
+# def dNdz(z, Nmin=20.0, Nmax=22.5, nsamp=100):
+#     """ Get the column density distribution as a function of z,
+#     for a given range in N"""
+#     # get incidence rate per path length dX (in comoving coordinates)
+#     nn = np.linspace(Nmin,Nmax,nsamp)
+#     aux = fN_default.evaluate(nn, z)
+#     dNdz = np.sum(np.exp(aux)*(nn[1]-nn[0]))
+#     return dNdz
 
 
 def get_N(z, Nmin=20.0, Nmax=22.5, nsamp=100):
@@ -161,7 +168,8 @@ def get_N(z, Nmin=20.0, Nmax=22.5, nsamp=100):
     return NHI
 
 
-def add_DLA_table_to_object_Saclay(hdulist,fname_sigma,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8):
+# @profile
+def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8, rand=False):
     qso = hdulist['METADATA'].read() # Read the QSO table
     lam = hdulist['LAMBDA'].read() # Read the vector with the wavelenghts corresponding to each cell
     deltas = hdulist['DELTA'].read()  # (nspec, npix)
@@ -184,11 +192,11 @@ def add_DLA_table_to_object_Saclay(hdulist,fname_sigma,dNdz_arr,dz_of_z,dla_bias
     # y = interp1d(z_cell,D_cell)
     # bias = dla_bias/(D_cell)*y(2.25)  # (npix)
     # sigma_g = fitsio.FITS(fname_sigma)[0].read_header()['SIGMA']
-    sigma_g = 1.19
+    sigma_g = constant.sigma_g
     # Gaussian field threshold:
     nu_arr = nu_of_bD(dla_bias*sigma_g*D_cell)  # (npix)
     #Figure out cells that could host a DLA, based on Gaussian fluctuation
-    flagged_cells = flag_DLA(zq,z_cell,deltas,nu_arr,sigma_g,zlow, dz_of_z)
+    flagged_cells = flag_DLA(zq,z_cell,deltas,nu_arr,sigma_g,zlow, dz_of_z, rand)
     flagged_cells[deltas==-1e6]=False  # don't draw DLA outside forest
     #Edges of the z bins
     if extrapolate_z_down and extrapolate_z_down<z_cell[0]:
@@ -203,7 +211,10 @@ def add_DLA_table_to_object_Saclay(hdulist,fname_sigma,dNdz_arr,dz_of_z,dla_bias
     p_nu_z = 1.0-norm.cdf(nu_arr)
 
     #Define mean of the Poisson distribution (per cell)
-    mu = mean_N_per_cell/p_nu_z * np.ones_like(flagged_cells)
+    mu = mean_N_per_cell * np.ones_like(flagged_cells)
+    # correct for the threshold dependency
+    if not rand:
+        mu /= p_nu_z
     # mu *= 20000  # incrase number of DLA
     # mu *= 6.4
     # mu = mean_N_per_cell*(1+bias*deltas)
@@ -229,9 +240,9 @@ def add_DLA_table_to_object_Saclay(hdulist,fname_sigma,dNdz_arr,dz_of_z,dla_bias
     dec = qso['DEC'][dla_skw_id]
     z_norsd = qso['Z_noRSD'][dla_skw_id]
     #Make the data into a table HDU
-    dla_table = astropy.table.Table([MOCKIDs,dla_z,dla_rsd_dz,dla_NHI,ZQSO, z_norsd, ra, dec],names=('MOCKID','Z_DLA','DZ_DLA','N_HI_DLA','Z_QSO', 'Z_QSO_NO_RSD', 'RA', 'DEC'))
-
-    return dla_table, ndlas
+    # dla_table = astropy.table.Table([MOCKIDs,dla_z,dla_rsd_dz,dla_NHI,ZQSO, z_norsd, ra, dec],names=('MOCKID','Z_DLA','DZ_DLA','N_HI_DLA','Z_QSO', 'Z_QSO_NO_RSD', 'RA', 'DEC'))
+    # return dla_table, ndlas
+    return [MOCKIDs, dla_z, dla_rsd_dz, dla_NHI, ZQSO, z_norsd, ra, dec], ndlas
 
 ######
 
@@ -239,70 +250,125 @@ def add_DLA_table_to_object_Saclay(hdulist,fname_sigma,dNdz_arr,dz_of_z,dla_bias
 
 ######
 
-parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--input_path', type = str, default = None, required = True,
-                    help='Path to input directory tree to explore, e.g., /global/cscratch1/sd/*/spectra/*')
-parser.add_argument('--output_file', type = str, default = None, required = True,
-                    help='Output filename')
-parser.add_argument('--input_pattern', type = str, default = 'spectra_merged*.fits',
-                    help='Filename pattern')
-# parser.add_argument('--fname_cosmo', type = str, default = None, required = True,
-#                     help='Path to file with cosmological parameter information')
-parser.add_argument('--fname_sigma', type = str, default = None, required = True,
-                    help='Path to file with information sigma(0) (initial density field RMS)')
-parser.add_argument('--nmin', type = float, default=17.2,
-                    help='Minimum value of log(NHI) to consider')
-parser.add_argument('--nmax', type = float, default=22.5,
-                    help='Maximum value of log(NHI) to consider')
-parser.add_argument('--dla_bias', type = float, default=2.,
-                    help='DLA bias at z=2.25')
-parser.add_argument('--cell_size', type = float, default=2.19,
-                    help='size of voxcell')
-parser.add_argument('-seed', type = int, default=None,
-                    help='set seed')
-args = parser.parse_args()
-
-t0 = time.time()
-seed = args.seed
-if seed is None:
-    seed = np.random.randint(2**31 -1, size=1)[0]
-    np.random.seed(seed)
-    print("Seed has not been specified. Seed is set to {}".format(seed))
-else:
-    np.random.seed(seed)
-    print("Specified seed is {}".format(seed))
-
-print("Files will be read from {}".format(args.input_path))
-print("Output will be written in {}".format(args.output_file))
-flist = glob.glob(os.path.join(args.input_path,args.input_pattern))
-print('Will read', len(flist),' files')
-hdulist = fitsio.FITS(flist[0])
-lam = hdulist[2].read()
-# cosmo_hdu = fitsio.FITS(args.fname_cosmo)[1].read_header()
-z_cell = lam / constant.lya - 1.
-dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)
-dNdz_arr *= 20000
-dNdz_arr *= 6.4
-dNdz_arr /= (-0.01534254*z_cell + 0.0597803)*6.4 / 0.186  # correct the z dependency
-dz_of_z = dz_of_z(args.cell_size)
-ndlas = 0
-
-for i, fname in enumerate(flist):
-    try:
-        hdulist = fitsio.FITS(fname)
-        aux, n = add_DLA_table_to_object_Saclay(hdulist, args.fname_sigma, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax)
-        hdulist.close()
-    except IOError:
-        print("WARNING: can't read fname")
-    ndlas += n
-    if i==0:
-        out_table = aux
+# @profile
+def main():
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--input_path', type = str, default = None, required = True,
+                        help='Path to input directory tree to explore, e.g., /global/cscratch1/sd/*/spectra/*')
+    parser.add_argument('--output_path', type = str, default = None, required = True,
+                        help='Output path')
+    parser.add_argument('--nmin', type = float, default=17.2,
+                        help='Minimum value of log(NHI) to consider')
+    parser.add_argument('--nmax', type = float, default=22.5,
+                        help='Maximum value of log(NHI) to consider')
+    parser.add_argument('--dla_bias', type = float, default=2.,
+                        help='DLA bias at z=2.25')
+    parser.add_argument('--cell_size', type = float, default=2.19,
+                        help='size of voxcell')
+    parser.add_argument('-seed', type = int, default=None,
+                        help='set seed')
+    parser.add_argument("-random",type = str, default='False',
+                        help="If True, generate randoms")
+    parser.add_argument("--random_factor",type = float, default=3.,
+                        help="Factor x thus that n_rand = x * n_data")
+    args = parser.parse_args()
+    
+    t0 = time.time()
+    random_cond = util.str2bool(args.random)
+    seed = args.seed
+    if seed is None:
+        seed = np.random.randint(2**31 -1, size=1)[0]
+        np.random.seed(seed)
+        print("Seed has not been specified. Seed is set to {}".format(seed))
     else:
-        out_table = astropy.table.vstack([out_table, aux])
-    if i%500==0:
-        print('Read %d of %d' %(i,len(flist)))
+        np.random.seed(seed)
+        print("Specified seed is {}".format(seed))
+    
+    print("Files will be read from {}".format(args.input_path))
+    if os.path.isdir(args.output_path):
+        if not random_cond:
+            filename = args.output_path + "/dla.fits"
+        else:
+            filename = args.output_path + "/dla_randoms.fits"
+    else:
+        filename = args.output_path
+    try:
+        outfits = fitsio.FITS(filename, 'rw', clobber=True)
+    except IOError:
+        print("Can't create or open file {}".format(filename))
+        print("Exiting!")
+        sys.exit()
+    print("Output will be written in {}".format(filename))
+    flist = glob.glob(args.input_path+"/*")
+    print('Will read', len(flist),' files')
+    hdulist = fitsio.FITS(flist[0])
+    lam = hdulist[2].read()
+    # cosmo_hdu = fitsio.FITS(args.fname_cosmo)[1].read_header()
+    z_cell = lam / constant.lya - 1.
+    dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)
+    # dNdz_arr *= 20000.
+    # dNdz_arr *= 6.4
+    if random_cond:
+        dNdz_arr *= args.random_factor
+    dNdz_arr /= (-0.01534254*z_cell + 0.0597803)*6.4 / 0.186  # correct the z dependency
+    # dz_of_z = dz_of_z_func(args.cell_size)
+    dz_of_z = dz_of_z_func(0)  # don't remove DLA close to QSO
+    ndlas = 0
+    mockid = []
+    z_dla = []
+    dz_dla = []
+    n_hi_dla = []
+    z_qso = []
+    z_qso_no_rsd = []
+    ra = []
+    dec = []
+    names=['MOCKID','Z_DLA','DZ_DLA','N_HI_DLA','Z_QSO', 'Z_QSO_NO_RSD', 'RA', 'DEC']
 
-out_table.write(args.output_file, overwrite=True)
-print("Fits table written.")
-print("Draw {} DLAs".format(ndlas))
-print("Took {} s".format(time.time() - t0))
+    t_loop = time.time()
+    for i, fname in enumerate(flist):
+        try:
+            hdulist = fitsio.FITS(fname)
+            table, n = add_DLA_table_to_object_Saclay(hdulist, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax, rand=random_cond)
+            hdulist.close()
+        except IOError:
+            print("WARNING: can't read fname")
+        ndlas += n
+        # if i==0:
+        #     out_table = table
+        # else:
+        #     out_table = astropy.table.vstack([out_table, table])
+        mockid.append(table[0])
+        z_dla.append(table[1])
+        dz_dla.append(table[2])
+        n_hi_dla.append(table[3])
+        z_qso.append(table[4])
+        z_qso_no_rsd.append(table[5])
+        ra.append(table[6])
+        dec.append(table[7])
+        del table
+        gc.collect()
+        if i%500==0:
+            print('Read %d of %d' %(i,len(flist)))
+
+    print("Loop on files done. Took {} s".format(time.time()-t_loop))
+    print("Writting output file ...")
+    t_writting = time.time()
+    mockid = np.concatenate(mockid)
+    z_dla = np.concatenate(z_dla)
+    dz_dla = np.concatenate(dz_dla)
+    n_hi_dla = np.concatenate(n_hi_dla)
+    z_qso = np.concatenate(z_qso)
+    z_qso_no_rsd = np.concatenate(z_qso_no_rsd)
+    ra = np.concatenate(ra)
+    dec = np.concatenate(dec)
+    table = [mockid, z_dla, dz_dla, n_hi_dla, z_qso, z_qso_no_rsd, ra, dec]
+    outfits.write(table, names=names)
+    outfits.close()
+    # out_table.write(filename, overwrite=True)
+    print("Fits table written. Took {} s".format(time.time() - t_writting))
+    print("Draw {} DLAs".format(ndlas))
+    print("Took {} s".format(time.time() - t0))
+
+
+if __name__ == "__main__":
+    main()
