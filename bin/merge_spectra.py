@@ -7,8 +7,10 @@ import argparse
 import time
 from memory_profiler import profile
 from SaclayMocks import util, constant
+import pyfftw
 import pyfftw.interfaces.numpy_fft as fft
 import glob
+# import matplotlib.pyplot as plt
 
 
 # @profile
@@ -36,12 +38,14 @@ def main():
     parser.add_argument("--fit-p1d", help="If True, store delta_l, delta_s and eta_par. Default False", default='False')
     parser.add_argument("-seed", type=int, help="specify a seed", default=None)
     parser.add_argument("--check-id", help="If True, check if the spectra ID matches the QSO ID by looking at (ra,dec), default True", default='True')
+    parser.add_argument("-ncpu", type=int, help="number of cpu, default = 2", default=2)
     args = parser.parse_args()
 
     inpath = args.inDir
     outpath = args.outDir
     islice = args.i
     nside = args.nside
+    ncpu = args.ncpu
     nest_option = util.str2bool(args.nest)
     rsd = util.str2bool(args.rsd)
     add_noise = util.str2bool(args.addnoise)
@@ -71,6 +75,7 @@ def main():
         np.random.seed(seed)
         print("Seed has not been specified. Seed is set to {}".format(seed))
     else:
+        seed = seed + islice
         np.random.seed(seed)
         print("Specified seed is {}".format(seed))
 
@@ -96,19 +101,21 @@ def main():
     if args.p1dfile is None:
         filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
     print("Reading P1D file {}".format(filename))
+    p1d_data = fitsio.read(filename, ext=1)
     if fit_p1d:
-        p1d_data = fitsio.read(filename, ext=1)
         p1dmiss = sp.interpolate.InterpolatedUnivariateSpline(p1d_data['k'], p1d_data['P1D'])
     else:
         p1dmiss = util.InterpP1Dmissing(filename)
+        sigma_s_interp = sp.interpolate.interp1d(p1d_data['z'], p1d_data['sigma'])
 
     # ........... Open fits files
     print("Opening fits files...")
     fits = []
 
     for f in os.listdir(inpath):
-        index = f[8:].find('-')+1
-        if f[8+index:] == str(islice)+'.fits':
+        index1 = f.rfind('-')+1
+        index2 = f.find('.')
+        if f[index1:index2] == str(islice):
             try:
                 fits.append(fitsio.FITS(inpath+'/'+f))
                 print("{} opened".format(f))
@@ -204,6 +211,17 @@ def main():
     healpix = util.radec2pix(nside, RA, DEC, nest=nest_option)
     print("IDs read - {} s".format(time.time()-t_init))
 
+    #...............................    get wisdom to save time on FFT
+    wisdom_path = os.path.expandvars("$SACLAYMOCKS_BASE/etc/")
+    wisdomFile = wisdom_path+"wisdom1D_"+str(ncpu)+".npy"
+
+    if os.path.isfile(wisdomFile) :
+        pyfftw.import_wisdom(sp.load(wisdomFile))
+        save_wisdom = False
+    else :
+        print("{f} file not found. Saving wisdom file to {f}".format(f=wisdomFile))
+        save_wisdom = True
+
     # .......... Merge spectra
     print("Merging spectra...")
     names = ['RA', 'DEC', 'Z_noRSD', 'Z', 'HDU', 'THING_ID', 'PLATE', 'MJD', 'FIBERID', 'PMF']
@@ -216,6 +234,7 @@ def main():
     cpt2 = 0
     cpt3 = 0
     t2 = time.time()
+    timer = 0
     for pix in np.unique(healpix):
         cut = (healpix == pix)  # select only ID in pix healpix
         spectra_list = []
@@ -237,6 +256,7 @@ def main():
             eta_list = []
             noise_list = []
         for ID in np.unique(IDs[cut]):
+            # if ID != 3134001249: continue
             msk = np.where((IDs[cut] == ID))[0]
             if len(msk) > 0:
                 if check_id:
@@ -257,42 +277,74 @@ def main():
                     z = args.zfix * np.ones_like(wav_tmp)
                 else:
                     z = np.concatenate(redshift[cut][msk])[arg_wav_sorted]
+                    z_0 = np.ones_like(z) * 2.2466318099484273  # prov
                 if args.aa <= 0:
                     aa = a_of_z.interp(z)
+                    # aa = a_of_z.interp(z_0)  # prov
                 if args.cc <= 0:
                     cc = c_of_z.interp(z)
+                    # cc = c_of_z.interp(z_0)  # prov
                 growthf_tmp = growthf_24*(1+2.4) / (1+z)
+                # growthf_tmp = growthf_24*(1+2.4) / (1+z_0)  # prov
                 if rsd:
                     eta_par_tmp = np.concatenate(eta_par[cut][msk])[arg_wav_sorted]
                 delta_l_tmp = np.concatenate(delta_l[cut][msk])[arg_wav_sorted]
 
                 # Generate small scales
                 if add_noise:
+                    timer_init = time.time()
                     wav_rf = wav_tmp / (1+Z_QSO_RSD[cut][msk][0])
                     mmm = np.where((wav_rf<constant.lya) & (wav_rf>constant.lylimit))[0]
                     if len(mmm) > 0:
                         nz = 256
                         while (nz < len(wav_tmp)) : nz *= 2
                         delta_s = np.random.normal(size=nz)   # latter, produce directly in k space
-                        delta_sk = fft.rfftn(delta_s)
+                        delta_sk = fft.rfftn(delta_s, threads=ncpu)
                         k = np.fft.rfftfreq(nz) * 2 * k_ny
+                        zeff = z[mmm].mean()
+                        # zeff = z_0[mmm].mean()  # prov
                         if fit_p1d:
                             pmis = p1dmiss(k)
                         else:
-                            zeff = z[mmm].mean()
                             pmis = p1dmiss(zeff, k)
+                            pmis[pmis<0] = 0
                         delta_sk *= np.sqrt(pmis/pixsize)
-                        delta_s = fft.irfftn(delta_sk)
+                        delta_s = fft.irfftn(delta_sk, threads=ncpu)
                         delta_s = delta_s[0:len(wav_tmp)]
+                        delta_s *= sigma_s_interp(z) / sigma_s_interp(zeff)
                         delta = delta_l_tmp + delta_s
+                        # delta = delta_l_tmp  # prov
                     else:
                         delta = delta_l_tmp
+                    timer += time.time() - timer_init
                 else:
                     delta = delta_l_tmp
 
                 # Apply FGPA:
                 if rsd:
+                    # f, ax = plt.subplots()
+                    # ax.plot(delta_l_tmp)
+                    # ax.set_title('delta_l')
+                    # plt.grid()
+                    # f, ax = plt.subplots()
+                    # ax.plot(delta_s)
+                    # ax.set_title('delta_s')
+                    # plt.grid()
+                    # f, ax = plt.subplots()
+                    # ax.plot(eta_par_tmp)
+                    # ax.set_title('eta_par')
+                    # plt.grid()
+                    # f, ax = plt.subplots()
+                    # ax.plot(growthf_tmp)
+                    # ax.set_title('growthf')
+                    # plt.grid()
                     spec = util.fgpa(delta, eta_par_tmp, growthf_tmp, aa, bb, cc)
+                    # spec = 1 + delta + cc*eta_par_tmp
+                    # f, ax = plt.subplots()
+                    # ax.plot(spec)
+                    # ax.set_title('spec {}'.format(ID))
+                    # plt.grid()
+                    # plt.show()
                 else:
                     spec = np.exp(-aa * np.exp(bb * growthf_tmp * delta))
 
@@ -334,7 +386,7 @@ def main():
                 if len(msk) > 1:
                     cpt2 += 1
         if len(ra_list) == 0: continue
-        outfits = fitsio.FITS(outpath+'/spectra_merged-{}-{}.fits'.format(pix, islice), 'rw', clobber=True)
+        outfits = fitsio.FITS(outpath+'/spectra_merged-{}-{}.fits.gz'.format(pix, islice), 'rw', clobber=True)
         table = [np.array(ra_list), np.array(dec_list),
                  np.array(Z_QSO_NO_RSD_list), np.array(Z_QSO_RSD_list),
                  np.array(HDU_list), np.array(ID_list),
@@ -357,11 +409,17 @@ def main():
         cpt3 += len(ra_list)
 
     print("Merging and writting done. {} s".format(time.time() - t2))
+    # Save wisdom
+    if save_wisdom:
+        print("Saving wisdom file in {}".format(wisdomFile))
+        sp.save(wisdomFile, pyfftw.export_wisdom())
+        save_wisdom = False
     print("Spectra merged and fits file saved.")
     print("{} initial forests.".format(cpt1))
     print("{} forest mergers.".format(cpt2))
     print("{} total forest written.".format(cpt3))
     print("Slice {} done. Took {}s".format(islice, time.time()-t_init))
+    print("FFT timer = {} s".format(timer))
 
 if __name__ == "__main__":
     main()

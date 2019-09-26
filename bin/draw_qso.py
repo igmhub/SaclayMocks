@@ -107,6 +107,7 @@ def main():
     parser.add_argument("-zmin", type=float, help="minimal redshift for drawing QSO, default is None", default=-1)
     parser.add_argument("-zmax", type=float, help="maximal redshift for drawing QSO, default is None", default=-1)
     parser.add_argument("-desi", type=str, help="select only objects in desi footprint, default is True", default="True")
+    parser.add_argument("-zfix", type=float, help="If specified, all QSO will be drawn at redshift = zfix", default=None)
     parser.add_argument("-seed", type=int, help="specify a seed", default=None)
     parser.add_argument("-rsd", help="If True, rsd are added, default True", default='True')
     parser.add_argument("-dgrowthfile", help="dD/dz file, default etc/dgrowth.fits", default=None)
@@ -142,7 +143,6 @@ def main():
     print("\n\nBegining of DrawQSO.")
     if random_cond:
         print("***Random catalogs***")
-        print(random_cond)
 
     global seed
     seed = args.seed
@@ -151,11 +151,15 @@ def main():
         np.random.seed(seed)
         print("Seed has not been specified. Seed is set to {}".format(seed))
     else:
+        seed = seed + i_slice
         np.random.seed(seed)
         print("Specified seed is {}".format(seed))
 
+    if args.zfix is not None:
+        print("Redshift has been fixed to {}".format(args.zfix))
+
     #........................................   read box.fits header
-    boxfits = fitsio.FITS(args.indir+"/boxln-{}.fits".format(i_slice))
+    boxfits = fitsio.FITS(args.indir+"/boxln_1-{}.fits".format(i_slice))
     head = boxfits[0].read_header()
     Nslice = args.Nslice
     DX = head["DX"]
@@ -173,16 +177,25 @@ def main():
     else:
         out_file = args.outpath+'/QSO-{}-{}.fits'.format(i_slice, Nslice)
 
-    if (not random_cond):
+    if not random_cond:
+        # p1,2,3 are first the lognormal field boxes
+        # at the end, we draw the QSO with a probability ~ f(p1, p2, p3)
         t0=time()
-        rho = boxfits[0].read()
+        p1 = boxfits[0].read()
         boxfits.close()
+        p2 = fitsio.read(args.indir+"/boxln_2-{}.fits".format(i_slice), ext=0)
+        p3 = fitsio.read(args.indir+"/boxln_3-{}.fits".format(i_slice), ext=0)
         t1=time()
-        print("read box in ",t1-t0,"s ",rho.shape)
-        print("sigma(rho)=",rho.std())
-        exprho = np.exp(rho)
-        del rho  # unassign variable
-        gc.collect()  # force memory clearing
+        print("read boxes in {} s, shape: {}".format(t1-t0,p1.shape))
+        sigma_p_1 = np.std(p1)
+        sigma_p_2 = np.std(p2)
+        sigma_p_3 = np.std(p3)
+        sigma_p_tot = np.std([p1, p2, p3])
+        print "sigma(rho)=",sigma_p_tot, sigma_p_1, sigma_p_2, sigma_p_3
+        # take exponential of each field
+        np.exp(p1, p1)
+        np.exp(p2, p2)
+        np.exp(p3, p3)
         if rsd:
             print("Reading velocity boxes...")
             vx = fitsio.read(args.indir+"/vx-{}.fits".format(i_slice), ext=0)
@@ -203,6 +216,36 @@ def main():
     z_axis = (sp.arange(NZ)+0.5)*DZ + R0 - LZ/2     # Z at cell center
     z_edges = sp.arange(NZ+1)*DZ + R0 - LZ/2        # Z at edges
     dz = z_of_R(z_edges[1:]/h) - z_of_R(z_edges[0:-1]/h)   #  z_of_R[m+1] - z_of_R[m]
+
+    # add z dependence
+    # there are 3 lognormal fields p1, p2, p3 at z1, z2, z3
+    # we build p12 and p23 which are the interpolation of p1, p2 and p2, p3
+    # we then build the probability ptot = c*p12 + (1-c)*p23
+    # where c is a coefficient, store in etc/qso_lognormal_coef.txt
+    if not random_cond:
+        print("Computing exp(a(z)*g) for the 3 lognormal fields and interpolating...")
+        t3 = time()
+        z1 = constant.z_QSO_bias_1
+        z2 = constant.z_QSO_bias_2
+        z3 = constant.z_QSO_bias_3
+        qso_lognormal_coef = util.qso_lognormal_coef()
+        rho_sum = constant.rho_sum
+        print("rho_sum = {} ; {} s".format(rho_sum, time()-t3))
+        # apply a(z): P = exp(delta)**a(z) for each lognormal
+        z_box = z_of_R(np.sqrt((x_axis**2).reshape(-1,1,1) +
+                    (y_axis**2).reshape(-1,1) + z_axis**2)/h)  # (NX,NY,NZ)
+        p1 **= util.qso_a_of_z(z_box, z1)
+        p2 **= util.qso_a_of_z(z_box, z2)
+        p3 **= util.qso_a_of_z(z_box, z3)
+        print("a(z) applied to boxes. {} s".format(time()-t3))
+        # Do the interpolations
+        p12 = p1*(z2 - z_box)/(z2-z1) + p2*(z_box-z1)/(z2-z1)
+        p23 = p2*(z3 - z_box)/(z3-z2) + p3*(z_box-z2)/(z3-z2)
+        del p1, p2, p3
+        ptot = qso_lognormal_coef(z_box)*(p12 - p23) + p23
+        del p12, p23, z_box
+        gc.collect()
+        print("Interpolations done. {} s".format(time() - t3))
 
     # margin of dmax cells
     print(LX,LY,LZ,R0,dmax*DX) # prov
@@ -232,6 +275,7 @@ def main():
         surface = 4 * tetax_max * tetay_max     # rad^2
     surfaceDeg = surface * (180/PI)**2
     nQSOexp = constant.n_qso_exp * surfaceDeg
+    nQSOexp *= constant.qso_nz_adhoc
     nQSOexp /= Nslice
     volFrac= (surface/3)*(Rmax**3-Rmin**3)/LX_fullbox/LY/LZ
     print("Fraction of box volume used",volFrac)
@@ -260,71 +304,122 @@ def main():
     # dZ = (c/H(z) dz = d_H dz   =>  dN/dZ = dN/dz Dz/dZ = dN/dz /d_H
     dn_cell = dn_cell * DX * DY / R_of_z(dz_interp)**2  # deg^-2 -> per cell
 
-    density_max = dn_cell.max()
-    density_mean = dn_cell[(dz_interp>z_min)*(dz_interp<z_max)].mean()
+    mmm = (dz_interp>z_min) & (dz_interp<z_max)
+    if not random_cond:
+        mean_rho_interp = dn_cell[mmm] / (
+            qso_lognormal_coef(dz_interp[mmm])*(
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z1)*sigma_p_1)**2/2)*(z2-dz_interp[mmm])/(z2-z1) +
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z2)*sigma_p_2)**2/2)*(dz_interp[mmm]-z1)/(z2-z1)
+            )
+            + (1-qso_lognormal_coef(dz_interp[mmm]))*(
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z2)*sigma_p_2)**2/2)*(z3-dz_interp[mmm])/(z3-z2) +
+            np.exp((util.qso_a_of_z(dz_interp[mmm], z3)*sigma_p_3)**2/2)*(dz_interp[mmm]-z2)/(z3-z2)
+            )
+            )
+        density_max = np.max(mean_rho_interp)
+        density_mean = np.mean(mean_rho_interp)
+    else:
+        density_max = dn_cell.max()
+        density_mean = dn_cell.mean()
+
     if z_max > 2.1:  # Count only QSO for z > 2.1 to have the right N/deg^2
         N_zmin_zmax = dn_cell[(dz_interp>z_min)*(dz_interp<z_max)].sum()
         N_21_zmax = dn_cell[(dz_interp>2.1)*(dz_interp<z_max)].sum()
-    print("dN per cell max:",density_max,", mean:", density_mean,density_max/density_mean)
+    print("dN per cell max: {} ;  mean: {}".format(density_max, density_mean))
     dn_cell = np.append(dn_cell, np.zeros(10*NZ))  # artificially increasing dNdz range
 
     if (drawPlot) :
         hrho , hh = np.histogram(rho,100)
         plt.plot(hrho)
-        plt.hist(exprho.reshape(np.size(exprho)),1000)
+        plt.hist(ptot.reshape(np.size(ptot)),1000)
         plt.xscale('log')
         plt.yscale('log')
         plt.show()
 
     if (not random_cond):
-        rho_max = exprho.max()
-        rho_sum = exprho.sum()
+        rho_max = ptot.max()
+        # rho_sum = ptot.sum()
         kk = nQSOexp / rho_sum
         norm = nQSOexp / rho_sum    # corresponds to cond1
         norm *= density_max / density_mean  # correction for cond2
         norm /= volFrac             # correction for cond3
         if z_max > 2.1:
             norm /= N_21_zmax / N_zmin_zmax  # correct for z > 2.1 only
+
+        print("nQSOexp={}".format(nQSOexp))
+        print("rho_sum={}".format(rho_sum))
+        print("density_max={}".format(density_max))
+        print("density_mean={}".format(density_mean))
+        print("volFrac={}".format(volFrac))
+        print("N_21_zmax={}".format(N_21_zmax))
+        print("N_zmin_zmax={}".format(N_zmin_zmax))
+        print("norm={}".format(norm))
         # gives ~4% more QSO than expected
         # this is due to the fact that the 3 cond are not independent
 
         print("exp(rho) max and sum = ",rho_max,rho_sum)
         print("k exp(rho_max) =",kk*rho_max)
         if (kk*rho_max>1):
-            print("k exp(rho) > 1 in ", np.size(np.where(kk*exprho>1)[0]),"cells")
-            print("sum min(k exp(rho) , 1) =", np.minimum(kk*exprho,1).sum())
+            print "k exp(rho) > 1 in ", np.size(np.where(kk*ptot>1)[0]),"cells"
+            print "sum min(k exp(rho) , 1) =", np.minimum(kk*ptot,1).sum()
+
+    # Apply desi footprint
+    if desi:
+        desi_footprint = util.desi_footprint()
 
     #.........................................................    loop on cells
     nQSO = 0
     if (not random_cond):
         nnQSO=0
     qsofits = FITS(out_file, 'rw', clobber=True)  # output file
+    z_list = []
+    z_rsd_list = []
+    ra_list = []
+    dec_list = []
+    xx_list = []
+    yy_list = []
+    zz_list = []
     if not random_cond:
         names = ["Z_QSO_NO_RSD", "Z_QSO_RSD", "RA", "DEC", "HDU", "THING_ID", "PLATE", "MJD", "FIBERID", "PMF", "XX", "YY", "ZZ"] # , "XGRID", "YGRID", "ZGRID"]
     else:
         names = ["Z", "RA", "DEC", "HDU", "THING_ID", "PLATE", "MJD", "FIBERID", "PMF", "XX", "YY", "ZZ"] # , "XGRID", "YGRID", "ZGRID"]
 
+    t4 = time()
     for mz in range(NZ):
         XX = x_axis
         YY = y_axis
         XY2 = (XX*XX).reshape(-1,1) + YY*YY    # broadcasting -> (NX,NY)
         ZZ = z_axis[mz]
         RR = np.sqrt(ZZ*ZZ + XY2)
-        redshift = z_of_R(RR/h)
+        if args.zfix is  None:
+            redshift = z_of_R(RR/h)
+        else:
+            redshift = args.zfix*np.ones_like(RR)
         delta_z = dz_interp[1] - dz_interp[0]
         iz = ((redshift - dz_interp[0]) / delta_z).round().astype(int)
         density = dn_cell[iz]
+        # correct the z dependence in cond1 (due to a(z))
+        if not random_cond:
+            density /= (qso_lognormal_coef(redshift)*(
+            np.exp((util.qso_a_of_z(redshift, z1)*sigma_p_1)**2/2)*(z2-redshift)/(z2-z1) +
+            np.exp((util.qso_a_of_z(redshift, z2)*sigma_p_2)**2/2)*(redshift-z1)/(z2-z1)
+            )
+            + (1-qso_lognormal_coef(redshift))*(
+            np.exp((util.qso_a_of_z(redshift, z2)*sigma_p_2)**2/2)*(z3-redshift)/(z3-z2) +
+            np.exp((util.qso_a_of_z(redshift, z3)*sigma_p_3)**2/2)*(redshift-z2)/(z3-z2)
+            )
+            )
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==
         rnd1 = sp.random.ranf(size=(NX,NY))        #  float64
         if (not random_cond):
-            cond1 = rnd1 < norm * exprho[:, :, mz]  # (NX,NY)
+            cond1 = rnd1 < norm * ptot[:, :, mz]  # (NX,NY)
             # should be a Poisson of norm * np.exp(rho)  <==
             # sometime get 2 QSO in a cell
             nnQSO += np.size(np.where(cond1)[0])
         else:
-            cond1 = rnd1 > (1.-0.006)
+            cond1 = rnd1 > (1. - constant.rand_qso_nb)
 
         cond2 = density_max * sp.random.ranf(size=(NX,NY)) < density    # (NX,NY)
 
@@ -338,14 +433,20 @@ def main():
         ra, dec, RR = box.ComputeRaDecR2(XXX, YYY, ZZZ, np.radians(ra0), np.radians(dec0))
         ra = np.degrees(ra)
         dec = np.degrees(dec)
-        redshift = z_of_R(RR/h)
+        if args.zfix is None:
+            redshift = z_of_R(RR/h)
+        else:
+            redshift = args.zfix*np.ones_like(RR)
         if redshift.min() > z_max +1.: continue
         if not random_cond and rsd:
-            vpar = (XX.reshape(-1,1)*vx[:, :, mz]
-                  + YY*vy[:, :, mz]
-                  + ZZ*vz[:, :, mz]) / RR
-            msk = np.where(redshift < z_max + 1.)  # don't go above z=5
-            RR_RSD = RR.copy()
+            vpar = (XXX*vx[:, :, mz]
+                  + YYY*vy[:, :, mz]
+                  + ZZZ*vz[:, :, mz]) / RR
+            msk = redshift < z_max + 1.  # dont' go above z=5
+            if args.zfix is None:
+                RR_RSD = RR.copy()
+            else:
+                RR_RSD = R_of_z(redshift)*h
             RR_RSD[msk] += vpar[msk] * (1+redshift[msk]) * Dgrowth.interp(redshift[msk]) / (dgrowth0 * H0)
             redshift_RSD = z_of_R(RR_RSD/h)
 
@@ -369,30 +470,21 @@ def main():
         YY = YY[iqso[1]]
         ZZ = ZZZ[iqso]
         RR = RR[iqso]
-        zzz = z_of_R(RR/h)
+        # zzz = z_of_R(RR/h)
+        zzz = redshift[iqso]
         if RR.size == 0: continue
         if rsd and not random_cond:
             RR_RSD = RR_RSD[iqso]
-            zzz_RSD = z_of_R(RR_RSD/h)
+            zzz_RSD = redshift_RSD[iqso]
         else:
             zzz_RSD = zzz
 
         ra = ra[iqso]
         dec = dec[iqso]
 
-        # # Draw random xyz in the cell
-        # X = x_axis[iqso[0]] + np.random.uniform(-DX/2, DX/2, len(iqso[0]))
-        # Y = y_axis[iqso[1]] + np.random.uniform(-DY/2, DY/2, len(iqso[0]))
-        # Z = ZZ + np.random.uniform(-DZ/2, DZ/2, len(iqso[0]))
-        # zzz = z_of_R(np.sqrt(X*X+Y*Y+Z*Z)/h)
-
-        # ra, dec, _ = box.ComputeRaDecR2(XX, YY, ZZ, np.radians(ra0), np.radians(dec0))  # (NQS0_)
-        # ra = np.degrees(ra)
-        # dec = np.degrees(dec)
-
         # Select desi footprint
         if desi:
-            msk = util.desi_footprint(ra, dec)
+            msk = desi_footprint.selection(ra,dec)
             ra = ra[msk]
             dec = dec[msk]
             zzz = zzz[msk]
@@ -401,49 +493,52 @@ def main():
             ZZ = ZZ[msk]
             zzz_RSD = zzz_RSD[msk]
 
-        un = np.ones(len(zzz)).astype(int)
-        # XGRID = np.array(iqso[0]) + i_slice*NX
-        # YGRID = np.array(iqso[1])
-        # ZGRID = un * mz
-        #if (len(XGRID)>0):
-        #    print( np.mean(np.log(exprho[XGRID,YGRID,ZGRID])) )
-        THING_ID = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO, nQSO+len(zzz)) + 1).astype(int)  # start at 1
-        HDU = un * i_slice  # QSOhdu
-        plate = THING_ID
-        mjd = np.random.randint(51608, high=57521, size=len(zzz))
-        fiberid = np.random.randint(1,high=1001, size=len(zzz))
-        # pmf = np.array([plate[i].astype(str)+'-'+mjd[i].astype(str)+'-'+fiberid[i].astype(str) for i in range(len(zzz))])
-        pmf = np.empty((len(zzz)), dtype='|S21')
-        for i in range(len(zzz)):
-            l_tmp = plate[i].astype(str)+'-'+mjd[i].astype(str)+'-'+fiberid[i].astype(str)
-            pmf[i] = l_tmp
         nQSO += len(zzz)
-        # print(mz)
-        # print(len(zzz), len(tanx), len(X))
-        #print(len(zzz),len(ra),len(dec))
-        if not random_cond:
-            array_list = [np.float32(zzz), np.float32(zzz_RSD), np.float32(ra), np.float32(dec), np.int32(HDU), THING_ID, plate, np.int32(mjd), np.int32(fiberid), pmf, np.float32(XX), np.float32(YY), np.float32(ZZ)]  # , XGRID, YGRID, ZGRID]
-        else:
-            array_list = [np.float32(zzz), np.float32(ra), np.float32(dec), np.int32(HDU), THING_ID, plate, np.int32(mjd), np.int32(fiberid), pmf, np.float32(XX), np.float32(YY), np.float32(ZZ)]  # , XGRID, YGRID, ZGRID]
+        ra_list.append(ra)
+        dec_list.append(dec)
+        z_list.append(zzz)
+        z_rsd_list.append(zzz_RSD)
+        xx_list.append(XX)
+        yy_list.append(YY)
+        zz_list.append(ZZ)
 
-        # print("MZ : {}".format(mz))
-        # print(array_list)
+    # end of loop on qso
+    t5 = time()
+    print("End of loop on QSO. Took {} s".format(t5 - t4))
+    if len(ra_list) > 0:
+	ra_list = np.concatenate(ra_list)
+	dec_list = np.concatenate(dec_list)
+	z_list = np.concatenate(z_list)
+	z_rsd_list = np.concatenate(z_rsd_list)
+	xx_list = np.concatenate(xx_list)
+	yy_list = np.concatenate(yy_list)
+	zz_list = np.concatenate(zz_list)
+    # write to fits file
+    un = np.ones(nQSO)
+    thing_id = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO) + 1).astype(int)  # start at 1
+    hdu = un * i_slice  # QSOhdu
+    plate = thing_id
+    mjd = np.random.randint(51608, high=57521, size=nQSO)
+    fiberid = np.random.randint(1,high=1001, size=nQSO)
+    pmf = np.empty(nQSO, dtype='|S21')
+    for i in range(nQSO):
+        l_tmp = plate[i].astype(str)+'-'+mjd[i].astype(str)+'-'+fiberid[i].astype(str)
+        pmf[i] = l_tmp
+    if not random_cond:
+        array_list = [np.float32(z_list), np.float32(z_rsd_list), np.float32(ra_list), np.float32(dec_list), np.int32(hdu), thing_id, plate, np.int32(mjd), np.int32(fiberid), pmf, np.float32(xx_list), np.float32(yy_list), np.float32(zz_list)]
+    else:
+        array_list = [np.float32(z_list), np.float32(ra_list), np.float32(dec_list), np.int32(hdu), thing_id, plate, np.int32(mjd), np.int32(fiberid), pmf, np.float32(xx_list), np.float32(yy_list), np.float32(zz_list)]
 
-        if (len(qsofits) == 1):
-            qsofits.write(array_list, names=names)
-            #exit(0)
-        else:
-            qsofits[-1].append(array_list, names=names)
-        #   this is not making a new HDU, this is appending to last hdu, i.e. hdu=1
+    qsofits.write(array_list, names=names)
 
-    if len(qsofits) == 1:
-        print("No QSO drawn, creating a null table")
-        if not random_cond:
-            null_table = [np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.int32), np.array([], dtype=np.int64), np.array([], dtype=np.int64), np.array([], dtype=np.int32), np.array([], dtype=np.int32), np.array([], dtype='|S21'), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32)]
-        else:
-            null_table = [np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.int32), np.array([], dtype=np.int64), np.array([], dtype=np.int64), np.array([], dtype=np.int32), np.array([], dtype=np.int32), np.array([], dtype='|S21'), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32)]
+    # if len(qsofits) == 1:
+    #     print("No QSO drawn, creating a null table")
+    #     if not random_cond:
+    #         null_table = [np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.int32), np.array([], dtype=np.int64), np.array([], dtype=np.int64), np.array([], dtype=np.int32), np.array([], dtype=np.int32), np.array([], dtype='|S21'), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32)]
+    #     else:
+    #         null_table = [np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.int32), np.array([], dtype=np.int64), np.array([], dtype=np.int64), np.array([], dtype=np.int32), np.array([], dtype=np.int32), np.array([], dtype='|S21'), np.array([], dtype=np.float32), np.array([], dtype=np.float32), np.array([], dtype=np.float32)]
 
-        qsofits.write(null_table, names=names)
+    #     qsofits.write(null_table, names=names)
 
     qsofits[1].write_key("seed", np.int32(seed), comment="seed used to generate randoms")
     qsofits[1].write_key("ra0", ra0, comment="right ascension of the box center")
@@ -460,15 +555,11 @@ def main():
     qsofits[1].write_key("XX", None, comment="position on X axis in Mpc/h")
     qsofits[1].write_key("YY", None, comment="position on Y axis in Mpc/h")
     qsofits[1].write_key("ZZ", None, comment="position on Z axis in Mpc/h")
-    # qsofits[1].write_key("XGRID", None, comment="index on X axis")
-    # qsofits[1].write_key("YGRID", None, comment="index on Y axis")
-    # qsofits[1].write_key("ZGRID", None, comment="index on Z axis")
-
     qsofits.close()
-    print(nQSO, "QSOs drawn")
+    print("File {} written in {} s".format(out_file, time() - t5))
+    print nQSO, "QSOs drawn"
     if (not random_cond):
-        print(nnQSO, "QSOs in the full box") # prov
-    print(out_file, "file written")
+        print nnQSO, "QSOs in the full box" # prov
     print("Took {}s".format(time()-t_init))
 
     if drawPlot : plt.show()
