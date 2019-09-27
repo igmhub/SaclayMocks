@@ -337,7 +337,7 @@ def main():
     z_of_R = cosmo_fid.r_2_z
 
     # h_of_z = interpolate.interp1d(np.arange(0,5,0.01), dist.hubble_z(np.arange(0,5,0.01), **cosmo_fid))
-    h_of_z = cosmo.dist_hubble
+    h_of_z = cosmo_fid.dist_hubble
     R0 = h * R_of_z(z0)
     Rmin,Rmax,tanx_max,tany_max = box.box_limit(LX,LY,LZ,R0,dmax*DX)
     z_low = args.zmin
