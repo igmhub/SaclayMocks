@@ -139,15 +139,15 @@ def xi_from_pk(k,pk,nk=32*1024,direct=True):
             print("**** WARNING kmax=",kmax," while kmax >= 10 advised ****")
         rmax = np.pi * nk / kmax
         if (rmax < 1000) :
-            print "**** WARNING rmax=",rmax," while rmax >= 1000 advised ****"
+            print("**** WARNING rmax=",rmax," while rmax >= 1000 advised ****")
         #print direct,kmax, 2*kmax/nk, rmax, 2*rmax/nk
     else:
         myrmax = kmax   # in this case variable kmax is actually rmax
         mykmax = np.pi * nk / myrmax
         if (mykmax < 10) :
-            print "**** WARNING rmax=",mykmax," while kmax >= 10 advised ****"
+            print("**** WARNING rmax=",mykmax," while kmax >= 10 advised ****")
         if (myrmax < 1000) :
-            print "**** WARNING rmax=",myrmax," while rmax >= 1000 advised ****"
+            print("**** WARNING rmax=",myrmax," while rmax >= 1000 advised ****")
         #print direct,mykmax, 2*mykmax/nk, myrmax, 2*myrmax/nk
     kIn=np.linspace(0,kmax,nk)
     pkIn=pkInter(kIn)

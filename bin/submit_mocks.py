@@ -1289,6 +1289,4 @@ def main():
 
 
 if __name__ == "__main__":
-    if sys.version_info[0] >= 3:
-        raise Exception("Must be using Python2")
     main()
