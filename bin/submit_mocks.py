@@ -1165,7 +1165,7 @@ def main():
     run_args['make_spectra'] = True  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
-    run_args['run_mergechunks'] = False  # Gather outputs from all chunks and write in desi format
+    run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = True  # Compute master_randoms.fits file
     run_args['compute_dla'] = True  # Compute dla catalog of each chunks

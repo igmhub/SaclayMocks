@@ -120,7 +120,7 @@ def main():
     #              'omega_lambda_0':constant.omega_lambda_0,
     #              'omega_k_0':constant.omega_k_0, 'h':constant.h}
     # R_of_z = dist.quick_distance_function(dist.comoving_distance, return_inverse=False, **cosmo_fid)
-    cosmo_fid = util.cosmo(constant.Om, Ok=constant.Ok, H0=100*constant.h)
+    cosmo_fid = util.cosmo(constant.omega_M_0, Ok=constant.omega_k_0, H0=100*constant.h)
     R_of_z = cosmo_fid.r_comoving
     growthf_24 = util.fgrowth(2.4, constant.omega_M_0)
     redshift = np.linspace(args.zmin, args.zmax, 10000)
