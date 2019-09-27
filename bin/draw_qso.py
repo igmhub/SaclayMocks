@@ -8,7 +8,7 @@ import healpy as hp
 import sys
 import matplotlib.pyplot as plt
 import os
-import cosmolopy.distance as dist
+# import cosmolopy.distance as dist
 import fitsio
 from fitsio import FITS,FITSHDR
 from SaclayMocks import box
@@ -191,7 +191,7 @@ def main():
         sigma_p_2 = np.std(p2)
         sigma_p_3 = np.std(p3)
         sigma_p_tot = np.std([p1, p2, p3])
-        print "sigma(rho)=",sigma_p_tot, sigma_p_1, sigma_p_2, sigma_p_3
+        print("sigma(rho)=", sigma_p_tot, sigma_p_1, sigma_p_2, sigma_p_3)
         # take exponential of each field
         np.exp(p1, p1)
         np.exp(p2, p2)
@@ -208,8 +208,12 @@ def main():
     LZ = NZ * DZ
 
     #........................................     some geometry and cosmology
-    cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
-    R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
+    # cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
+    # R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
+    cosmo_fid = util.cosmo(Om, Ok=Ok, H0=100*h)
+    R_of_z = cosmo_fid.r_comoving
+    z_of_R = cosmo_fid.r_2_z
+
     R0 = h * R_of_z(z0)
     x_axis = (sp.arange(NX)+0.5)*DX + (2*i_slice-Nslice) * LX_fullbox/(2*Nslice)
     y_axis = (sp.arange(NY)+0.5)*DY - LY/2
@@ -300,7 +304,8 @@ def main():
     dndz_interp = f_dndz(dz_interp)
 
     # dn/dz/deg^2 => n/cell(z)
-    dn_cell = dndz_interp * DZ / dist.hubble_distance_z(dz_interp,**cosmo_fid)
+    # dn_cell = dndz_interp * DZ / dist.hubble_distance_z(dz_interp,**cosmo_fid)
+    dn_cell = dndz_interp * DZ / cosmo_fid.dist_hubble(dz_interp)
     # dZ = (c/H(z) dz = d_H dz   =>  dN/dZ = dN/dz Dz/dZ = dN/dz /d_H
     dn_cell = dn_cell * DX * DY / R_of_z(dz_interp)**2  # deg^-2 -> per cell
 
@@ -360,8 +365,8 @@ def main():
         print("exp(rho) max and sum = ",rho_max,rho_sum)
         print("k exp(rho_max) =",kk*rho_max)
         if (kk*rho_max>1):
-            print "k exp(rho) > 1 in ", np.size(np.where(kk*ptot>1)[0]),"cells"
-            print "sum min(k exp(rho) , 1) =", np.minimum(kk*ptot,1).sum()
+            print("k exp(rho) > 1 in ", np.size(np.where(kk*ptot>1)[0]),"cells")
+            print("sum min(k exp(rho) , 1) =", np.minimum(kk*ptot,1).sum())
 
     # Apply desi footprint
     if desi:
@@ -506,13 +511,13 @@ def main():
     t5 = time()
     print("End of loop on QSO. Took {} s".format(t5 - t4))
     if len(ra_list) > 0:
-	ra_list = np.concatenate(ra_list)
-	dec_list = np.concatenate(dec_list)
-	z_list = np.concatenate(z_list)
-	z_rsd_list = np.concatenate(z_rsd_list)
-	xx_list = np.concatenate(xx_list)
-	yy_list = np.concatenate(yy_list)
-	zz_list = np.concatenate(zz_list)
+        ra_list = np.concatenate(ra_list)
+        dec_list = np.concatenate(dec_list)
+        z_list = np.concatenate(z_list)
+        z_rsd_list = np.concatenate(z_rsd_list)
+        xx_list = np.concatenate(xx_list)
+        yy_list = np.concatenate(yy_list)
+        zz_list = np.concatenate(zz_list)
     # write to fits file
     un = np.ones(nQSO)
     thing_id = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO) + 1).astype(int)  # start at 1
@@ -557,9 +562,9 @@ def main():
     qsofits[1].write_key("ZZ", None, comment="position on Z axis in Mpc/h")
     qsofits.close()
     print("File {} written in {} s".format(out_file, time() - t5))
-    print nQSO, "QSOs drawn"
+    print(nQSO, "QSOs drawn")
     if (not random_cond):
-        print nnQSO, "QSOs in the full box" # prov
+        print(nnQSO, "QSOs in the full box")  # prov
     print("Took {}s".format(time()-t_init))
 
     if drawPlot : plt.show()

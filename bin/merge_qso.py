@@ -6,7 +6,7 @@ import time
 import os
 from SaclayMocks import util, constant
 import glob
-import cosmolopy.distance as dist
+# import cosmolopy.distance as dist
 
 
 # if True:
@@ -116,10 +116,12 @@ def main():
     outfits[1].write_key("z0", constant.z0, comment="box center redshift")
 
     # Write distance relations
-    cosmo_fid = {'omega_M_0':constant.omega_M_0,
-                 'omega_lambda_0':constant.omega_lambda_0,
-                 'omega_k_0':constant.omega_k_0, 'h':constant.h}
-    R_of_z = dist.quick_distance_function(dist.comoving_distance, return_inverse=False, **cosmo_fid)
+    # cosmo_fid = {'omega_M_0':constant.omega_M_0,
+    #              'omega_lambda_0':constant.omega_lambda_0,
+    #              'omega_k_0':constant.omega_k_0, 'h':constant.h}
+    # R_of_z = dist.quick_distance_function(dist.comoving_distance, return_inverse=False, **cosmo_fid)
+    cosmo_fid = util.cosmo(constant.Om, Ok=constant.Ok, H0=100*constant.h)
+    R_of_z = cosmo_fid.r_comoving
     growthf_24 = util.fgrowth(2.4, constant.omega_M_0)
     redshift = np.linspace(args.zmin, args.zmax, 10000)
     growthf = growthf_24*(1+2.4) / (1+redshift)

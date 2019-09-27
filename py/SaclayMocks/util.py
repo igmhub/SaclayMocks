@@ -1,3 +1,4 @@
+import scipy as sp
 import scipy.stats as stats
 from scipy import interpolate
 from scipy import integrate
@@ -505,3 +506,46 @@ def extract_h5file(fname):
     f.close()
 
     return free_p, fixed_p, pars, err_pars
+
+
+class cosmo:
+    '''
+    From picca.constant.py
+    https://github.com/igmhub/picca/blob/master/py/picca/constants.py
+    '''
+    def __init__(self, Om, Ok=0., Or=0., wl=-1., H0=100.):
+        ### Ignore evolution of neutrinos from matter to radiation
+        ### H0 in km/s/Mpc
+        c = constant.c
+        Ol = 1.-Ok-Om-Or
+
+        nbins = 10000
+        zmax = 10.
+        dz = zmax/nbins
+        z = sp.arange(nbins)*dz
+        hubble = H0*sp.sqrt( Ol*(1.+z)**(3.*(1.+wl)) + Ok*(1.+z)**2 + Om*(1.+z)**3 + Or*(1.+z)**4 )
+
+        chi = sp.zeros(nbins)
+        for i in range(1,nbins):
+            chi[i] = chi[i-1]+c*(1./hubble[i-1]+1./hubble[i])/2.*dz
+
+        self.r_comoving = interpolate.interp1d(z,chi)
+
+        ### dm here is the comoving angular diameter distance
+        if Ok==0.:
+            dm = chi
+        elif Ok<0.:
+            dm = sp.sin(H0*sp.sqrt(-Ok)/c*chi)/(H0*sp.sqrt(-Ok)/c)
+        elif Ok>0.:
+            dm = sp.sinh(H0*sp.sqrt(Ok)/c*chi)/(H0*sp.sqrt(Ok)/c)
+
+        self.hubble = interpolate.interp1d(z,hubble)
+        self.r_2_z = interpolate.interp1d(chi,z)
+
+        ### D_H
+        self.dist_hubble = interpolate.interp1d(z,c/hubble)
+        ### D_M
+        self.dm = interpolate.interp1d(z,dm)
+        ### D_V
+        y = sp.power(z*self.dm(z)**2*self.dist_hubble(z),1./3.)
+        self.dist_v = interpolate.interp1d(z,y)
