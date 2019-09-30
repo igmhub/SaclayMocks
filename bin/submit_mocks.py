@@ -5,6 +5,7 @@ import subprocess
 import healpy as hp
 import numpy as np
 from SaclayMocks import util
+from __future__ import division, print_function
 
 
 """
