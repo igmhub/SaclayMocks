@@ -441,6 +441,7 @@ def main():
     fiber_list = []
     pmf_list = []
     t0 = time.time()
+    print("Starting loop on qso...")
     for qso in (qsos) :		#............................  loop over qso
         if ((nqsomax > 0) & (iqso >= nqsomax)) :break
         ra = qso['RA']
