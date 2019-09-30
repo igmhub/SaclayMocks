@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division, print_function
 import numpy as np
 import healpy as hp
 import fitsio
@@ -11,7 +12,6 @@ from SaclayMocks import util
 from SaclayMocks import constant
 from memory_profiler import profile
 import glob
-from __future__ import division, print_function
 
 
 # @profile
