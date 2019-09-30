@@ -66,7 +66,7 @@ def nu_of_bD(b):
     b_nu[galaxy_mean!=0] = p_nu[galaxy_mean!=0]/galaxy_mean[galaxy_mean!=0]
     # it means that to get a bias of 2, you need a value of the field
     # to be 2 times more probable than the probability to be above this value
-    b_nu[galaxy_mean==0] = nu[galaxy_mean==0]
+    # b_nu[galaxy_mean==0] = nu[galaxy_mean==0]
         # approximation for nu > 37.5, better than 0.027, i.e 0.07%
     y = interp1d(b_nu,nu)
     return y(b)
@@ -120,6 +120,7 @@ def dNdz(z, Nmin=20.0, Nmax=22.5):
     """ Get the column density distribution as a function of z,
     for a given range in N"""
     if use_pyigm:
+        print("Use pyigm to compute dNdz.")
         # get incidence rate per path length dX (in comoving coordinates)
         dNdX = fN_default.calculate_lox(z,Nmin,Nmax)
         # convert dX to dz
@@ -166,6 +167,100 @@ def get_N(z, Nmin=20.0, Nmax=22.5, nsamp=100):
         #    NHI[i] = np.random.choice(nn,size=1,p=probs[i]/np.sum(probs[i]))+(nn[1]-nn[0])*np.random.random(size=1)
         NHI[i] = np.random.choice(nn,size=1,p=probs[i]/np.sum(probs[i]))+(nn[1]-nn[0])*np.random.random(size=1)
     return NHI
+
+
+def get_NHI(z, NHI_min=17.2, NHI_max=22.5, NHI_nsamp=100):
+    """ Get random column densities for a given z
+    This function is taken from LyaColoRe
+    https://github.com/igmhub/LyaCoLoRe/blob/master/py/DLA.py
+    """
+    times = []
+    t = time.time()
+
+    # number of DLAs we want to generate
+    Nz = len(z)
+
+    # Set up the grid in NHI, and define its edges/widths.
+    # First in log space.
+    log_NHI_edges = np.linspace(NHI_min,NHI_max,NHI_nsamp+1)
+    log_NHI = (log_NHI_edges[1:] + log_NHI_edges[:-1])/2.
+    log_NHI_widths = log_NHI_edges[1:] - log_NHI_edges[:-1]
+    # Then in linear space.
+    NHI_edges = 10**log_NHI_edges
+    NHI_widths = NHI_edges[1:] - NHI_edges[:-1]
+
+    times += [time.time()-t]
+    t = time.time()
+
+    probs = np.zeros([Nz,NHI_nsamp])
+
+    if use_pyigm:
+
+        #Evaluate f at the points of the NHI grid and each redshift.
+        f = 10**fN_default.evaluate(log_NHI,z)
+
+        times += [time.time()-t]
+        t = time.time()
+        
+        #Calculate the probaility of each NHI bin.
+        aux = f*np.outer(NHI_widths,np.ones(z.shape))
+        
+        times += [time.time()-t]
+        t = time.time()
+    
+        probs = (aux/np.sum(aux,axis=0)).T
+
+        times += [time.time()-t]
+        t = time.time()
+
+    else:
+
+        # TODO: test this
+        probs_low = dnHD_dz_cumlgN(z,nn[:-1]).T
+        probs_high = dnHD_dz_cumlgN(z,nn[1:]).T
+        probs[:,1:] = probs_high-probs_low
+
+    times += [time.time()-t]
+    t = time.time()
+
+    #Calculate the cumulative distribution
+    """
+    cumulative = np.zeros(probs.shape)
+    for i in range(NHI_nsamp):
+        cumulative[:,i] = np.sum(probs[:,:i],axis=1)
+    """
+    cumulative = np.cumsum(probs,axis=1)
+
+    #Add the top and bottom edges on to improve interpolation.
+    """
+    log_NHI_interp = np.concatenate([[log_NHI_edges[0]],log_NHI,[log_NHI_edges[1]]])
+    end_0 = np.zeros((z.shape[0],1))
+    end_1 = np.ones((z.shape[0],1))
+    cumulative_interp = np.concatenate([end_0,cumulative,end_1],axis=1)
+    """
+
+    log_NHI_interp = log_NHI_edges
+    end_0 = np.zeros((z.shape[0],1))
+    cumulative_interp = np.concatenate([end_0,cumulative],axis=1)
+
+    times += [time.time()-t]
+    t = time.time()
+
+    #Assign NHI values by choosing a random number in [0,1] and interpolating
+    #the cumulative distribution to get a value of NHI.
+    log_NHI_values = np.zeros(Nz)
+    for i in range(Nz):
+        p = np.random.uniform()
+        log_NHI_values[i] = np.interp(p,cumulative_interp[i,:],log_NHI_interp)
+
+    times += [time.time()-t]
+    t = time.time()
+
+    times = np.array(times)
+    times /= np.sum(times)
+    #print(times.round(4))
+
+    return log_NHI_values
 
 
 # @profile
@@ -231,7 +326,8 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     dla_rsd_dz = np.zeros(ndlas)
     dla_count = 0
     dla_z, dla_skw_id, dla_rsd_dz, dla_count = doloop(dlas_in_cell, velocity, zedges, dla_z, dla_skw_id, dla_rsd_dz, dla_count)
-    dla_NHI = get_N(dla_z,Nmin=Nmin,Nmax=Nmax)
+    # dla_NHI = get_N(dla_z,Nmin=Nmin,Nmax=Nmax)
+    dla_NHI = get_NHI(dla_z,NHI_min=Nmin,NHI_max=Nmax)
 
     #global id for the skewers
     MOCKIDs = qso['THING_ID'][dla_skw_id]
@@ -275,6 +371,8 @@ def main():
     
     t0 = time.time()
     random_cond = util.str2bool(args.random)
+    if random_cond:
+        print("Generating random DLAs...")
     seed = args.seed
     if seed is None:
         seed = np.random.randint(2**31 -1, size=1)[0]
@@ -308,9 +406,10 @@ def main():
     dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)
     # dNdz_arr *= 20000.
     # dNdz_arr *= 6.4
+    # dNdz_arr *= 5.9
     if random_cond:
         dNdz_arr *= args.random_factor
-    dNdz_arr /= (-0.01534254*z_cell + 0.0597803)*6.4 / 0.186  # correct the z dependency
+    # dNdz_arr /= (-0.01534254*z_cell + 0.0597803)*6.4 / 0.186  # correct the z dependency
     # dz_of_z = dz_of_z_func(args.cell_size)
     dz_of_z = dz_of_z_func(0)  # don't remove DLA close to QSO
     ndlas = 0
