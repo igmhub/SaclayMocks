@@ -1106,14 +1106,14 @@ def main():
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:45:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "regular"  # default "regular"
+    sbatch_args['time_chunk'] = "00:15:00"  # default "00:30:00"
+    sbatch_args['queue_chunk'] = "debug"  # default "regular"
     sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "02:00:00"  # default "01:30:00"
-    sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
+    sbatch_args['time_mergechunks'] = "00:30:00"  # default "01:30:00"
+    sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
     sbatch_args['name_mergechunks'] = "mergechunks_saclay"
     sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
@@ -1136,7 +1136,7 @@ def main():
     mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
-    mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
+    mock_args['desifootprint'] = False  # If True, cut QSO outside desi footprint
     mock_args['NQSO'] = -1  # If >0, limit the number of QSO treated in make_spectra
     mock_args['small_scales'] = True  # If True, add small scales in FGPA
     mock_args['rsd'] = True  # If True, add RSD
@@ -1157,15 +1157,15 @@ def main():
     # pk:
     run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = True  # Produce GRF boxes
+    run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
     run_args['run_chunks'] = True  # produce chunks
-    run_args['draw_qso'] = True  # run draw_qso.py
-    run_args['randoms'] = True  # run draw_qso.py for randoms
-    run_args['make_spectra'] = True  # run make_spectra.py
+    run_args['draw_qso'] = False  # run draw_qso.py
+    run_args['randoms'] = False  # run draw_qso.py for randoms
+    run_args['make_spectra'] = False  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
-    run_args['run_mergechunks'] = False  # Gather outputs from all chunks and write in desi format
+    run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = True  # Compute master_randoms.fits file
     run_args['compute_dla'] = True  # Compute dla catalog of each chunks
