@@ -10,7 +10,7 @@ from scipy import interpolate
 
 
 """
-Chi2 runs on raw spectra (spectra_merged), skewer transmissions.
+Fitter runs on raw spectra (spectra_merged), skewer transmissions.
 You need a directory with at least the boxes, the QSO
 Start by difining chi2 with indir and redshift
 then read_data()
@@ -19,7 +19,7 @@ and then minimize()
 finally, export results of minimisation
 can also check plots with check_plot()
 """
-class Chi2(object):
+class Fitter(object):
     def __init__(self, indir, z, a_ref, cc, bb=1.58, Nreg=1, xx=100., pixel=0.2):
         self.data = {}
         self.mock = {}
