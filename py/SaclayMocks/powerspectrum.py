@@ -332,14 +332,14 @@ class xi_prediction() :
         Fmean = self.ComputeFmean()
         xx=np.linspace(-0.99,0,nbin)  # make sure to have zero
         yy=np.linspace(0,1,nbin)
-        xi_g=np.hstack((xx,yy[1:])) # do not have zero twice
-        xi_F = np.zeros(len(xi_g))
-        for i in range(len(xi_g)):
-            xi_F[i], err = xi_predicted(xi_g[i], self.F, Fmean)
-            #print i, xi_g[i], xi_F[i]
-        self.xig2xiF=interpolate.InterpolatedUnivariateSpline(xi_g,xi_F)
-        self.xi_g_array=xi_g
-        self.xi_F_array=xi_F
+        xi_g_array=np.hstack((xx,yy[1:])) # do not have zero twice
+        xi_F_array = np.zeros(len(xi_g_array))
+        for i in range(len(xi_g_array)):
+            xi_F_array[i], err = xi_predicted(xi_g_array[i], self.F, Fmean)
+            #print i, xi_g_array[i], xi_F_array[i]
+        self.xig2xiF=interpolate.InterpolatedUnivariateSpline(xi_g_array,xi_F_array)
+        self.xi_g_array=xi_g_array
+        self.xi_F_array=xi_F_array
         return self.xi_g_array,self.xi_F_array
 
     def xi_g(self,r,mu):
