@@ -648,6 +648,14 @@ def chunk_parameters(cells):
         chunkid=['1']
         nslice = 8
 
+    if cells == 32:
+        ra0=['190']
+        dra=['1.6']
+        dec0=['0']
+        ddec=['1.6']
+        chunkid=['1']
+        nslice = 2
+
     return np.array(ra0), np.array(dra), np.array(dec0), np.array(ddec), np.array(chunkid), np.array(nslice)
 
 
