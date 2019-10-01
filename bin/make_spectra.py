@@ -86,29 +86,9 @@ def main():
         #return fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
 
     #*************************************************************
-    @jit('(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64)',nopython=True)    # int32[:,:] ? <==
-    #@jit(nopython=True)
-    def ReadSpecNo(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,imin=0, imax=sys.maxint):
-
-        spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
-        imax = np.minimum(imax,XvecSlice.size)
-        sig2=2*DX*DX
-        for icell in range(imin,imax):
-            X = XvecSlice[icell]
-            #Xtrue = Xvec[icell]
-            Y = Yvec[icell]
-            Z = Zvec[icell]
-            lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
-            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
-            spectrum[icell] = computeRho(myrho,weight)
-        return spectrum
-
-
-    #*************************************************************
     #   @jit + python -m cProfile -s tottime fails
-    #@jit(nopython=True)
-    @jit('Tuple((float64[:],float64[:],float64[:]))(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],int64,int64)',nopython=True)
-    def ReadSpec(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxint):
+    @jit('Tuple((float64[:],float64[:],float64[:]))(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64,float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],int64,int64)',nopython=True)
+    def ReadSpec(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,rsd,dla, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxint):
         # reads spectrum for (Xvec, Yvec, Zvec)
         # XvecSlice is in [-LX/2, -LX/2 + LX/NSlice]
         # cells is the list of indices used for G.S. around (0,0,0),
@@ -117,12 +97,8 @@ def main():
         # function also uses cosntants LX,LY,LZ,DX,DY,DZ
 
         spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
-        rsd=True    # the 5 lines below should be parameters   <==
-        dla=True
-        if rsd:
-            eta_par = sp.zeros_like(XvecSlice)
-            if dla:
-                vpar = sp.zeros_like(XvecSlice)
+        eta_par = sp.zeros_like(XvecSlice)
+        vpar = sp.zeros_like(XvecSlice)
 
         imax = np.minimum(imax,XvecSlice.size)
         sig2=2*DX*DX
@@ -131,7 +107,6 @@ def main():
             Xtrue = Xvec[icell]
             Y = Yvec[icell]
             Z = Zvec[icell]
-            #lcells, weight = ComputeWeight(X,Y,Z, sig2)
             lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
             myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
             spectrum[icell] = computeRho(myrho,weight)
@@ -162,14 +137,6 @@ def main():
                     vpar[icell] = (vx_*Xtrue + vy_*Y + vz_*Z)/np.sqrt(RR)
 
         return spectrum, eta_par, vpar
-        #if rsd:            <==
-            #if dla:
-                #return spectrum, eta_par, vpar
-            #else:
-                #return spectrum, eta_par
-        #else:
-            #return spectrum
-        #return spectrum
 
 
     #************************************************************* main
@@ -441,7 +408,6 @@ def main():
     fiber_list = []
     pmf_list = []
     t0 = time.time()
-    print("Starting loop on qso...")
     for qso in (qsos) :		#............................  loop over qso
         if ((nqsomax > 0) & (iqso >= nqsomax)) :break
         ra = qso['RA']
@@ -506,26 +472,22 @@ def main():
         iqso += 1
 
         # Read boxes along l.o.s and apply smoothing
-        if rsd:
-            if dla:
-                delta_l, eta_par, velo_par = ReadSpec(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx, eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=imin, imax=imax)
-                #try:           <==
-                     #delta_l, eta_par, velo_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
-                #except:
-                    #print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
-                    #continue
-            #else:
-                #try:
-                    #delta_l, eta_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
-                #except:
-                    #print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
-                    #continue
-        else:
-            #delta_l = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
-            delta_l = ReadSpecNo(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, imin=imin, imax=imax)
-
-        # LX,LY,LZ,DX,DY,DZ are hidden parameters,
-        # as well as fullrho and eta_x, eta_y eta_z
+        if (rsd==False):
+            eta_xx = np.array([],dtype=np.float32)
+            eta_yy = np.array([],dtype=np.float32)
+            eta_zz = np.array([],dtype=np.float32)
+            eta_xy = np.array([],dtype=np.float32)
+            eta_xz = np.array([],dtype=np.float32)
+            eta_yz = np.array([],dtype=np.float32)
+        if (dla==False):
+            velo_x = np.array([],dtype=np.float32)
+            velo_y = np.array([],dtype=np.float32)
+            velo_z = np.array([],dtype=np.float32)
+        try:
+            delta_l, eta_par, velo_par = ReadSpec(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,int(rsd),int(dla), eta_xx, eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z, imin=imin, imax=imax)
+        except:
+            print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
+            continue
 
         lrf =  mylambda/(1+zQSO)
         cut = ((lrf<lya) & (lrf>lylimit))
