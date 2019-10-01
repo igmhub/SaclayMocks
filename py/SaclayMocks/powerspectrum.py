@@ -293,7 +293,7 @@ class xi_prediction() :
         a=self.a
         u = np.log(a) -np.log(-np.log(Fmax))
         xx = 0.5 * ( 1 + sp.special.erf( u/b/np.sqrt(2) ) )
-        print 1-Fmax,a,b,1-xx
+        #print 1-Fmax,a,b,1-xx
         return xx
 
     def ComputeFmean(self):     # checked wrt simu1D.cpp
@@ -305,6 +305,7 @@ class xi_prediction() :
         Fmean , error = sp.integrate.quad(self.F_pdf,0,1-epsilon,limit=50)
         #print epsilon,a,b,Fmean
         Fmean += 1- self.pdf_integrale(1-epsilon) # \int_{1-epsilon}^1
+        #print self.a,self.b,Fmean
         return Fmean
 
     def __init__(self,a,b,G,sigma_g,c,DX=2.19):
@@ -315,10 +316,9 @@ class xi_prediction() :
         self.DX = DX
             #...........................       P(k)
         k = np.linspace(0,10,10000)
-        #Pcamb = powerspectrum.P_0()
         Pcamb = P_0()
         P = Pcamb.P(k)
-        W = np.exp(-k*k*DX*DX/2)
+        W = np.exp(-k*k*self.DX*self.DX/2)
         P *= W*W
             #...........................       xi_g(r)
         r,xi = xi_from_pk(k,P)
@@ -327,10 +327,11 @@ class xi_prediction() :
         self.r=r[cut]
         self.xi=xi[cut]
         self.xi_Ham = xi_Hamilton(r,xi,rmax)
-            #...........................        xi_g -> xi_F
+
+    def xig_xiF(self,nbin=41):      # computes xi_g -> xi_F
         Fmean = self.ComputeFmean()
-        xx=np.linspace(-0.99,0,41)  # make sure to have zero
-        yy=np.linspace(0,1,41)
+        xx=np.linspace(-0.99,0,nbin)  # make sure to have zero
+        yy=np.linspace(0,1,nbin)
         xi_g=np.hstack((xx,yy[1:])) # do not have zero twice
         xi_F = np.zeros(len(xi_g))
         for i in range(len(xi_g)):
@@ -339,8 +340,6 @@ class xi_prediction() :
         self.xig2xiF=interpolate.InterpolatedUnivariateSpline(xi_g,xi_F)
         self.xi_g_array=xi_g
         self.xi_F_array=xi_F
-
-    def xig_xiF(self):      # returns xi_g and xi_F array
         return self.xi_g_array,self.xi_F_array
 
     def xi_g(self,r,mu):
