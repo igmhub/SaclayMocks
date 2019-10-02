@@ -98,7 +98,8 @@ def main():
         qso_data = np.concatenate(qso_data)
 
     # .......... Load P1D missing
-    if args.p1dfile is None:
+    filename = args.p1dfile
+    if filename is None:
         filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
     print("Reading P1D file {}".format(filename))
     p1d_data = fitsio.read(filename, ext=1)
