@@ -713,7 +713,7 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
     mock_args['out_dir'] = out_dir
 
     # desi format directories:
-    if "transmissions" in run_args['todo_mergechunks']:
+    if run_args['run_mergechunks'] and "transmissions" in run_args['todo_mergechunks']:
         do_dir_tree(out_dir, mock_args['nside'])
 
     # logs directory:
