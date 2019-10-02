@@ -104,7 +104,9 @@ def main():
     print("Reading P1D file {}".format(filename))
     p1d_data = fitsio.read(filename, ext=1)
     if fit_p1d:
-        p1dmiss = sp.interpolate.InterpolatedUnivariateSpline(p1d_data['k'], p1d_data['P1D'])
+        field = 'P1Dmiss'
+        if rsd: field += 'RSD'
+        p1dmiss = sp.interpolate.InterpolatedUnivariateSpline(p1d_data['k'], p1d_data[field])
     else:
         p1dmiss = util.InterpP1Dmissing(filename)
         sigma_s_interp = sp.interpolate.interp1d(p1d_data['z'], p1d_data['sigma'])
@@ -312,7 +314,8 @@ def main():
                         delta_sk *= np.sqrt(pmis/pixsize)
                         delta_s = fft.irfftn(delta_sk, threads=ncpu)
                         delta_s = delta_s[0:len(wav_tmp)]
-                        delta_s *= sigma_s_interp(z) / sigma_s_interp(zeff)
+                        if not fit_p1d:  # correct the z dependence
+                            delta_s *= sigma_s_interp(z) / sigma_s_interp(zeff)
                         delta = delta_l_tmp + delta_s
                         # delta = delta_l_tmp  # prov
                     else:
