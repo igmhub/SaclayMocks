@@ -430,7 +430,7 @@ def main():
             table, n = add_DLA_table_to_object_Saclay(hdulist, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax, rand=random_cond)
             hdulist.close()
         except IOError:
-            print("WARNING: can't read fname")
+            print("WARNING: can't read {}".format(fname))
         ndlas += n
         # if i==0:
         #     out_table = table
