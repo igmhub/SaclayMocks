@@ -1197,7 +1197,7 @@ def main():
     mock_args['nmocks'] = nmocks
     mock_args['mock_dir'] = mock_dir
 
-        ### Define chunks parameters :
+    ### Define chunks parameters :
     if args.seed is not None:
         mock_args['seed'] = "-seed "+str(args.seed)
     if args.box_size < 2560:

@@ -152,9 +152,9 @@ class Fitter(object):
         self.mock['sigma_l'] = sigma_l
         self.mock['sigma'] = sigma
         print("Sigma_l = {} ; sigma_s = {} --> sigma = {}".format(sigma_l, sigma_s, sigma))
-        tau = util.taubar_over_a(self.mock['sigma'], self.mock['growthf'], self.mock['bb'])
-        self.taubar_over_a = tau
-        print("Taubar_over_a = {}".format(tau))
+        # tau = util.taubar_over_a(self.mock['sigma'], self.mock['growthf'], self.mock['bb'])
+        # self.taubar_over_a = tau
+        # print("Taubar_over_a = {}".format(tau))
         print("Done.")
 
     def comp_p1d(self, a, bins=None):
@@ -188,7 +188,7 @@ class Fitter(object):
         chi2 = (((Pk[msk]-self.data['Pk'][msk]) / self.data['Pkerr'][msk])**2).sum()
         return chi2
 
-    def minimize(self, a_init=0.01, a_err=0.4, a_min=0., a_max=3.,tol=1e4, print_level=1):
+    def minimize(self, a_init=0.01, a_err=0.1, a_min=0., a_max=3.,tol=1e4, print_level=1):
         t0 = time.time()
         print("Starting minimisation...")
         m=Minuit(self.chi2, a=a_init, error_a=a_err, limit_a=(a_min,a_max), print_level=print_level)
