@@ -285,7 +285,8 @@ def main():
     print("Fraction of box volume used",volFrac)
     print("surface: ", surfaceDeg, "deg^2  -> ",int(nQSOexp),"QSOs expected")
     xx = np.sqrt(Rmax*Rmax+LY*LY+LZ*LZ)
-    print("far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h))
+    # print("far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h))
+    print("far corner of the box",xx,"Mpc/h")
 
     #...............................  read dN/dz assuming constant Delta z
     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/nz_qso_desi.dat")
