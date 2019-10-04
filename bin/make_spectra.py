@@ -88,7 +88,7 @@ def main():
     #*************************************************************
     #   @jit + python -m cProfile -s tottime fails
     @jit('Tuple((float64[:],float64[:],float64[:]))(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64,float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],int64,int64)',nopython=True)
-    def ReadSpec(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,rsd,dla, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxint):
+    def ReadSpec(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,rsd,dla, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxsize):
         # reads spectrum for (Xvec, Yvec, Zvec)
         # XvecSlice is in [-LX/2, -LX/2 + LX/NSlice]
         # cells is the list of indices used for G.S. around (0,0,0),
