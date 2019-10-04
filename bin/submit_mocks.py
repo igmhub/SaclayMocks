@@ -1166,15 +1166,15 @@ def main():
     # boxes:
     run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = False  # produce chunks
+    run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
-    run_args['randoms'] = True  # run draw_qso.py for randoms
+    run_args['randoms'] = False  # run draw_qso.py for randoms
     run_args['make_spectra'] = True  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
-    run_args['merge_randoms'] = True  # Compute master_randoms.fits file
+    run_args['merge_randoms'] = False  # Compute master_randoms.fits file
     run_args['compute_dla'] = True  # Compute dla catalog of each chunks
     run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
     run_args['merge_dla'] = True  # Compute master_DLA.fits file
@@ -1212,6 +1212,7 @@ def main():
         chunkid = chunkid[m]
 
     ### 1D power spectrum fitting procedure
+    mock_args['fit_p1d'] = False
     if args.fit_p1d:
         if len(args.fit_p1d) != 5:
             raise Exception("Number of parameters given with --fit-p1d not correct")

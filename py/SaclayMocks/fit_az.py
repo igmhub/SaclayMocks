@@ -84,7 +84,7 @@ class Fitter(object):
         self.data['dk'] = dk
         self.data['bins'] = bins
 
-    def read_mock(self, nfiles=None, debug=False):
+    def read_mock(self, nfiles=None, debug=False, zmin=None, zmax=None):
         # print("Reading sigma_l...")
         # sigma_l = fitsio.read_header(self.mock['indir']+"/boxes/box-0.fits", ext=0)['sigma']
         # self.mock['sigma_l'] = sigma_l
@@ -145,6 +145,28 @@ class Fitter(object):
             self.mock['sigma'] = sigma
             print("Sigma_l = {} ; sigma_s = {} --> sigma = {}".format(sigma_l, sigma_s, sigma))
         self.mock['mask_size'] = self.mock['spectra'].mask.size
+        if zmin or zmax:
+            lambda_rf = self.mock['wav'] / (self.mock['data']['Z'].reshape(-1,1) + 1)
+            zmean = np.mean(lambda_rf[~self.mock['spectra'].mask], axis=1)
+
+            redshift = self.mock['wav'] / constant.lya - 1
+            redshift *= np.ones(len(mock['data'])).reshape(-1,1)
+            zmean = np.mean(redshift[~self.mock['spectra'].mask], axis=1)
+
+
+
+            
+            # m = np.ones_like(self.mock['data']['Z'])
+            # if zmin:
+            #     m *= self.mock['data']['Z'] > zmin
+            # if zmax:
+            #     m *= self.mock['data']['Z'] < zmax
+            # m = np.bool_(m)
+            # keys = ['data', 'wav', 'spectra']
+            # if not debug:
+            #     keys += ['delta_l', 'delta_s', 'delta', 'eta_par', 'g_field']
+            # for k in keys:
+            #     self.mock[k] = self.mock[k][m]
         print("Done.")
 
     def comp_p1d(self, a, bins=None, debug=False):
