@@ -373,6 +373,7 @@ def main():
         desi_footprint = util.desi_footprint()
 
     #.........................................................    loop on cells
+    print("Starting loop...")
     nQSO = 0
     if (not random_cond):
         nnQSO=0
