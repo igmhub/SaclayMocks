@@ -10,7 +10,7 @@ from scipy import interpolate
 
 
 """
-Chi2 runs on raw spectra (spectra_merged), skewer transmissions.
+Fitter runs on raw spectra (spectra_merged), skewer transmissions.
 You need a directory with at least the boxes, the QSO
 Start by difining chi2 with indir and redshift
 then read_data()
@@ -19,7 +19,7 @@ and then minimize()
 finally, export results of minimisation
 can also check plots with check_plot()
 """
-class Chi2(object):
+class Fitter(object):
     def __init__(self, indir, z, a_ref, cc, bb=1.58, Nreg=1, xx=100., pixel=0.2):
         self.data = {}
         self.mock = {}
@@ -84,7 +84,7 @@ class Chi2(object):
         self.data['dk'] = dk
         self.data['bins'] = bins
 
-    def read_mock(self):
+    def read_mock(self, nfiles=None, debug=False):
         # print("Reading sigma_l...")
         # sigma_l = fitsio.read_header(self.mock['indir']+"/boxes/box-0.fits", ext=0)['sigma']
         # self.mock['sigma_l'] = sigma_l
@@ -97,70 +97,63 @@ class Chi2(object):
         # print("sigma_s is {}".format(sigma_s))
         print("Reading mock spectra...")
         files = os.listdir(self.mock['indir']+'/spectra_merged/')
+        if nfiles:
+            files = np.sort(files)[:nfiles]
         first = True
         metadata = []
         spectra = []
-        # tau_a_list = []
         delta_l_list = []
         delta_s_list = []
         eta_par = []
-        # eta_l = []
-        # eta_s = []
         for f in files:
             if first:
                 wav = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='LAMBDA')
                 growthf = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='GROWTHF')
-                redshift = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='Z')
+                if not debug:
+                    redshift = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='Z')
                 first = False
             data = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='METADATA')
             spec = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='FLUX')
-            # tau_a = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='TAU')
-            delta_l = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='DELTA_L')
-            delta_s = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='DELTA_S')
-            eta = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='ETA_PAR')
-            # eta_l_tmp = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='ETA_L')
-            # eta_s_tmp = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='ETA_S')
             msk = wav/(1+data['Z']).reshape(-1,1)
             msk = ((msk <= constant.lylimit) | (msk >= constant.lya))
             metadata.append(data)
             spectra.append(ma.array(spec, mask=msk))
-            # tau_a_list.append(ma.array(tau_a, mask=msk))
-            delta_l_list.append(ma.array(delta_l, mask=msk))
-            delta_s_list.append(ma.array(delta_s, mask=msk))
-            eta_par.append(ma.array(eta, mask=msk))
-            # eta_l.append(ma.array(eta_l_tmp, mask=msk))
-            # eta_s.append(ma.array(eta_s_tmp, mask=msk))
+            if not debug:
+                delta_l = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='DELTA_L')
+                delta_s = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='DELTA_S')
+                eta = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='ETA_PAR')
+                delta_l_list.append(ma.array(delta_l, mask=msk))
+                delta_s_list.append(ma.array(delta_s, mask=msk))
+                eta_par.append(ma.array(eta, mask=msk))
 
         self.mock['data'] = np.concatenate(metadata)
         self.mock['wav'] = np.float64(wav)
         self.mock['growthf'] = np.float64(growthf)
-        self.mock['redshift'] =np.float64(redshift)
         self.mock['spectra'] = np.float64(ma.concatenate(spectra))
-        # self.mock['tau_a'] = np.float64(ma.concatenate(tau_a_list))
-        self.mock['delta_l'] = np.float64(ma.concatenate(delta_l_list))
-        self.mock['delta_s'] = np.float64(ma.concatenate(delta_s_list))
-        self.mock['delta'] = self.mock['delta_l'] + self.mock['delta_s']
-        self.mock['eta_par'] = np.float64(ma.concatenate(eta_par))
-        self.mock['g_field'] = self.mock['delta'] + self.mock['cc']*self.mock['eta_par']
-        # self.mock['eta_l'] = np.float64(ma.concatenate(eta_l))
-        # self.mock['eta_s'] = np.float64(ma.concatenate(eta_s))
+        if not debug:
+            self.mock['redshift'] =np.float64(redshift)
+            self.mock['delta_l'] = np.float64(ma.concatenate(delta_l_list))
+            self.mock['delta_s'] = np.float64(ma.concatenate(delta_s_list))
+            self.mock['delta'] = self.mock['delta_l'] + self.mock['delta_s']
+            self.mock['eta_par'] = np.float64(ma.concatenate(eta_par))
+            self.mock['g_field'] = self.mock['delta'] + self.mock['cc']*self.mock['eta_par']
+            sigma_l = self.mock['delta_l'].std()
+            sigma_s = self.mock['delta_s'].std()
+            sigma = np.sqrt(sigma_l**2 + sigma_s**2)
+            self.mock['sigma_s'] = sigma_s
+            self.mock['sigma_l'] = sigma_l
+            self.mock['sigma'] = sigma
+            print("Sigma_l = {} ; sigma_s = {} --> sigma = {}".format(sigma_l, sigma_s, sigma))
         self.mock['mask_size'] = self.mock['spectra'].mask.size
-        sigma_l = self.mock['delta_l'].std()
-        sigma_s = self.mock['delta_s'].std()
-        sigma = np.sqrt(sigma_l**2 + sigma_s**2)
-        self.mock['sigma_s'] = sigma_s
-        self.mock['sigma_l'] = sigma_l
-        self.mock['sigma'] = sigma
-        print("Sigma_l = {} ; sigma_s = {} --> sigma = {}".format(sigma_l, sigma_s, sigma))
-        tau = util.taubar_over_a(self.mock['sigma'], self.mock['growthf'], self.mock['bb'])
-        self.taubar_over_a = tau
-        print("Taubar_over_a = {}".format(tau))
         print("Done.")
 
-    def comp_p1d(self, a, bins=None):
+    def comp_p1d(self, a, bins=None, debug=False):
         if bins is None:
             bins = self.data['bins']
-        spec = self.comp_spectra(a)
+        if debug:
+            spec = self.mock['spectra']
+        else:
+            spec = self.comp_spectra(a)
         Fmean = ma.mean(spec)
         P1D = powerspectrum.ComputeP1D(self.pixel*self.Nreg)
         for s in spec:
@@ -188,7 +181,7 @@ class Chi2(object):
         chi2 = (((Pk[msk]-self.data['Pk'][msk]) / self.data['Pkerr'][msk])**2).sum()
         return chi2
 
-    def minimize(self, a_init=0.01, a_err=0.4, a_min=0., a_max=3.,tol=1e4, print_level=1):
+    def minimize(self, a_init=0.01, a_err=0.1, a_min=0., a_max=3.,tol=1e4, print_level=1):
         t0 = time.time()
         print("Starting minimisation...")
         m=Minuit(self.chi2, a=a_init, error_a=a_err, limit_a=(a_min,a_max), print_level=print_level)
@@ -206,10 +199,13 @@ class Chi2(object):
         np.save(outdir+'/chi.npy', self.fit['chi2'])
         np.save(outdir+'/tol.npy', self.fit['tol'])
 
-    def check_p1d(self, a=None, title=''):
-        if not a:
-            a = self.fit['a']
-        k, Pk, Pkerr = self.comp_p1d(a)
+    def check_p1d(self, a=None, title='', debug=False):
+        if debug:
+            k, Pk, Pkerr = self.comp_p1d(1, debug=True)
+        else:
+            if not a:
+                a = self.fit['a']
+            k, Pk, Pkerr = self.comp_p1d(a)
         msk = np.where(k > 0)
 
         # Pk vs k [h.Mpc^-1]
