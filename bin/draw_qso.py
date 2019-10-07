@@ -8,7 +8,7 @@ import healpy as hp
 import sys
 import matplotlib.pyplot as plt
 import os
-import cosmolopy.distance as dist
+# import cosmolopy.distance as dist
 import fitsio
 from fitsio import FITS,FITSHDR
 from SaclayMocks import box
@@ -208,8 +208,12 @@ def main():
     LZ = NZ * DZ
 
     #........................................     some geometry and cosmology
-    cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
-    R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
+    # cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
+    # R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
+    # R0 = h * R_of_z(z0)
+    cosmo_fid = util.cosmo(Om, Ok=Ok, H0=100*h)
+    R_of_z = cosmo_fid.r_comoving
+    z_of_R = cosmo_fid.r_2_z
     R0 = h * R_of_z(z0)
     x_axis = (sp.arange(NX)+0.5)*DX + (2*i_slice-Nslice) * LX_fullbox/(2*Nslice)
     y_axis = (sp.arange(NY)+0.5)*DY - LY/2
@@ -280,8 +284,8 @@ def main():
     volFrac= (surface/3)*(Rmax**3-Rmin**3)/LX_fullbox/LY/LZ
     print "Fraction of box volume used",volFrac
     print "surface: ", surfaceDeg, "deg^2  -> ",int(nQSOexp),"QSOs expected"
-    xx = np.sqrt(Rmax*Rmax+LY*LY+LZ*LZ)
-    print "far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h)
+    # xx = np.sqrt(Rmax*Rmax+LY*LY+LZ*LZ)
+    # print "far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h)
 
     #...............................  read dN/dz assuming constant Delta z
     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/nz_qso_desi.dat")
@@ -300,7 +304,8 @@ def main():
     dndz_interp = f_dndz(dz_interp)
 
     # dn/dz/deg^2 => n/cell(z)
-    dn_cell = dndz_interp * DZ / dist.hubble_distance_z(dz_interp,**cosmo_fid) 	
+    # dn_cell = dndz_interp * DZ / dist.hubble_distance_z(dz_interp,**cosmo_fid)
+    dn_cell = dndz_interp * DZ / cosmo_fid.dist_hubble(dz_interp)
     # dZ = (c/H(z) dz = d_H dz   =>  dN/dZ = dN/dz Dz/dZ = dN/dz /d_H
     dn_cell = dn_cell * DX * DY / R_of_z(dz_interp)**2  # deg^-2 -> per cell
 

@@ -15,7 +15,7 @@ from fitsio import FITS
 import sys
 import scipy as sp
 import numpy as np
-import cosmolopy.distance as dist
+# import cosmolopy.distance as dist
 import os
 import time
 from numba import jit
@@ -297,9 +297,13 @@ def main():
     #.................................................  	set the box at z0
     # http://roban.github.io/CosmoloPy/docAPI/cosmolopy.distance-module.html
     # cosmolopy returns distance in Mpc not Mpc/h
-    cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
-    R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
-    h_of_z = interpolate.interp1d(np.arange(0,5,0.01), dist.hubble_z(np.arange(0,5,0.01), **cosmo_fid))
+    # cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
+    # R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
+    # h_of_z = interpolate.interp1d(np.arange(0,5,0.01), dist.hubble_z(np.arange(0,5,0.01), **cosmo_fid))
+    cosmo_fid = util.cosmo(Om, Ok=Ok, H0=100*h)
+    R_of_z = cosmo_fid.r_comoving
+    z_of_R = cosmo_fid.r_2_z
+    h_of_z = cosmo_fid.dist_hubble
     R0 = h * R_of_z(z0)
     Rmin,Rmax,tanx_max,tany_max = box.box_limit(LX,LY,LZ,R0,dmax*DX)
     z_low = args.zmin
