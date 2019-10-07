@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division, print_function
 import os, sys
 import argparse
 import subprocess
@@ -591,7 +592,7 @@ def do_dir_tree(outdir, nside):
     '''
     npixel = hp.nside2npix(nside)
     print("Creating directory tree...")
-    for i in range(npixel/100 + 1):
+    for i in range(npixel//100 + 1):
         if os.path.isdir(outdir+"/"+str(i)):
             continue
         subprocess.call(["mkdir", outdir+"/"+str(i)])
@@ -647,6 +648,14 @@ def chunk_parameters(cells):
         ddec=['1.6']
         chunkid=['1']
         nslice = 8
+
+    if cells == 32:
+        ra0=['190']
+        dra=['1.6']
+        dec0=['0']
+        ddec=['1.6']
+        chunkid=['1']
+        nslice = 2
 
     return np.array(ra0), np.array(dra), np.array(dec0), np.array(ddec), np.array(chunkid), np.array(nslice)
 
@@ -1107,14 +1116,14 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "03:30:00"  # default "01:30:00"
+    sbatch_args['time_boxes'] = "04:00:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
     sbatch_args['time_chunk'] = "00:30:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "debug"  # default "regular"
+    sbatch_args['queue_chunk'] = "regular"  # default "regular"
     sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
@@ -1143,7 +1152,7 @@ def main():
     mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
-    mock_args['desifootprint'] = False  # If True, cut QSO outside desi footprint
+    mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
     mock_args['NQSO'] = -1  # If >0, limit the number of QSO treated in make_spectra
     mock_args['small_scales'] = True  # If True, add small scales in FGPA
     mock_args['rsd'] = True  # If True, add RSD
@@ -1162,13 +1171,13 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = False  # Produce Pk
+    run_args['run_pk'] = True  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = False  # Produce GRF boxes
+    run_args['run_boxes'] = True  # Produce GRF boxes
     # chunks:
     run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
-    run_args['randoms'] = False  # run draw_qso.py for randoms
+    run_args['randoms'] = True  # run draw_qso.py for randoms
     run_args['make_spectra'] = True  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
@@ -1327,6 +1336,4 @@ def main():
 
 
 if __name__ == "__main__":
-    if sys.version_info[0] >= 3:
-        raise Exception("Must be using Python2")
     main()
