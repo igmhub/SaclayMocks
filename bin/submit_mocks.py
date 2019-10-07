@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division, print_function
 import os, sys
 import argparse
 import subprocess
@@ -591,7 +592,7 @@ def do_dir_tree(outdir, nside):
     '''
     npixel = hp.nside2npix(nside)
     print("Creating directory tree...")
-    for i in range(npixel/100 + 1):
+    for i in range(npixel//100 + 1):
         if os.path.isdir(outdir+"/"+str(i)):
             continue
         subprocess.call(["mkdir", outdir+"/"+str(i)])
@@ -1297,6 +1298,4 @@ def main():
 
 
 if __name__ == "__main__":
-    if sys.version_info[0] >= 3:
-        raise Exception("Must be using Python2")
     main()

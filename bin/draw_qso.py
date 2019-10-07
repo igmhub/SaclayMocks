@@ -83,7 +83,7 @@ def sample(data, num_samples, g_min=19, g_max=23, z_min=0, z_max=6, seed=None):
 
 #********************************************************************
 #def zDistribution(gbin,zbin,nqso) :
-#	np.linalg.matmut(nqso,)
+#    np.linalg.matmut(nqso,)
 
 #********************************************************************
 # @profile
@@ -191,7 +191,7 @@ def main():
         sigma_p_2 = np.std(p2)
         sigma_p_3 = np.std(p3)
         sigma_p_tot = np.std([p1, p2, p3])
-        print "sigma(rho)=",sigma_p_tot, sigma_p_1, sigma_p_2, sigma_p_3
+        print("sigma(rho)=", sigma_p_tot, sigma_p_1, sigma_p_2, sigma_p_3)
         # take exponential of each field
         np.exp(p1, p1)
         np.exp(p2, p2)
@@ -208,12 +208,11 @@ def main():
     LZ = NZ * DZ
 
     #........................................     some geometry and cosmology
-    # cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
-    # R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
-    # R0 = h * R_of_z(z0)
+    # Distances return by util.cosmo  are in Mpc and not in Mpc/h
     cosmo_fid = util.cosmo(Om, Ok=Ok, H0=100*h)
     R_of_z = cosmo_fid.r_comoving
     z_of_R = cosmo_fid.r_2_z
+
     R0 = h * R_of_z(z0)
     x_axis = (sp.arange(NX)+0.5)*DX + (2*i_slice-Nslice) * LX_fullbox/(2*Nslice)
     y_axis = (sp.arange(NY)+0.5)*DY - LY/2
@@ -252,7 +251,7 @@ def main():
         print("Interpolations done. {} s".format(time() - t3))
 
     # margin of dmax cells
-    print LX,LY,LZ,R0,dmax*DX # prov
+    print(LX,LY,LZ,R0,dmax*DX) # prov
     Rmin,Rmax,tanx_max,tany_max = box.box_limit(LX_fullbox,LY,LZ,R0,dmax*DX)
     # tanx_max and tany_max should be calculated again with new Rmin/Rmax ?
     if zmin > 0:
@@ -265,16 +264,16 @@ def main():
         Rmax = R_of_z(z_max)*h
     else:
         z_max = z_of_R(Rmax/h)
-    print "zmin, z0, zmax:", z_min, z0, z_max
-    print "Rmin, R0, Rmax:", Rmin, R0, Rmax
-    print "theta_max:",tanx_max,tany_max
+    print("zmin, z0, zmax:", z_min, z0, z_max)
+    print("Rmin, R0, Rmax:", Rmin, R0, Rmax)
+    print("theta_max:",tanx_max,tany_max)
     tetax_max = np.arctan(tanx_max)
     tetay_max = np.arctan(tany_max)
     if ((dra>0) & (ddec>0)) :
         Ldec = np.sin(np.radians(dec0+ddec)) - np.sin(np.radians(dec0-ddec))
-        Lra = 2*np.radians(dra)	
-        surface = Ldec * Lra	# rad^2
-        print ddec,dra,Ldec,Lra,surface
+        Lra = 2*np.radians(dra)
+        surface = Ldec * Lra    # rad^2
+        print(ddec,dra,Ldec,Lra,surface)
     else :
         surface = 4 * tetax_max * tetay_max     # rad^2
     surfaceDeg = surface * (180/PI)**2
@@ -282,10 +281,11 @@ def main():
     nQSOexp *= constant.qso_nz_adhoc
     nQSOexp /= Nslice
     volFrac= (surface/3)*(Rmax**3-Rmin**3)/LX_fullbox/LY/LZ
-    print "Fraction of box volume used",volFrac
-    print "surface: ", surfaceDeg, "deg^2  -> ",int(nQSOexp),"QSOs expected"
-    # xx = np.sqrt(Rmax*Rmax+LY*LY+LZ*LZ)
-    # print "far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h)
+
+    print("Fraction of box volume used {}".format(volFrac))
+    print("surface: {} deg^2 -> {} QSOs expected".format(surfaceDeg, int(nQSOexp)))
+    xx = np.sqrt(Rmax*Rmax+LY*LY+LZ*LZ)
+    print("far corner of the box {} Mpc/h".format(xx))
 
     #...............................  read dN/dz assuming constant Delta z
     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/nz_qso_desi.dat")
@@ -295,7 +295,7 @@ def main():
     zhigh = d[:,1]
     dndz = d[:,2] #number of QSO per sq deg per dz=0.1
     if (z_of_R((R0+LZ/2)/h) > zhigh[-1]) :
-        print "z_max = ",z_of_R((R0+LZ/2)/h)," larger than dNdz upper range ",zhigh[-1]
+        print("z_max = ",z_of_R((R0+LZ/2)/h)," larger than dNdz upper range ",zhigh[-1])
         exit(0)
 
     # smooth dndz
@@ -362,11 +362,11 @@ def main():
         # gives ~4% more QSO than expected
         # this is due to the fact that the 3 cond are not independent
 
-        print "exp(rho) max and sum = ",rho_max,rho_sum
-        print "k exp(rho_max) =",kk*rho_max
+        print("exp(rho) max and sum = ",rho_max,rho_sum)
+        print("k exp(rho_max) =",kk*rho_max)
         if (kk*rho_max>1):
-            print "k exp(rho) > 1 in ", np.size(np.where(kk*ptot>1)[0]),"cells"
-            print "sum min(k exp(rho) , 1) =", np.minimum(kk*ptot,1).sum()
+            print("k exp(rho) > 1 in ", np.size(np.where(kk*ptot>1)[0]),"cells")
+            print("sum min(k exp(rho) , 1) =", np.minimum(kk*ptot,1).sum())
 
     # Apply desi footprint
     if desi:
@@ -394,7 +394,7 @@ def main():
     for mz in range(NZ):
         XX = x_axis
         YY = y_axis
-        XY2 = (XX*XX).reshape(-1,1) + YY*YY	# broadcasting -> (NX,NY)
+        XY2 = (XX*XX).reshape(-1,1) + YY*YY    # broadcasting -> (NX,NY)
         ZZ = z_axis[mz]
         RR = np.sqrt(ZZ*ZZ + XY2)
         if args.zfix is  None:
@@ -418,7 +418,7 @@ def main():
 
         # ==> should correct for the fact that   rnd1 < exp(rho)   not always true
         #  use reproducible random <==
-        rnd1 = sp.random.ranf(size=(NX,NY))		#  float64
+        rnd1 = sp.random.ranf(size=(NX,NY))        #  float64
         if (not random_cond):
             cond1 = rnd1 < norm * ptot[:, :, mz]  # (NX,NY)
             # should be a Poisson of norm * np.exp(rho)  <==
@@ -427,7 +427,7 @@ def main():
         else:
             cond1 = rnd1 > (1. - constant.rand_qso_nb)
 
-        cond2 = density_max * sp.random.ranf(size=(NX,NY)) < density	# (NX,NY)	
+        cond2 = density_max * sp.random.ranf(size=(NX,NY)) < density    # (NX,NY)
 
         # Draw random xyz in the cell
         XX = XX + np.random.uniform(-DX/2, DX/2, size=len(XX))
@@ -512,13 +512,13 @@ def main():
     t5 = time()
     print("End of loop on QSO. Took {} s".format(t5 - t4))
     if len(ra_list) > 0:
-	ra_list = np.concatenate(ra_list)
-	dec_list = np.concatenate(dec_list)
-	z_list = np.concatenate(z_list)
-	z_rsd_list = np.concatenate(z_rsd_list)
-	xx_list = np.concatenate(xx_list)
-	yy_list = np.concatenate(yy_list)
-	zz_list = np.concatenate(zz_list)
+        ra_list = np.concatenate(ra_list)
+        dec_list = np.concatenate(dec_list)
+        z_list = np.concatenate(z_list)
+        z_rsd_list = np.concatenate(z_rsd_list)
+        xx_list = np.concatenate(xx_list)
+        yy_list = np.concatenate(yy_list)
+        zz_list = np.concatenate(zz_list)
     # write to fits file
     un = np.ones(nQSO)
     thing_id = (chunk*1e9 + i_slice*1e6 + np.arange(nQSO) + 1).astype(int)  # start at 1
@@ -563,9 +563,9 @@ def main():
     qsofits[1].write_key("ZZ", None, comment="position on Z axis in Mpc/h")
     qsofits.close()
     print("File {} written in {} s".format(out_file, time() - t5))
-    print nQSO, "QSOs drawn"
+    print(nQSO, "QSOs drawn")
     if (not random_cond):
-        print nnQSO, "QSOs in the full box" # prov
+        print(nnQSO, "QSOs in the full box")  # prov
     print("Took {}s".format(time()-t_init))
 
     if drawPlot : plt.show()
