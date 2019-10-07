@@ -25,7 +25,7 @@ def regroup(spectrum, m):
     m = int(m)
     N=len(spectrum)
     p = N / m
-#    print N,p*m # prov
+#    print(N,p*m) # prov
     spectrum = spectrum[0:p*m]
     xx = spectrum.reshape(p,m)
     xx = xx.mean(1)
@@ -507,13 +507,13 @@ def extract_h5file(fname):
 
     return free_p, fixed_p, pars, err_pars
 
+
 class cosmo:
     '''
     From picca.constant.py
     https://github.com/igmhub/picca/blob/master/py/picca/constants.py
     '''
-    def __init__(self,Om,Ok=0.,Or=0.,wl=-1.,H0=100.):
-
+    def __init__(self, Om, Ok=0., Or=0., wl=-1., H0=100.):
         ### Ignore evolution of neutrinos from matter to radiation
         ### H0 in km/s/Mpc
         c = constant.c

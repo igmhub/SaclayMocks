@@ -29,7 +29,6 @@ except:
 def dz_of_z_func(cell_size=2.19, zmin=1.3, zmax=4., nbin=500):
     h = constant.h
     Om = constant.omega_M_0
-    # OL = constant.omega_lambda_0
     Ok = constant.omega_k_0
     # cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
     # R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
