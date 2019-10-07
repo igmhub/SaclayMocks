@@ -1116,13 +1116,13 @@ def main():
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
     sbatch_args['time_chunk'] = "00:30:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "debug"  # default "regular"
+    sbatch_args['queue_chunk'] = "regular"  # default "regular"
     sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "00:30:00"  # default "01:30:00"
-    sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
+    sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
+    sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
     sbatch_args['name_mergechunks'] = "mergechunks_saclay"
     sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
@@ -1164,9 +1164,9 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = False  # Produce Pk
+    run_args['run_pk'] = True  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = False  # Produce GRF boxes
+    run_args['run_boxes'] = True  # Produce GRF boxes
     # chunks:
     run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
