@@ -208,8 +208,7 @@ def main():
     LZ = NZ * DZ
 
     #........................................     some geometry and cosmology
-    # cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
-    # R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
+    # Distances return by util.cosmo  are in Mpc and not in Mpc/h
     cosmo_fid = util.cosmo(Om, Ok=Ok, H0=100*h)
     R_of_z = cosmo_fid.r_comoving
     z_of_R = cosmo_fid.r_2_z
@@ -282,11 +281,11 @@ def main():
     nQSOexp *= constant.qso_nz_adhoc
     nQSOexp /= Nslice
     volFrac= (surface/3)*(Rmax**3-Rmin**3)/LX_fullbox/LY/LZ
-    print("Fraction of box volume used",volFrac)
-    print("surface: ", surfaceDeg, "deg^2  -> ",int(nQSOexp),"QSOs expected")
+
+    print("Fraction of box volume used {}".format(volFrac))
+    print("surface: {} deg^2 -> {} QSOs expected".format(surfaceDeg, int(nQSOexp)))
     xx = np.sqrt(Rmax*Rmax+LY*LY+LZ*LZ)
-    # print("far corner of the box",xx,"Mpc/h -> z=",z_of_R(xx/h))
-    print("far corner of the box",xx,"Mpc/h")
+    print("far corner of the box {} Mpc/h".format(xx))
 
     #...............................  read dN/dz assuming constant Delta z
     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/nz_qso_desi.dat")

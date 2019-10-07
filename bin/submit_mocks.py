@@ -1109,7 +1109,7 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "03:30:00"  # default "01:30:00"
+    sbatch_args['time_boxes'] = "04:00:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
