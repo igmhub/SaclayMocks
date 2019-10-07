@@ -722,7 +722,7 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
     mock_args['out_dir'] = out_dir
 
     # desi format directories:
-    if "transmissions" in run_args['todo_mergechunks']:
+    if run_args['run_mergechunks'] and "transmissions" in run_args['todo_mergechunks']:
         do_dir_tree(out_dir, mock_args['nside'])
 
     # logs directory:
@@ -893,6 +893,9 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_merge_spectra'] += " -rsd "+str(mock_args['rsd'])
                         mock_args['args_merge_spectra'] += " -addnoise "+str(mock_args['small_scales'])
                         mock_args['args_merge_spectra'] += " -dla "+str(mock_args['dla'])
+                        if mock_args['fit_p1d']:
+                            mock_args['args_merge_spectra'] += " --fit-p1d True "
+                            mock_args['args_merge_spectra'] += " -p1dfile "+mock_args['chunk_dir-'+cid]+"/p1dmiss.fits"
                         mock_args['args_merge_spectra'] += " "+mock_args['seed']+" "+mock_args['zfix']
                         run_python_script(node, cid, "merge_spectra", mock_args, sbatch_args)
     if run_args['run_mergechunks']:
@@ -1083,6 +1086,10 @@ def main():
     parser.add_argument("--bb-nodes", action='store_true', required=False,
         help="use the BurstBuffer nodes")
 
+    parser.add_argument("--fit-p1d", type=str, nargs="*", default = '', required=False,
+        help="Set up parameters for the 1D power spectrum fitting procedure:\n"
+            +"give in order: z, a, b, c, seed")
+
     parser.add_argument("--seed", type=int, default=None, required=False,
         help="Specify a particular seed (optional)")
 
@@ -1176,17 +1183,17 @@ def main():
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
-    run_args['merge_randoms'] = True  # Compute master_randoms.fits file
+    run_args['merge_randoms'] = False  # Compute master_randoms.fits file
     run_args['compute_dla'] = True  # Compute dla catalog of each chunks
     run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
     run_args['merge_dla'] = True  # Compute master_DLA.fits file
     run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
-    run_args['run_create'] = True  # Create persistent reservation
-    run_args['run_stagein'] = True  # Stage in the init files (pk, directories, ...) (from scratch to BB)
+    run_args['run_create'] = False  # Create persistent reservation
+    run_args['run_stagein'] = False  # Stage in the init files (pk, directories, ...) (from scratch to BB)
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
-    run_args['run_delete'] = True  # delete the persistent reservation
+    run_args['run_delete'] = False  # delete the persistent reservation
 
     # -------------------------- Nothing to change bellow
     ### Define directories
@@ -1199,6 +1206,49 @@ def main():
     mock_args['nmocks'] = nmocks
     mock_args['mock_dir'] = mock_dir
 
+    ### Define chunks parameters :
+    if args.seed is not None:
+        mock_args['seed'] = "-seed "+str(args.seed)
+    if args.box_size < 2560:
+        mock_args['desifootprint'] = False
+    ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size)
+    if args.chunk_id is not None:
+        m = np.array(args.chunk_id) - 1
+        ra0 = ra0[m]
+        dec0 = dec0[m]
+        dra = dra[m]
+        ddec = ddec[m]
+        chunkid = chunkid[m]
+
+    ### 1D power spectrum fitting procedure
+    mock_args['fit_p1d'] = False
+    if args.fit_p1d:
+        if len(args.fit_p1d) != 5:
+            raise Exception("Number of parameters given with --fit-p1d not correct")
+        print("P1D fitting procedure")
+        print("zfix, a, b, c, seed = {}".format(args.fit_p1d))
+        mock_args['fit_p1d'] = True
+        mock_args['nx'] = 128
+        mock_args['ny'] = 128
+        mock_args['nz'] = 1536
+        mock_args['zfix'] = "-zfix {}".format(args.fit_p1d[0])
+        mock_args['a'] = args.fit_p1d[1]
+        mock_args['b'] = args.fit_p1d[2]
+        mock_args['c'] = args.fit_p1d[3]
+        mock_args['seed'] = '-seed {}'.format(args.fit_p1d[4])
+        mock_args['desifootprint'] = False
+        mock_args['dla'] = False
+        ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(128)
+        mock_args['sbatch'] = False
+        run_args['run_pk'] = True
+        run_args['run_boxes'] = True
+        run_args['run_chunks'] = True
+        run_args['draw_qso'] = True
+        run_args['randoms'] = False
+        run_args['make_spectra'] = True
+        run_args['merge_spectra'] = True
+        run_args['run_mergechunks'] = False
+
     ### Define sbatch options
     if not mock_args['sbatch']:
         print("Warning: the jobs will not be sent to cori nodes, they will be executed here.")
@@ -1206,21 +1256,6 @@ def main():
         for k in sbatch_args.keys():
             if 'nodes' in k:
                 sbatch_args[k] = 1
-
-    run_args['todo_chunk'] = ""
-    if run_args['draw_qso']: run_args['todo_chunk'] += "qso "
-    if run_args['randoms']: run_args['todo_chunk'] += "randoms "
-    if run_args['make_spectra']: run_args['todo_chunk'] += "make_spectra "
-    if run_args['merge_spectra']: run_args['todo_chunk'] += "merge_spectra "
-
-    run_args['todo_mergechunks'] = ""
-    if run_args['merge_qso']: run_args['todo_mergechunks'] += "merge_qso "
-    if run_args['merge_randoms']: run_args['todo_mergechunks'] += "merge_randoms "
-    if run_args['compute_dla']: run_args['todo_mergechunks'] += "compute_dla "
-    if run_args['dla_randoms']: run_args['todo_mergechunks'] += "dla_randoms "
-    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
-    if run_args['merge_rand_dla']: run_args['todo_mergechunks'] += "merge_rand_dla "
-    if run_args['transmissions']: run_args['todo_mergechunks'] += "transmissions "
 
     if mock_args['burst_buffer']:
         print("WARNING: You are using Burst Buffer mode. If you cancel the sbatch"\
@@ -1241,6 +1276,29 @@ def main():
         run_args['run_stageout'] = False
         run_args['run_delete'] = False
 
+    mock_args['ra0'] = ra0
+    mock_args['dec0'] = dec0
+    mock_args['dra'] = dra
+    mock_args['ddec'] = ddec
+    mock_args['chunkid'] = chunkid
+    mock_args['nslice'] = nslice
+
+    ### Codes to run
+    run_args['todo_chunk'] = ""
+    if run_args['draw_qso']: run_args['todo_chunk'] += "qso "
+    if run_args['randoms']: run_args['todo_chunk'] += "randoms "
+    if run_args['make_spectra']: run_args['todo_chunk'] += "make_spectra "
+    if run_args['merge_spectra']: run_args['todo_chunk'] += "merge_spectra "
+
+    run_args['todo_mergechunks'] = ""
+    if run_args['merge_qso']: run_args['todo_mergechunks'] += "merge_qso "
+    if run_args['merge_randoms']: run_args['todo_mergechunks'] += "merge_randoms "
+    if run_args['compute_dla']: run_args['todo_mergechunks'] += "compute_dla "
+    if run_args['dla_randoms']: run_args['todo_mergechunks'] += "dla_randoms "
+    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
+    if run_args['merge_rand_dla']: run_args['todo_mergechunks'] += "merge_rand_dla "
+    if run_args['transmissions']: run_args['todo_mergechunks'] += "transmissions "
+
     print("Writting scripts for {} realisations".format(nmocks))
     print("Mock files will be written in {}".format(mock_dir))
     if args.out_dir is not None:
@@ -1258,26 +1316,6 @@ def main():
     if mock_args['burst_buffer'] and run_args['run_stageout']: print("- Stage out: {}".format(mock_args['stage_out_dir']))
     if mock_args['burst_buffer'] and run_args['run_delete']: print("- Delete reservation")
 
-    ### Define chunks parameters :
-    if args.seed is not None:
-        mock_args['seed'] = "-seed "+str(args.seed)
-    if args.box_size < 2560:
-        mock_args['desifootprint'] = False
-    ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size)
-    if args.chunk_id is not None:
-        m = np.array(args.chunk_id) - 1
-        ra0 = ra0[m]
-        dec0 = dec0[m]
-        dra = dra[m]
-        ddec = ddec[m]
-        chunkid = chunkid[m]
-
-    mock_args['ra0'] = ra0
-    mock_args['dec0'] = dec0
-    mock_args['dra'] = dra
-    mock_args['ddec'] = ddec
-    mock_args['chunkid'] = chunkid
-    mock_args['nslice'] = nslice
     print("It will produce {} chunks, with ids: {}".format(len(chunkid), chunkid))
     print("and ra0: {}".format(ra0))
 
