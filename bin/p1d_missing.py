@@ -3,11 +3,10 @@ from __future__ import division, print_function
 from LyaMocks import PowerSpectrum
 import os
 import fitsio
-import scipy as sp
 import numpy as np
 import argparse
-import matplotlib.pyplot as plt 
-from scipy import interpolate, integrate
+import matplotlib.pyplot as plt
+from scipy import interpolate
 
 
 def P_RSD(k_par,k_perp,P, beta):
@@ -109,9 +108,9 @@ if RSD:
 #plt.show()
 
 # Following lines are kept just to check the intermediate steps
-# #.................................     compute P1D with w^2 
+# #.................................     compute P1D with w^2
 # # once we have W^2, the effect of k_ny cut is negligible
-# # so, indistinguishable from cut at k_N and W^2 
+# # so, indistinguishable from cut at k_N and W^2
 # if(False) :
 #     W = np.exp(- DX*DX*kk*kk/2)
 #     P1DWcamb = PowerSpectrum.P_1D(kk,Pcamb*W*W).P1D(kp)
@@ -131,7 +130,7 @@ if RSD:
 #     P1Dcutcamb = PowerSpectrum.P_1D(kk_cut,Pcamb_cut).P1D(kp)
 #     plt.plot(kp,P1Dcutcamb,color="blue")
 #     #plt.plot(kp,P1Dcutcamb,color="green")
-    
+
 #     if (RSD) :
 #         PRSD = P_RSD(k_par_t,k_perp,Pcut)
 #         P1DcutcambRSD = PowerSpectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
@@ -150,10 +149,10 @@ if RSD:
     P1DWcutcambRSD = PowerSpectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
 
 #.................................      missing P^1D(k)
-P1Dmissing = np.maximum(interpolate.InterpolatedUnivariateSpline(kp,P1Dcamb - P1DWcutcamb),0)  
+P1Dmissing = np.maximum(interpolate.InterpolatedUnivariateSpline(kp,P1Dcamb - P1DWcutcamb),0)
 
 if RSD:
-    P1DmissingRSD = np.maximum(interpolate.InterpolatedUnivariateSpline(kp,P1DcambRSD - P1DWcutcambRSD),0) 
+    P1DmissingRSD = np.maximum(interpolate.InterpolatedUnivariateSpline(kp,P1DcambRSD - P1DWcutcambRSD),0)
 
 # Write to fits file
 print("P1D computed. Writting file...")
