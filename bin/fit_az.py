@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys
+import os
 import argparse
 import subprocess
 from SaclayMocks import fit_az
