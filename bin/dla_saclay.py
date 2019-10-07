@@ -11,7 +11,7 @@ import time
 import glob
 import argparse
 from SaclayMocks import constant, util
-import cosmolopy.distance as dist
+# import cosmolopy.distance as dist
 from memory_profiler import profile
 
 
@@ -29,11 +29,12 @@ except:
 def dz_of_z_func(cell_size=2.19, zmin=1.3, zmax=4., nbin=500):
     h = constant.h
     Om = constant.omega_M_0
-    Om = constant.omega_M_0
-    OL = constant.omega_lambda_0
     Ok = constant.omega_k_0
-    cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
-    R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
+    # cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
+    # R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
+    cosmo_fid = util.cosmo(Om, Ok=Ok, H0=100*h)
+    R_of_z = cosmo_fid.r_comoving
+    z_of_R = cosmo_fid.r_2_z
     rmin = R_of_z(zmin)*h
     rmax = R_of_z(zmax)*h
     r_vec = np.linspace(rmin, rmax, nbin)
