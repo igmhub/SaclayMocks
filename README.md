@@ -16,7 +16,18 @@ export PYTHONPATH=$SACLAYMOCKS_BASE/py/:$PYTHONPATH
 ```
 
 ## Dependencies
-The code runs with python2 and is not compatible with python3 at the moment.
+The code is compatible both with python2 and python3.
+Here is a list of needed packages:
+- scipy
+- healpy
+- fitsio
+- h5py
+- pyfftw
+- numba
+- iminuit
+- memory_profiler
+- linetools
+- pyigm
 
 ## Running
 The code runs as follow:
