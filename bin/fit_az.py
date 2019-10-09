@@ -65,7 +65,7 @@ if args.compute_spectra:
 
 print("Fitting a...")
 indir += '/mock_0/chunk_1/'
-fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, xx=100., pixel=0.2)
+fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2)
 fit_az.read_data()
 fit_az.read_mock()
 fit_az.minimize()
