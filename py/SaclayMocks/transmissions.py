@@ -125,10 +125,10 @@ class ReadTransmission(object):
             # z from 2.2 to 4.4
             raise ValueError("ERROR -- You entered a wrong redshift. Here is the list of redshift : {}".format(np.unique(z)))
 
-        xx = 100
-        k_data = data[:, 1][msk]*xx
-        pk_data = data[:, 2][msk]/xx
-        pkerr_data = data[:, 3][msk]/xx
+        convert_factor = util.kms2mpc(redshift)
+        k_data = data[:, 1][msk] * convert_factor
+        pk_data = data[:, 2][msk] / convert_factor
+        pkerr_data = data[:, 3][msk] / convert_factor
 
         # P1D of mock
         print("Computing P1D of mocks")

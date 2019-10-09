@@ -236,33 +236,6 @@ def hist2D(x, y, z=None, bins=100, xlabel=None, ylabel=None, zlabel=None, title=
     plt.show()
 
 
-def read_transmission(inDir, ext, field=None, debug=False):
-    x = []
-    pix = []
-    for d in os.listdir(inDir):
-        if os.path.isdir(inDir+d):
-            for e in os.listdir(inDir+d):
-                if os.path.isdir(inDir+d+'/'+e):
-                    for f in os.listdir(inDir+d+'/'+e):
-                        if f[:12] == 'transmission':
-                            print("Reading : {}".format(inDir+d+'/'+e+'/'+f))
-                            fits = FITS(inDir+d+'/'+e+'/'+f)
-                            if field is None:
-                                try:
-                                    y = fits[ext].read()
-                                    x.append(y)
-                                except:
-                                    print("Cannot read {}".format(f))
-                                    pix.append(e)
-                            else:
-                                x = np.concatenate((x, fits[ext][field].read()))
-                            fits.close()
-    if debug:
-        return x,pix
-    else:
-        return x
-
-
 class InterpFitsTable():
     '''Read table from a fits file, and compute the interpolate function'''
     def __init__(self, inDir, field1, field2):
@@ -302,10 +275,6 @@ def iterfiles(root, prefix):
         for filename in filenames:
             if filename.startswith(prefix):
                 yield os.path.join(dirpath, filename)
-
-
-def h_of_z(redshift, Om, H0):
-    return H0 * np.sqrt(Om*(1+redshift)**3 + (1-Om))
 
 
 def zeff(filename, rmin=80., rmax=120.):
@@ -381,21 +350,6 @@ def pol(x, p):
     for i, pp in enumerate(p):
         res += pp*x**(deg-i)
     return res
-
-
-def read_p1dmiss(z, k, filename=None):
-    '''
-    This function reads the coefficients of the polynomial fit on P1Dmissing
-    and uses them to interpolate it to the redshift z
-    The fit was done on P1D/(1+z)**3.8
-    '''
-    if filename is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_fit.fits")
-    data = fitsio.read(filename, ext=1)
-    f = interpolate.interp1d(data['k'], data['p'], axis=0)
-    pkinterp = np.array([pol(z, f(kk)) for kk in k])
-    pkinterp *= (1+z)**3.8
-    return pkinterp
 
 
 class InterpP1Dmissing():
@@ -549,3 +503,21 @@ class cosmo:
         ### D_V
         y = sp.power(z*self.dm(z)**2*self.dist_hubble(z),1./3.)
         self.dist_v = interpolate.interp1d(z,y)
+
+
+def kms2mpc(redshift, omega_m=None, omega_k=None, h=None):
+    '''
+    This function returns the factor to convert km/s to Mpc/h:
+    [Mpc/h] = H(z) / [(1+z)*h] [km/s]
+    '''
+    redshift = np.array(redshift)
+    if omega_m is None:
+        omega_m = constant.omega_M_0
+    if omega_k is None:
+        omega_k = constant.omega_k_0
+    if h is None:
+        h = constant.h
+    cosmo_fid = cosmo(Om=omega_m, Ok=omega_k, H0=h*100)
+    hubble_z = cosmo_fid.hubble(redshift)
+    factor = hubble_z / (1+redshift) / h
+    return factor

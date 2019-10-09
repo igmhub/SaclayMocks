@@ -20,7 +20,7 @@ finally, export results of minimisation
 can also check plots with check_plot()
 """
 class Fitter(object):
-    def __init__(self, indir, z, a_ref, cc, bb=1.58, Nreg=1, xx=100., pixel=0.2):
+    def __init__(self, indir, z, a_ref, cc, bb=1.58, Nreg=1, pixel=0.2):
         self.data = {}
         self.mock = {}
         self.mock['a_ref'] = a_ref
@@ -29,13 +29,12 @@ class Fitter(object):
         self.z = z
         self.Nreg = Nreg
         self.pixel = pixel
-        self.xx = xx  # parameter to go from km/s to Mpc/h
         self.mock['bb'] = bb
         self.mock['cc'] = cc
         # self.mock['dd'] = dd
 
     @classmethod
-    def mock_init(Cls, indir, z, beta, cc, dd, a_ref=1e-3, Nhdu=8, bb=1.58, Nreg=1, xx=100., pixel=0.2, kmax=20., dk=0.001):
+    def mock_init(Cls, indir, z, beta, cc, dd, a_ref=1e-3, Nhdu=8, bb=1.58, Nreg=1, pixel=0.2, kmax=20., dk=0.001):
         '''
         This alternative init produces p1dmiss.fits and
         runs minimize_az which runs MakeSpectra
@@ -51,7 +50,7 @@ class Fitter(object):
         p1dfile = indir+"/p1dmiss.fits"
         os.system("bash minimize_az.sh {} {} {} {} {} {} {}".format(a_ref, z, indir, Nhdu, cc, fit_p1d, p1dfile))
         print("Done.")
-        new = Cls(indir, z, a_ref, cc, bb=bb, xx=xx, pixel=pixel, Nreg=Nreg)
+        new = Cls(indir, z, a_ref, cc, bb=bb, pixel=pixel, Nreg=Nreg)
         new.beta = beta
         new.dd = dd
         new.Nhdu = Nhdu
@@ -76,9 +75,10 @@ class Fitter(object):
             raise ValueError("ERROR -- You entered a wrong redshift. Here is the list of redshift : {}".format(np.unique(z)))
 
         self.data['z'] = self.z
-        self.data['k'] = data[:, 1][msk]*self.xx
-        self.data['Pk'] = data[:, 2][msk]/self.xx
-        self.data['Pkerr'] = data[:, 3][msk]/self.xx
+        convert_factor = util.kms2mpc(self.z)
+        self.data['k'] = data[:, 1][msk] * convert_factor
+        self.data['Pk'] = data[:, 2][msk] / convert_factor
+        self.data['Pkerr'] = data[:, 3][msk] / convert_factor
         dk = self.data['k'][1] - self.data['k'][0]
         bins = np.append(self.data['k'] - dk/2, self.data['k'][-1]+dk/2)
         self.data['dk'] = dk
@@ -220,7 +220,8 @@ class Fitter(object):
         ax1.grid()
         ax1.errorbar(k[msk], Pk[msk], yerr=Pkerr[msk], fmt='.', label='mock')
         ax1.errorbar(self.data['k'][msk], self.data['Pk'][msk], yerr=self.data['Pkerr'][msk], fmt='+', label='data')
-        # ax1.plot(k[msk], util.P1Dk(k[msk]/self.xx, z)/self.xx, '.', label='fit data')
+        # convert_factor = util.kms2mpc(self.z)
+        # ax1.plot(k[msk], util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax1.legend()
 
         # k*Pk vs k [s.km^-1]
@@ -229,9 +230,10 @@ class Fitter(object):
         ax2.set_title(title)
         ax2.set_xlabel('k [s/km]')
         ax2.set_ylabel('k * Pk / pi')
-        ax2.errorbar(k[msk]/self.xx, k[msk]*Pk[msk]/np.pi, yerr=k[msk]*Pkerr[msk]/np.pi, fmt='.', label='mock')
-        ax2.errorbar(self.data['k'][msk]/self.xx, self.data['k'][msk]*self.data['Pk'][msk]/np.pi, yerr=self.data['k'][msk]*self.data['Pkerr'][msk]/np.pi, fmt='+', label='data')
-        # ax2.plot(k[msk]/self.xx, k[msk]*util.P1Dk(k[msk]/self.xx, z)/self.xx, '.', label='fit data')
+        convert_factor = util.kms2mpc(self.z)
+        ax2.errorbar(k[msk]/convert_factor, k[msk]*Pk[msk]/np.pi, yerr=k[msk]*Pkerr[msk]/np.pi, fmt='.', label='mock')
+        ax2.errorbar(self.data['k'][msk]/convert_factor, self.data['k'][msk]*self.data['Pk'][msk]/np.pi, yerr=self.data['k'][msk]*self.data['Pkerr'][msk]/np.pi, fmt='+', label='data')
+        # ax2.plot(k[msk]/convert_factor, k[msk]*util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax2.grid()
         ax2.legend()
 
