@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import division, print_function
-from LyaMocks import PowerSpectrum
+from SaclayMocks import powerspectrum
 import os
 import fitsio
 import numpy as np
@@ -85,14 +85,14 @@ print("It will be computed with "+
 PI = np.pi
 kk=np.arange(kmax/dk)*dk
 filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
-P_camb = PowerSpectrum.P_0(filename)
+P_camb = powerspectrum.P_0(filename)
 Pcamb = P_camb.P(kk)
 kny = PI/DX
 # kp = np.arange(kny/dk)*dk
 kp = np.arange(PI/0.2/dk)*dk  # k for plot
 
 #.................................     compute P1D
-P1Dcamb = PowerSpectrum.P_1D(kk,Pcamb).P1D(kp)
+P1Dcamb = powerspectrum.P_1D(kk,Pcamb).P1D(kp)
 
 if RSD:
     k_par = np.arange(kmax/dk)*dk
@@ -100,7 +100,7 @@ if RSD:
     k_perp = np.arange(kmax/dk)*dk
     k_perp_t = k_perp.reshape(len(k_perp),-1)
     PRSD = P_RSD(k_par_t,k_perp,P_camb.P, beta)
-    P1DcambRSD = PowerSpectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
+    P1DcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
 
 #print ("0")
 #plt.show()
@@ -113,12 +113,12 @@ if RSD:
 # # so, indistinguishable from cut at k_N and W^2
 # if(False) :
 #     W = np.exp(- DX*DX*kk*kk/2)
-#     P1DWcamb = PowerSpectrum.P_1D(kk,Pcamb*W*W).P1D(kp)
+#     P1DWcamb = powerspectrum.P_1D(kk,Pcamb*W*W).P1D(kp)
 #     plt.plot(kp,P1DWcamb,color="blue")
     
 #     if (RSD) :
 #         PRSD = P_RSD(k_par_t,k_perp,PW2)
-#         P1DWcambRSD = PowerSpectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
+#         P1DWcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
 #         plt.plot(kp,P1DWcambRSD,color="black")
 #     print ("1")
 
@@ -127,13 +127,13 @@ if RSD:
 # kk_cut=kk[cut]
 # Pcamb_cut=Pcamb[cut]
 # if (False):
-#     P1Dcutcamb = PowerSpectrum.P_1D(kk_cut,Pcamb_cut).P1D(kp)
+#     P1Dcutcamb = powerspectrum.P_1D(kk_cut,Pcamb_cut).P1D(kp)
 #     plt.plot(kp,P1Dcutcamb,color="blue")
 #     #plt.plot(kp,P1Dcutcamb,color="green")
 
 #     if (RSD) :
 #         PRSD = P_RSD(k_par_t,k_perp,Pcut)
-#         P1DcutcambRSD = PowerSpectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
+#         P1DcutcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
 #         plt.plot(kp,P1DcutcambRSD,color="green")
 #     print ("2")
 
@@ -142,11 +142,11 @@ cut = kk <= kny
 kk_cut = kk[cut]
 Pcamb_cut = Pcamb[cut]
 W = np.exp(- DX*DX*kk_cut*kk_cut/2)
-P1DWcutcamb = PowerSpectrum.P_1D(kk_cut,Pcamb_cut*W*W).P1D(kp)
+P1DWcutcamb = powerspectrum.P_1D(kk_cut,Pcamb_cut*W*W).P1D(kp)
 
 if RSD:
     PRSD = P_RSD(k_par_t,k_perp,PW2cut, beta)
-    P1DWcutcambRSD = PowerSpectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
+    P1DWcutcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
 
 #.................................      missing P^1D(k)
 P1Dmissing = np.maximum(interpolate.InterpolatedUnivariateSpline(kp,P1Dcamb - P1DWcutcamb),0)
