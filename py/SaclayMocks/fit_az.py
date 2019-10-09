@@ -105,14 +105,17 @@ class Fitter(object):
         delta_l_list = []
         delta_s_list = []
         eta_par = []
+        dt = [('RA', '>f4'), ('DEC', '>f4'), ('Z_noRSD', '>f4'), ('Z', '>f4'),
+              ('HDU', '>i8'), ('THING_ID', '>i8'), ('PLATE', '>i8'),
+              ('MJD', '>i4'), ('FIBERID', '>i4'), ('PMF', '<U22')]
         for f in files:
             if first:
                 wav = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='LAMBDA')
-                growthf = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='GROWTHF')
                 if not debug:
+                    growthf = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='GROWTHF')
                     redshift = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='Z')
                 first = False
-            data = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='METADATA')
+            data = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='METADATA').astype(dt)
             spec = fitsio.read(self.mock['indir']+'/spectra_merged/'+f, ext='FLUX')
             msk = wav/(1+data['Z']).reshape(-1,1)
             msk = ((msk <= constant.lylimit) | (msk >= constant.lya))
@@ -128,9 +131,9 @@ class Fitter(object):
 
         self.mock['data'] = np.concatenate(metadata)
         self.mock['wav'] = np.float64(wav)
-        self.mock['growthf'] = np.float64(growthf)
         self.mock['spectra'] = np.float64(ma.concatenate(spectra))
         if not debug:
+            self.mock['growthf'] = np.float64(growthf)
             self.mock['redshift'] =np.float64(redshift)
             self.mock['delta_l'] = np.float64(ma.concatenate(delta_l_list))
             self.mock['delta_s'] = np.float64(ma.concatenate(delta_s_list))
