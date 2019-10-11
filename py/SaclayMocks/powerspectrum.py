@@ -426,6 +426,20 @@ def IntegratePKaiser(P,beta,k_max):
     intk2P , error = integrate.quad(k2P,0,k_max,limit=100)
     return 4*np.pi*(1+2*beta/3.+beta*beta/5.) * intk2P
 
+#********************************************************************
+def xi_from_pk_1D(k,P1): # k should go from 0 to kmax with constant steps
+    kmax=np.max(k)
+    if (kmax<100):  # zero padding
+        #k
+        PP=np.zeros(1)
+    N = len(k)
+    P2 = np.flipud(P1[1:-1])
+    P=np.hstack((P1,P2))        #  P0,P1, .. PN,PN-1, ... P1
+    xi=np.real( np.fft.rfft(P) )
+    xi *= kmax/N
+    rmax = np.pi * N / 2 / kmax
+    r=np.linspace(0,rmax,N)
+    return r,xi
 
 
 #********************************************************************
