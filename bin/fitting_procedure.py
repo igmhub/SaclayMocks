@@ -3,6 +3,7 @@ import os
 import argparse
 import subprocess
 from SaclayMocks import fit_az
+from time import time
 
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -22,11 +23,20 @@ parser.add_argument("--a", type=float, default=0.1, required=False,
 parser.add_argument("--b", type=float, default=1.58, required=False,
         help="value of b")
 
+parser.add_argument("--n-iter", type=int, default=10, required=False,
+        help="number of iteration to tune the 1D power spectrum shape")
+
 parser.add_argument("--seed", type=int, default=42, required=False,
         help="value of b")
 
 parser.add_argument("--compute-spectra", action='store_true', required=False,
         help="Compute spectra files using submit_mocks.py")
+
+parser.add_argument("--fit-az", action='store_true', required=False,
+        help="Fit the parameter a(z) using the P1D data")
+
+parser.add_argument("--fit-p1d", action='store_true', required=False,
+        help="Tune the shape of the 1D power spectrum")
 
 parser.add_argument("--check-plots", action='store_true', required=False,
         help="Do checking plots")
@@ -63,12 +73,32 @@ if args.compute_spectra:
     print("Running {} ...".format(command))
     subprocess.check_call(command, shell=True)
 
-print("Fitting a...")
-indir += '/mock_0/chunk_1/'
-fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2)
-fit_az.read_data()
-fit_az.read_mock()
-fit_az.minimize()
-fit_az.export(indir)
-if do_plots:
-    fit_az.check_p1d()
+# Fitting a(z)
+if args.fit_az:
+    print("Fitting a...")
+    t0 = time()
+    indir += '/mock_0/chunk_1/'
+    fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2)
+    fit_az.read_data()
+    fit_az.read_mock()
+    fit_az.minimize()
+    fit_az.export(indir)
+    if do_plots:
+        fit_az.check_p1d()
+    print("Done. For z = {}, a = {}. Took {} s".format(z, fit_az.fit['a'], time() - t0))
+
+# Tuning the P1D shape
+if args.fit_p1d:
+    if not args.fit_az:
+        print("Tunning of P1D shape is done using a={}".format(a))
+        fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2)
+        fit_az.read_data()
+        fit_az.read_mock()
+    print("Tunning the shape of 1D power spectrum...")
+    t0 = time()
+    fit_az.comp_p1d(fit_az.fit['a'])
+    fit_az.smooth_p1d()
+    for n in niter:
+        fit_az.iterate()
+        print("Iteration {} done.".format(n+1))
+    print("Tunning done. Took {} s".format(time() - t0))
