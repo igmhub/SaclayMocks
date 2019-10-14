@@ -1,7 +1,7 @@
 import fitsio
 import argparse
 import time
-from LyaMocks import util
+from SaclayMocks import util
 import scipy as sp
 
 
@@ -39,20 +39,21 @@ else:
 thid = master[1]['MOCKID'][:]
 master.close()
 
-print("Applying downsampling...")
-print("zmin={}".format(downsampling_z_cut))
-print("zmax={}".format(downsampling_z_cut_max))
-if zqso[(zqso>downsampling_z_cut)&(zqso<downsampling_z_cut_max)].size<downsampling_nb:
-    print('WARNING:: Trying to downsample, when nb cat = {} and nb downsampling = {}'.format(zqso[(zqso>downsampling_z_cut)&(zqso<downsampling_z_cut_max)].size,downsampling_nb) )
-    select = (zqso>downsampling_z_cut)&(zqso<downsampling_z_cut_max)
-else:
-    select_fraction = downsampling_nb/((zqso>downsampling_z_cut)&(zqso<downsampling_z_cut_max)).sum()
-    select = sp.random.choice(sp.arange(ra.size),size=int(ra.size*select_fraction),replace=False)
-
-ra = ra[select]
-dec = dec[select]
-zqso = zqso[select]
-thid = thid[select]
+if downsampling_nb:
+    print("Applying downsampling...")
+    print("zmin={}".format(downsampling_z_cut))
+    print("zmax={}".format(downsampling_z_cut_max))
+    if zqso[(zqso>downsampling_z_cut)&(zqso<downsampling_z_cut_max)].size<downsampling_nb:
+        print('WARNING:: Trying to downsample, when nb cat = {} and nb downsampling = {}'.format(zqso[(zqso>downsampling_z_cut)&(zqso<downsampling_z_cut_max)].size,downsampling_nb) )
+        select = (zqso>downsampling_z_cut)&(zqso<downsampling_z_cut_max)
+    else:
+        select_fraction = downsampling_nb/((zqso>downsampling_z_cut)&(zqso<downsampling_z_cut_max)).sum()
+        select = sp.random.choice(sp.arange(ra.size),size=int(ra.size*select_fraction),replace=False)
+    
+    ra = ra[select]
+    dec = dec[select]
+    zqso = zqso[select]
+    thid = thid[select]
 
 ### Save
 out = fitsio.FITS(args.o,'rw',clobber=True)
