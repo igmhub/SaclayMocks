@@ -94,11 +94,15 @@ if args.fit_p1d:
         fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2)
         fit_az.read_data()
         fit_az.read_mock()
+    else:
+        a = fit_az.fit['a']
     print("Tunning the shape of 1D power spectrum...")
     t0 = time()
-    fit_az.comp_p1d(fit_az.fit['a'])
+    fit_az.read_p1dmiss()
+    fit_az.fit_data()
+    fit_az.compute_p1d(a)
     fit_az.smooth_p1d()
-    for n in niter:
-        fit_az.iterate()
+    for n in range(args.n_iter):
+        fit_az.iterate(a=a, plot=True)
         print("Iteration {} done.".format(n+1))
     print("Tunning done. Took {} s".format(time() - t0))
