@@ -236,7 +236,7 @@ class Fitter(object):
             ret = True
 
         # s parameter for spline:
-        s = len(k)*pkerr.mean()**2 * 1.5  # 1.5 is fine tuning, not to get fluctuation of P1D in fit
+        s = len(k)*pkerr.mean()**2 * 3  # 1.5 is fine tuning, not to get fluctuation of P1D in fit
         # # Add a point at k=20 to avoid spline to diverge
         # kf = np.concatenate((kf, [self.k_fit[-1]]))
         # pkf = np.concatenate((pkf, [self.p1d_fit[-1]]))
@@ -301,10 +301,10 @@ class Fitter(object):
         if plot:
             plt.plot(self.mock['kmiss'], self.data['p1d_fit_interp'](self.mock['kmiss']), label='fit data')
             plt.plot(self.mock['kmiss'], self.mock['p1d_interp'](self.mock['kmiss']), label='mock smoothed')
-            plt.plot(self.mock['k'], self.mock['p1d'], '+', label='mock')
-            plt.plot(self.mock['kmiss'], self.mock['p1dmiss'], label='p1dmiss_{}'.format(self.niter))
+            plt.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
+            plt.plot(self.mock['kmiss'], self.mock['p1dmiss'] / 50, label='p1dmiss_{}'.format(self.niter))
             plt.plot(self.mock['kmiss'], rr, label='ratio rr')
-            plt.plot(self.mock['kmiss'], p1dmiss, label='p1dmiss_{}'.format(self.niter+1))
+            plt.plot(self.mock['kmiss'], p1dmiss / 50, label='p1dmiss_{}'.format(self.niter+1))
             plt.grid()
             plt.legend()
             plt.xlabel('k [h/Mpc/]')
