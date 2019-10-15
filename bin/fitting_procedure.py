@@ -2,6 +2,7 @@
 import os
 import argparse
 import subprocess
+import numpy as np
 from SaclayMocks import fit_az
 from time import time
 
@@ -98,11 +99,12 @@ if args.fit_p1d:
         a = fit_az.fit['a']
     print("Tunning the shape of 1D power spectrum...")
     t0 = time()
-    fit_az.read_p1dmiss()
+    k = np.concatenate((np.arange(0, 3, 0.1), np.arange(3, 20, 0.5)))
     fit_az.fit_data()
-    fit_az.compute_p1d(a)
+    fit_az.read_p1dmiss()
+    fit_az.compute_p1d(a, bins=k)
     fit_az.smooth_p1d()
     for n in range(args.n_iter):
-        fit_az.iterate(a=a, plot=True)
+        fit_az.iterate(a=a, bins=k, plot=True)
         print("Iteration {} done.".format(n+1))
     print("Tunning done. Took {} s".format(time() - t0))
