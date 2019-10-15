@@ -27,6 +27,9 @@ parser.add_argument("--b", type=float, default=1.58, required=False,
 parser.add_argument("--n-iter", type=int, default=10, required=False,
         help="number of iteration to tune the 1D power spectrum shape")
 
+parser.add_argument("--convergence-factor", type=float, default=1, required=False,
+        help="convergence factor to tune p1d shape")
+
 parser.add_argument("--seed", type=int, default=42, required=False,
         help="value of b")
 
@@ -50,6 +53,7 @@ a = args.a
 b = args.b
 c = args.c
 seed = args.seed
+convergence_factor = args.convergence_factor
 do_plots = args.check_plots
 
 if args.compute_spectra:
@@ -79,7 +83,7 @@ if args.fit_az:
     print("Fitting a...")
     t0 = time()
     indir += '/mock_0/chunk_1/'
-    fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2)
+    fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2, convergence_factor=convergence_factor)
     fit_az.read_data()
     fit_az.read_mock()
     fit_az.minimize()
@@ -92,8 +96,7 @@ if args.fit_az:
 if args.fit_p1d:
     if not args.fit_az:
         print("Tunning of P1D shape is done using a={}".format(a))
-        fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2)
-        fit_az.read_data()
+        fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2, convergence_factor=convergence_factor)
         fit_az.read_mock()
     else:
         a = fit_az.fit['a']
@@ -104,6 +107,7 @@ if args.fit_p1d:
     fit_az.read_p1dmiss()
     fit_az.compute_p1d(a, bins=k)
     fit_az.smooth_p1d()
+    print("nspec = {}".format(fit_az.mock['spectra'].shape))
     for n in range(args.n_iter):
         fit_az.iterate(a=a, bins=k, plot=True)
         print("Iteration {} done.".format(n+1))
