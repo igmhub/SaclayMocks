@@ -72,7 +72,7 @@ if args.compute_spectra:
     command = 'submit_mocks.py'
     command += ' --mock-dir ' + indir
     command += ' --fit-p1d {} {} {} {} {}'.format(z, a, b, c, seed)
-    print("Running {} ...".format(command))
+    print("Running {} ...\n".format(command))
     subprocess.check_call(command, shell=True)
 
     # Compute P1D missing
@@ -81,18 +81,18 @@ if args.compute_spectra:
     command += '--beta {} '.format(c)
     if do_plots:
         command += '--plot-p1d'
-    print("Running {} ...".format(command))
+    print("\n\nRunning {} ...\n".format(command))
     subprocess.check_call(command, shell=True)
 
     # Run submit.sh
     command = indir + '/mock_0/output/runs/submit.sh'
-    print("Running {} ...".format(command))
+    print("\n\nRunning {} ...\n".format(command))
     subprocess.check_call(command, shell=True)
 
 indir += '/mock_0/chunk_1/'
 # Fitting a(z)
 if args.fit_az:
-    print("Fitting a...")
+    print("\n\nFitting a...\n")
     t0 = time()
     fitter = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2,
         convergence_factor=convergence_factor, convergence_criterium=convergence_criterium)
@@ -102,10 +102,11 @@ if args.fit_az:
     fitter.export(indir)
     if do_plots:
         fitter.check_p1d()
-    print("Done. For z = {}, a = {}. Took {} s".format(z, fitter.fit['a'], time() - t0))
+    print("\nDone. For z = {}, a = {}. Took {} s\n".format(z, fitter.fit['a'], time() - t0))
 
 # Tuning the P1D shape
 if args.fit_p1d:
+    print("\nTunning the shape of 1D power spectrum...")
     if not args.fit_az:
         print("Tunning of P1D shape is done using a={}".format(a))
         fitter = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2,
@@ -113,7 +114,6 @@ if args.fit_p1d:
         fitter.read_mock()
     else:
         a = fitter.fit['a']
-    print("Tunning the shape of 1D power spectrum...")
     t0 = time()
     k = np.concatenate((np.arange(0, 3, 0.1), np.arange(3, 20, 0.5)))
     fitter.fit_data()
@@ -127,4 +127,4 @@ if args.fit_p1d:
     else:
         for n in range(args.n_iter):
             fitter.iterate(a=a, bins=k, plot=do_plots)
-    print("Tunning done. Took {} s".format(time() - t0))
+    print("\nTunning done. Took {} s".format(time() - t0))
