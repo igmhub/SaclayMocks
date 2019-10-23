@@ -6,6 +6,13 @@ import numpy as np
 from SaclayMocks import fit_az
 from time import time
 
+'''
+This code is used to first fit the parameter a(z) (for a given redshift) on 
+the P1D data ; then it tunes the shape of the missing 1D power spectrum
+to get the proper 1D power spectrum.
+
+For the moment, you need to compute spectra for each different redshift bin
+'''
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -29,6 +36,9 @@ parser.add_argument("--n-iter", type=int, default=10, required=False,
 
 parser.add_argument("--convergence-factor", type=float, default=1, required=False,
         help="convergence factor to tune p1d shape")
+
+parser.add_argument("--convergence-criterium", type=float, default=None, required=False,
+        help="convergence criterium to stop iteration procedure when reached")
 
 parser.add_argument("--seed", type=int, default=42, required=False,
         help="value of b")
@@ -54,6 +64,7 @@ b = args.b
 c = args.c
 seed = args.seed
 convergence_factor = args.convergence_factor
+convergence_criterium= args.convergence_criterium
 do_plots = args.check_plots
 
 if args.compute_spectra:
@@ -78,37 +89,42 @@ if args.compute_spectra:
     print("Running {} ...".format(command))
     subprocess.check_call(command, shell=True)
 
+indir += '/mock_0/chunk_1/'
 # Fitting a(z)
 if args.fit_az:
     print("Fitting a...")
     t0 = time()
-    indir += '/mock_0/chunk_1/'
-    fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2, convergence_factor=convergence_factor)
-    fit_az.read_data()
-    fit_az.read_mock()
-    fit_az.minimize()
-    fit_az.export(indir)
+    fitter = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2,
+        convergence_factor=convergence_factor, convergence_criterium=convergence_criterium)
+    fitter.read_data()
+    fitter.read_mock()
+    fitter.minimize()
+    fitter.export(indir)
     if do_plots:
-        fit_az.check_p1d()
-    print("Done. For z = {}, a = {}. Took {} s".format(z, fit_az.fit['a'], time() - t0))
+        fitter.check_p1d()
+    print("Done. For z = {}, a = {}. Took {} s".format(z, fitter.fit['a'], time() - t0))
 
 # Tuning the P1D shape
 if args.fit_p1d:
     if not args.fit_az:
         print("Tunning of P1D shape is done using a={}".format(a))
-        fit_az = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2, convergence_factor=convergence_factor)
-        fit_az.read_mock()
+        fitter = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2,
+            convergence_factor=convergence_factor, convergence_criterium=convergence_criterium)
+        fitter.read_mock()
     else:
-        a = fit_az.fit['a']
+        a = fitter.fit['a']
     print("Tunning the shape of 1D power spectrum...")
     t0 = time()
     k = np.concatenate((np.arange(0, 3, 0.1), np.arange(3, 20, 0.5)))
-    fit_az.fit_data()
-    fit_az.read_p1dmiss()
-    fit_az.compute_p1d(a, bins=k)
-    fit_az.smooth_p1d()
-    print("nspec = {}".format(fit_az.mock['spectra'].shape))
-    for n in range(args.n_iter):
-        fit_az.iterate(a=a, bins=k, plot=True)
-        print("Iteration {} done.".format(n+1))
+    fitter.fit_data()
+    fitter.read_p1dmiss()
+    fitter.compute_p1d(a, bins=k)
+    fitter.smooth_p1d()
+    print("nspec = {}\n".format(fitter.mock['spectra'].shape))
+    if convergence_criterium:
+        while not fitter.converged:
+            fitter.iterate(a=a, bins=k, plot=do_plots)
+    else:
+        for n in range(args.n_iter):
+            fitter.iterate(a=a, bins=k, plot=do_plots)
     print("Tunning done. Took {} s".format(time() - t0))

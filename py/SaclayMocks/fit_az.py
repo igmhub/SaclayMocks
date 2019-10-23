@@ -21,7 +21,7 @@ finally, export results of minimisation
 can also check plots with check_plot()
 """
 class Fitter(object):
-    def __init__(self, indir, z, a_ref, cc, bb=1.58, Nreg=1, pixel=0.2, cell_size=2.19, convergence_factor=1):
+    def __init__(self, indir, z, a_ref, cc, bb=1.58, Nreg=1, pixel=0.2, cell_size=2.19, convergence_factor=1, convergence_criterium=None):
         self.data = {}
         self.mock = {}
         self.fit = {}
@@ -37,6 +37,8 @@ class Fitter(object):
         self.mock['cc'] = cc
         self.niter = 0  # current iteration on p1d
         self.convergence_factor = convergence_factor
+        self.convergence_criterium = convergence_criterium
+        self.converged = False
 
     def read_data(self, filename=None):
         """
@@ -308,7 +310,16 @@ class Fitter(object):
             plt.grid()
             plt.legend()
             plt.xlabel('k [h/Mpc/]')
+            plt.title('iteration : {}'.format(self.niter))
             plt.show()
+
+        if self.convergence_criterium:
+            print("convergence is {}".format(np.max(np.abs(rr-1))))
+            if np.max(np.abs(rr - 1)) < self.convergence_criterium:
+                self.converged = True
+                print("Iterative procedure has converged in {} iterations.".format(self.niter))
+                return
+
         self.mock['p1dmiss'] = p1dmiss
         self.niter += 1
         self.export_p1dmiss()
@@ -318,6 +329,7 @@ class Fitter(object):
         self.compute_p1d(a, bins=bins)
         self.smooth_p1d()
         self.export_p1d()
+        print("Iteration {} done.\n".format(self.niter))
 
     def check_p1d(self, a=None, title='', debug=False):
         if debug:
@@ -348,7 +360,8 @@ class Fitter(object):
         ax2.set_ylabel('k * Pk / pi')
         convert_factor = util.kms2mpc(self.z)
         ax2.errorbar(self.mock['k']/convert_factor, self.mock['k']*self.mock['p1d']/np.pi, yerr=self.mock['k']*self.mock['err_p1d']/np.pi, fmt='.', label='mock')
-        ax2.errorbar(self.data['k'][msk]/convert_factor, self.data['k'][msk]*self.data['Pk'][msk]/np.pi, yerr=self.data['k'][msk]*self.data['Pkerr'][msk]/np.pi, fmt='+', label='data')
+        ax2.errorbar(self.data['k']/convert_factor, self.data['k']*self.data['Pk']/np.pi, yerr=self.data['k']*self.data['Pkerr']/np.pi, fmt='+', label='data')
+        # ax2.errorbar(self.data['k'][msk]/convert_factor, self.data['k'][msk]*self.data['Pk'][msk]/np.pi, yerr=self.data['k'][msk]*self.data['Pkerr'][msk]/np.pi, fmt='+', label='data')
         # ax2.plot(k[msk]/convert_factor, k[msk]*util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax2.grid()
         ax2.legend()
