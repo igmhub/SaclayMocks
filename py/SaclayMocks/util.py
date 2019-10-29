@@ -10,7 +10,6 @@ import os
 import sys
 from matplotlib import pyplot as plt
 import fitsio
-from fitsio import FITS
 from SaclayMocks import constant
 import h5py
 
@@ -167,14 +166,13 @@ def P1D_datafit(k, z):
     return P
 
 
-def read_P1D(redshift):
+def read_P1D(redshift, filename="$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"):
     """
     Read Pk file from Nathalie. Si III oscillations have been removed.
     Format is z, k, pk, pkerr, 0, 0, 0
     k in km/s and pk and pkerr in (km/s)**-1
     """
-    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out")
-    data = np.loadtxt(filename)
+    data = np.loadtxt(os.path.expandvars(filename))
     z = np.round(data[:, 0], 3)
     msk = np.where(z == np.round(redshift, 3))[0]
     if len(msk) == 0:
@@ -210,6 +208,26 @@ def read_P1D_fit(redshift):
     return k, Pk
 
 
+def read_P1D_model(redshift, filename="SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"):
+    '''
+    This function reads the P1D used as model to tune the P1D shape in mocks
+    It returns k, pk for a given redshift.
+    Units are in Mpc/h
+    '''
+    fits = fitsio.FITS(os.path.expandvars(filename))
+    z = fits[0].read()
+    k = fits[1].read()
+    pk = fits[2].read()
+    # select the redshift bin
+    msk = z == redshift
+    if msk.sum() == 0:
+        print("ERROR -- You entered a wrong redshift: {}. Here is the list of redshifts : {}".format(redshift, np.unique(z)))
+        sys.exit(1)
+    k = k[msk]
+    pk = pk[msk]
+    return k, pk
+
+
 def computechi2(mod, data, dataerr):
     return (((mod-data) / dataerr)**2).sum()
 
@@ -239,7 +257,7 @@ def hist2D(x, y, z=None, bins=100, xlabel=None, ylabel=None, zlabel=None, title=
 class InterpFitsTable():
     '''Read table from a fits file, and compute the interpolate function'''
     def __init__(self, inDir, field1, field2):
-        fits = FITS(inDir)
+        fits = fitsio.FITS(inDir)
         data = fits[1].read()
         z = data[field1]
         y = data[field2]
