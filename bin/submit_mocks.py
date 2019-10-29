@@ -1238,7 +1238,12 @@ def main():
         mock_args['seed'] = '-seed {}'.format(args.fit_p1d[4])
         mock_args['desifootprint'] = False
         mock_args['dla'] = False
-        ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(128)
+        ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(mock_args['nx'])
+        ra0 = ra0[[0]]
+        dra = dra[[0]]
+        dec0 = dec0[[0]]
+        ddec = ddec[[0]]
+        chunkid = chunkid[[0]]
         mock_args['sbatch'] = False
         run_args['run_pk'] = True
         run_args['run_boxes'] = True
