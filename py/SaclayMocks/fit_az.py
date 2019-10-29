@@ -47,20 +47,17 @@ class Fitter(object):
         k in km/s and pk and pkerr in (km/s)**-1 translated to Mpc/h
         """
         if filename is None:
-            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out")
-        print("Reading data from: {}".format(filename))
-        data = np.loadtxt(filename)
-        z = data[:, 0]
-        msk = np.where(z == self.z)[0]
-        if len(msk) == 0:
-            # z from 2.2 to 4.4
-            raise ValueError("ERROR -- You entered a wrong redshift. Here is the list of redshift : {}".format(np.unique(z)))
-
-        self.data['z'] = self.z
+            filename = "$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"
+        print("Reading data from {}".format(filename))
+        k, pk, pkerr = util.read_P1D(self.z, filename=filename)
         convert_factor = util.kms2mpc(self.z)
-        self.data['k'] = data[:, 1][msk] * convert_factor
-        self.data['Pk'] = data[:, 2][msk] / convert_factor
-        self.data['Pkerr'] = data[:, 3][msk] / convert_factor
+        k *= convert_factor
+        pk /= convert_factor
+        pkerr /= convert_factor
+        self.data['z'] = self.z
+        self.data['k'] = k
+        self.data['Pk'] = pk
+        self.data['Pkerr'] = pkerr
         dk = self.data['k'][1] - self.data['k'][0]
         bins = np.append(self.data['k'] - dk/2, self.data['k'][-1]+dk/2)
         self.data['dk'] = dk
@@ -134,35 +131,21 @@ class Fitter(object):
         pk = data[field]
         # msk = kk > 0
         # msk = kk > 0.12  # prov
-        if not hasattr(self, "data['k_fit']"):
-            self.fit_data()
-        msk = (kk > self.data['k_fit'].min()) & (kk < self.data['k_fit'].max())  # avoid interpolation issue in computation of rr in iterate()
+        if not hasattr(self, "data['k_model']"):
+            self.read_model()
+        msk = (kk > self.data['k_model'].min()) & (kk < self.data['k_model'].max())  # avoid interpolation issue in computation of rr in iterate()
         self.mock['kmiss'] = kk[msk]
         self.mock['p1dmiss'] = pk[msk]
 
-    def fit_data(self, klim=1.6, filename=None):
-        k_fit, p1d_fit = util.read_P1D_fit(self.z)
-        convert_factor = util.kms2mpc(self.z)
-        k_fit *= convert_factor
-        p1d_fit /= convert_factor
-        ### following line is to correct the fact that the fit on P1D data don't go to 0 at large k
-        # msk1 = k_fit < klim
-        # if filename is None:
-        #     os.path.expandvars("$SACLAYMOCKS_BASE/etc/fit_p1d_mock_z3.4.fits")
-        # data = fitsio.read(filename, ext=1)
-        # k_mock = data['k']
-        # p1d_mock = data['P1D']
-        # msk2 = k_mock >= klim
-        # x = p1d_fit[np.logical_not(msk1)][0] / p1d_mock[msk2][0]
-        # k = np.append(k_fit[msk1], k_mock[msk2])
-        # p1d = np.append(p1d_fit[msk1], x*p1d_mock[msk2])
-        # p1d_interp = sp.interpolate.interp1d(k, p1d)
-        k = k_fit
-        p1d = p1d_fit
+    def read_model(self, filename=None):
+        if filename is None:
+            filename = "$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"
+        print("Reading model from {}".format(filename))
+        k, p1d = util.read_P1D_model(self.z)
         p1d_interp = sp.interpolate.interp1d(k, p1d)
-        self.data['k_fit'] = k
-        self.data['p1d_fit'] = p1d
-        self.data['p1d_fit_interp'] = p1d_interp
+        self.data['k_model'] = k
+        self.data['p1d_model'] = p1d
+        self.data['p1d_model_interp'] = p1d_interp
 
     def p1dmiss_filename(self, niter=None):
         if niter is None:
@@ -294,14 +277,10 @@ class Fitter(object):
         '''
         Iterative procedure to tune the shape of the 1D powerspectrum
         '''
-        # print(self.data['k_fit'].min())
-        # print(self.data['k_fit'].max())
-        # print(self.mock['kmiss'].min())
-        # print(self.mock['kmiss'].max())
-        rr = self.data['p1d_fit_interp'](self.mock['kmiss']) / self.mock['p1d_interp'](self.mock['kmiss'])
+        rr = self.data['p1d_model_interp'](self.mock['kmiss']) / self.mock['p1d_interp'](self.mock['kmiss'])
         p1dmiss = self.mock['p1dmiss'] * (1 + self.convergence_factor*(rr - 1))
         if plot:
-            plt.plot(self.mock['kmiss'], self.data['p1d_fit_interp'](self.mock['kmiss']), label='fit data')
+            plt.plot(self.mock['kmiss'], self.data['p1d_model_interp'](self.mock['kmiss']), label='fit data')
             plt.plot(self.mock['kmiss'], self.mock['p1d_interp'](self.mock['kmiss']), label='mock smoothed')
             plt.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
             plt.plot(self.mock['kmiss'], self.mock['p1dmiss'] / 50, label='p1dmiss_{}'.format(self.niter))

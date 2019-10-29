@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import os
 import argparse
 import subprocess
 import numpy as np
@@ -64,7 +63,7 @@ b = args.b
 c = args.c
 seed = args.seed
 convergence_factor = args.convergence_factor
-convergence_criterium= args.convergence_criterium
+convergence_criterium = args.convergence_criterium
 do_plots = args.check_plots
 
 if args.compute_spectra:
@@ -116,7 +115,7 @@ if args.fit_p1d:
         a = fitter.fit['a']
     t0 = time()
     k = np.concatenate((np.arange(0, 3, 0.1), np.arange(3, 20, 0.5)))
-    fitter.fit_data()
+    fitter.read_model()
     fitter.read_p1dmiss()
     fitter.compute_p1d(a, bins=k)
     fitter.smooth_p1d()
