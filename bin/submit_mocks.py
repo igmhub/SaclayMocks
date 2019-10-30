@@ -1238,6 +1238,7 @@ def main():
         mock_args['seed'] = '-seed {}'.format(args.fit_p1d[4])
         mock_args['desifootprint'] = False
         mock_args['dla'] = False
+        mock_args['use_time'] = False
         ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(mock_args['nx'])
         ra0 = ra0[[0]]
         dra = dra[[0]]
