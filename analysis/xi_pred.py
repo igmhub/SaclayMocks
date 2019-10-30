@@ -7,9 +7,10 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", type=str, help="ex: Out/v2.7.1/from_transmission")
-parser.add_argument("-o", type=str, help="ex: Out/v2.7.1/from_transmission")
-parser.add_argument("--kind", type=str, help="specify if the prediction is Kaiser or FGPA. Default Kaiser", default='Kaiser')
+parser.add_argument("-i", type=str, help="input file")
+parser.add_argument("-o", type=str, help="output file")
+parser.add_argument("--kind", type=str, help="specify if the prediction is Kaiser or FGPA. Default Kaiser", default='FGPA')
+parser.add_argument("--zeff", type=float, help="specify a given redshift. If not specify, takes zeff from input file.", default=None)
 # parser.add_argument("--to-do", type=str, nargs="*", help="ex: cf xcf")
 # parser.add_argument("-aa", type=float)
 # parser.add_argument("-bb", type=float)
@@ -32,20 +33,19 @@ print("Reading {} ...".format(infile))
 ecf = fitsio.read(infile, ext=1)
 head = fitsio.read_header(infile, ext=1)
 
-zeff = util.zeff(infile)
-z0 = 2.2466318099484273
+if args.zeff is None:
+    zeff = util.zeff(infile)
+else:
+    zeff = args.zeff
 print("zeff = {}".format(zeff))
 filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/params.fits")
 a_of_z = util.InterpFitsTable(filename, 'z', 'a')
 c_of_z = util.InterpFitsTable(filename, 'z', 'c')
 Om = constant.omega_M_0
 growthf_24 = util.fgrowth(2.4, Om)
-# a = a_of_z.interp(zeff)
-a = a_of_z.interp(z0)
-# a = 1
+a = a_of_z.interp(zeff)
 b = 1.58
-# c = c_of_z.interp(zeff)
-c = c_of_z.interp(z0)
+c = c_of_z.interp(zeff)
 G = growthf_24*(1+2.4)/(1+zeff)
 sigma_g = 8.2  # sigma = 7.6 mesured at z=2.25
 # sigma_g = 2.55
