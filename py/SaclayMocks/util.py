@@ -326,16 +326,34 @@ class desi_footprint():
         return np.where(self.healpix_weight[healpix] > 0.99)[0]
 
 
-def sigma_p1d(p1d, pixel=0.2, N=10000):
+def sigma_p1d(redshift, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", pixel=0.2, N=10000):
     '''
-    p1d is an interpolated function of P1Dmissing (spline basically)
+    Return the sigma of delta_s for a given redshift
+    and a given P1Dmissing
     '''
+    redshift = np.array(redshift).reshape(-1)
+    sigma_s = np.zeros_like(redshift)
+    filename = os.path.expandvars(filename)
+    p1dmiss = InterpP1Dmissing(filename)
     L = N*pixel
     kj = 2*np.pi / L * np.arange(1, N/2)
-    sigma_2 = 2*p1d(kj).sum() / L
-    sigma_2 += p1d(0) / L  # kj=0 term
-    sigma_2 += p1d(np.pi/pixel) / L  # kj=k_nyquist term
-    return np.sqrt(sigma_2)
+    for i, z in enumerate(redshift):
+        var_s = 2*p1dmiss(z, kj).sum() / L
+        var_s += p1dmiss(z, 0) / L  # kj=0 term
+        var_s += p1dmiss(z, np.pi/pixel) / L  # kj=k_nyquist term
+        sigma_s[i] = np.sqrt(var_s)
+    return sigma_s
+
+
+def sigma_g(redshift, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", pixel=0.2, N=10000):
+    '''
+    Returns the sigma of g = delta_l + delta_s + c*eta_par field
+    '''
+    var_g = constant.sigma_l**2 + constant.sigma_eta**2
+    var_g += sigma_p1d(redshift, filename, pixel, N)**2
+    var_g += constant.mean_delta_l_eta - constant.mean_delta_l*constant.mean_eta  # covariance between delta_l and eta_par
+    sigma_g = np.sqrt(var_g)
+    return sigma_g
 
 
 def taubar_over_a(sigma, growth, bb=1.58):

@@ -38,5 +38,12 @@ deg2rad = sp.pi/180.
 rad2deg = 180/sp.pi
 
 # Hardcoded params:
-sigma_g = 1.19
 rho_sum = 16452460
+
+# Variance of the different fields
+# measurement was done the 25/10/2019 on (97541,6524) absorption pixels
+sigma_l = 1.1818754629312709
+sigma_eta = 0.5310386879517093
+mean_delta_l = 0.012722206794746017
+mean_eta = 0.0018851388985464644
+mean_delta_l_eta = 0.46845235760608894
