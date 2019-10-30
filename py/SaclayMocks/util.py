@@ -208,11 +208,11 @@ def read_P1D_fit(redshift):
     return k, Pk
 
 
-def read_P1D_model(redshift, filename="SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"):
+def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"):
     '''
     This function reads the P1D used as model to tune the P1D shape in mocks
     It returns k, pk for a given redshift.
-    Units are in Mpc/h
+    Units are in km/s 
     '''
     fits = fitsio.FITS(os.path.expandvars(filename))
     z = fits[0].read()

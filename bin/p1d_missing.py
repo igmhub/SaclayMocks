@@ -59,7 +59,7 @@ parser.add_argument("--voxel-size", type=float, default=2.19, required=False,
 parser.add_argument("--k-max", type=float, default=20., required=False,
     help="kmax to compute the missing 1D power spectrum")
 
-parser.add_argument("--dk", type=float, default=0.001, required=False,
+parser.add_argument("--dk", type=float, default=0.01, required=False,
     help="dk to compute the missing 1D power spectrum")
 
 parser.add_argument("--plot-p1d", action='store_true', required=False,

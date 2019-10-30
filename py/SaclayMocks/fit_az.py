@@ -142,6 +142,9 @@ class Fitter(object):
             filename = "$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"
         print("Reading model from {}".format(filename))
         k, p1d = util.read_P1D_model(self.z)
+        convert_factor = util.kms2mpc(self.z)
+        k *= convert_factor
+        p1d /= convert_factor
         p1d_interp = sp.interpolate.interp1d(k, p1d)
         self.data['k_model'] = k
         self.data['p1d_model'] = p1d
@@ -280,7 +283,7 @@ class Fitter(object):
         rr = self.data['p1d_model_interp'](self.mock['kmiss']) / self.mock['p1d_interp'](self.mock['kmiss'])
         p1dmiss = self.mock['p1dmiss'] * (1 + self.convergence_factor*(rr - 1))
         if plot:
-            plt.plot(self.mock['kmiss'], self.data['p1d_model_interp'](self.mock['kmiss']), label='fit data')
+            plt.plot(self.mock['kmiss'], self.data['p1d_model_interp'](self.mock['kmiss']), label='model')
             plt.plot(self.mock['kmiss'], self.mock['p1d_interp'](self.mock['kmiss']), label='mock smoothed')
             plt.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
             plt.plot(self.mock['kmiss'], self.mock['p1dmiss'] / 50, label='p1dmiss_{}'.format(self.niter))
