@@ -320,6 +320,8 @@ def main():
                         # delta = delta_l_tmp  # prov
                     else:
                         delta = delta_l_tmp
+                        if fit_p1d:
+                            delta_s = np.zeros_like(delta_l_tmp)
                     timer += time.time() - timer_init
                 else:
                     delta = delta_l_tmp

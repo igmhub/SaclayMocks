@@ -854,7 +854,8 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_draw_qso'] += " -zmax "+str(mock_args['zmax'])
                         mock_args['args_draw_qso'] += " -desi "+str(mock_args['desifootprint'])
                         mock_args['args_draw_qso'] += " -rsd "+str(mock_args['rsd'])
-                        mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
+                        # mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
+                        mock_args['args_draw_qso'] += " "+mock_args['seed']
                         run_python_script(node, cid, "draw_qso", mock_args, sbatch_args)
                     if run_args['randoms']:
                         mock_args['args_draw_qso'] = "-Nslice "+str(mock_args['nslice'])
@@ -869,7 +870,8 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_draw_qso'] += " -zmax "+str(mock_args['zmax'])
                         mock_args['args_draw_qso'] += " -desi "+str(mock_args['desifootprint'])
                         mock_args['args_draw_qso'] += " -rsd "+str(mock_args['rsd'])
-                        mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
+                        # mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
+                        mock_args['args_draw_qso'] += " "+mock_args['seed']
                         mock_args['args_draw_qso'] += " -random True "
                         run_python_script(node, cid, "draw_qso", mock_args, sbatch_args, "randoms")
                     if run_args['make_spectra']:
@@ -1228,8 +1230,8 @@ def main():
         print("P1D fitting procedure")
         print("zfix, a, b, c, seed = {}".format(args.fit_p1d))
         mock_args['fit_p1d'] = True
-        mock_args['nx'] = 256
-        mock_args['ny'] = 256
+        mock_args['nx'] = 512
+        mock_args['ny'] = 512
         mock_args['nz'] = 1536
         mock_args['zfix'] = "-zfix {}".format(args.fit_p1d[0])
         mock_args['a'] = args.fit_p1d[1]

@@ -345,13 +345,15 @@ def sigma_p1d(redshift, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", pix
     return sigma_s
 
 
-def sigma_g(redshift, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", pixel=0.2, N=10000):
+def sigma_g(redshift, pkfile="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", paramfile="$SACLAYMOCKS_BASE/etc/params.fits", pixel=0.2, N=10000):
     '''
     Returns the sigma of g = delta_l + delta_s + c*eta_par field
     '''
-    var_g = constant.sigma_l**2 + constant.sigma_eta**2
-    var_g += sigma_p1d(redshift, filename, pixel, N)**2
-    var_g += constant.mean_delta_l_eta - constant.mean_delta_l*constant.mean_eta  # covariance between delta_l and eta_par
+    c_of_z = InterpFitsTable(paramfile, 'z', 'c')
+    c = c_of_z.interp(redshift)
+    var_g = constant.sigma_l**2 + c*constant.sigma_eta**2
+    var_g += sigma_p1d(redshift, pkfile, pixel, N)**2
+    var_g +=c*(constant.mean_delta_l_eta - constant.mean_delta_l*constant.mean_eta)  # covariance between delta_l and eta_par
     sigma_g = np.sqrt(var_g)
     return sigma_g
 
