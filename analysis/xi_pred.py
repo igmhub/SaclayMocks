@@ -9,7 +9,7 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", type=str, help="input file")
 parser.add_argument("-o", type=str, help="output file")
-parser.add_argument("--kind", type=str, help="specify if the prediction is Kaiser or FGPA. Default Kaiser", default='FGPA')
+parser.add_argument("--kind", type=str, help="specify if the prediction is Kaiser or FGPA. Default FGPA", default='FGPA')
 parser.add_argument("--zeff", type=float, help="specify a given redshift. If not specify, takes zeff from input file.", default=None)
 # parser.add_argument("--to-do", type=str, nargs="*", help="ex: cf xcf")
 # parser.add_argument("-aa", type=float)
@@ -47,7 +47,8 @@ a = a_of_z.interp(zeff)
 b = 1.58
 c = c_of_z.interp(zeff)
 G = growthf_24*(1+2.4)/(1+zeff)
-sigma_g = 8.2  # sigma = 7.6 mesured at z=2.25
+sigma_g = util.sigma_g(zeff)
+# sigma_g = 8.2  # sigma = 7.6 mesured at z=2.25
 # sigma_g = 2.55
 print("a = {}".format(a))
 print("b = {}".format(b))
