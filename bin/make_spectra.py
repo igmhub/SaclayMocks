@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #!/usr/bin/env python
 #  MakeSpectra.py
-#	reads QSO list
-# 	reads non parallel l.o.s. through boxes
+#    reads QSO list
+#     reads non parallel l.o.s. through boxes
 #   add small scale power
-#	applies Gunn Peterson to make Lya forest
+#    applies Gunn Peterson to make Lya forest
 from __future__ import division, print_function
 from SaclayMocks import box
 from SaclayMocks import constant
@@ -15,7 +15,7 @@ from fitsio import FITS
 import sys
 import scipy as sp
 import numpy as np
-import cosmolopy.distance as dist
+# import cosmolopy.distance as dist
 import os
 import time
 from numba import jit
@@ -86,29 +86,9 @@ def main():
         #return fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
 
     #*************************************************************
-    @jit('(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64)',nopython=True)    # int32[:,:] ? <==
-    #@jit(nopython=True)
-    def ReadSpecNo(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,imin=0, imax=sys.maxint):
-
-        spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
-        imax = np.minimum(imax,XvecSlice.size)
-        sig2=2*DX*DX
-        for icell in range(imin,imax):
-            X = XvecSlice[icell]
-            #Xtrue = Xvec[icell]
-            Y = Yvec[icell]
-            Z = Zvec[icell]
-            lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
-            myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
-            spectrum[icell] = computeRho(myrho,weight)
-        return spectrum
-
-
-    #*************************************************************
     #   @jit + python -m cProfile -s tottime fails
-    #@jit(nopython=True)
-    @jit('Tuple((float64[:],float64[:],float64[:]))(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],int64,int64)',nopython=True)
-    def ReadSpec(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxint):
+    @jit('Tuple((float64[:],float64[:],float64[:]))(float32[:],int64,int64,int64,float64[:],float64[:],float64[:],float64[:], float64[:,:],int64[:,:],float64,float64,float64,float64,float64,float64,float64,int64,int64,float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],int64,int64)',nopython=True)
+    def ReadSpec(fullrho,nx,ny,nz,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,rsd,dla, eta_xx,eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=0, imax=sys.maxsize):
         # reads spectrum for (Xvec, Yvec, Zvec)
         # XvecSlice is in [-LX/2, -LX/2 + LX/NSlice]
         # cells is the list of indices used for G.S. around (0,0,0),
@@ -117,12 +97,8 @@ def main():
         # function also uses cosntants LX,LY,LZ,DX,DY,DZ
 
         spectrum = -1000000 * sp.ones_like(XvecSlice) # so that exp(-a(exp(b*g))) = 1
-        rsd=True    # the 5 lines below should be parameters   <==
-        dla=True
-        if rsd:
-            eta_par = sp.zeros_like(XvecSlice)
-            if dla:
-                vpar = sp.zeros_like(XvecSlice)
+        eta_par = sp.zeros_like(XvecSlice)
+        vpar = sp.zeros_like(XvecSlice)
 
         imax = np.minimum(imax,XvecSlice.size)
         sig2=2*DX*DX
@@ -131,7 +107,6 @@ def main():
             Xtrue = Xvec[icell]
             Y = Yvec[icell]
             Z = Zvec[icell]
-            #lcells, weight = ComputeWeight(X,Y,Z, sig2)
             lcells, weight = ComputeWeight(X,Y,Z, sig2,grid,cells,LX,LY,LZ,DX,DY,DZ,R0)
             myrho = fullrho[ny*nz*lcells[:,0] +nz*lcells[:,1] +lcells[:,2]]
             spectrum[icell] = computeRho(myrho,weight)
@@ -162,14 +137,6 @@ def main():
                     vpar[icell] = (vx_*Xtrue + vy_*Y + vz_*Z)/np.sqrt(RR)
 
         return spectrum, eta_par, vpar
-        #if rsd:            <==
-            #if dla:
-                #return spectrum, eta_par, vpar
-            #else:
-                #return spectrum, eta_par
-        #else:
-            #return spectrum
-        #return spectrum
 
 
     #************************************************************* main
@@ -239,15 +206,15 @@ def main():
     LZ = DZ * NZ
 
     if (NX != 1):
-        print ("NX=", NX, " != 1  => abort !")
+        print("NX=", NX, " != 1  => abort !")
         exit(1)
 
     if (iSlice >= NSlice):
-        print ('iSlice=',iSlice,">= NSlice =" , NSlice , "=> abort !")
+        print('iSlice=',iSlice,">= NSlice =" , NSlice , "=> abort !")
         exit(1)
 
     if (nHDU%NSlice != 0):
-        print (NSlice, " slices not divider of nHDU:", nHDU, "=> abort !")
+        print(NSlice, " slices not divider of nHDU:", nHDU, "=> abort !")
         exit(1)
 
     iXmin = np.maximum((iSlice * nHDU)//NSlice -dmax,0)
@@ -308,7 +275,7 @@ def main():
             velo_z = np.concatenate(velo_z)[ii:jj]
             print("Done. {} s".format(time.time()-t1))
 
-    # print rho cells to check <==
+    # printout rho cells to check <==
     xSlicemin = LX * iSlice / NSlice - LX/2
     xSlicemax = LX * (iSlice+1) / NSlice - LX/2
     print("Box {} - {} - {} with LX = {}, LY = {}, LZ = {}".format(nHDU, NY, NZ, LX, LY, LZ))
@@ -327,12 +294,13 @@ def main():
             velo_y = velo_y.ravel()
             velo_z = velo_z.ravel()
 
-    #.................................................  	set the box at z0
+    #.................................................      set the box at z0
     # http://roban.github.io/CosmoloPy/docAPI/cosmolopy.distance-module.html
-    # cosmolopy returns distance in Mpc not Mpc/h
-    cosmo_fid = {'omega_M_0':Om, 'omega_lambda_0':OL, 'omega_k_0':Ok, 'h':h}
-    R_of_z, z_of_R = dist.quick_distance_function(dist.comoving_distance, return_inverse=True, **cosmo_fid)
-    h_of_z = interpolate.interp1d(np.arange(0,5,0.01), dist.hubble_z(np.arange(0,5,0.01), **cosmo_fid))
+    # Distances return by util.cosmo  are in Mpc and not in Mpc/h
+    cosmo_fid = util.cosmo(Om, Ok=Ok, H0=100*h)
+    R_of_z = cosmo_fid.r_comoving
+    z_of_R = cosmo_fid.r_2_z
+    h_of_z = cosmo_fid.dist_hubble
     R0 = h * R_of_z(z0)
     Rmin,Rmax,tanx_max,tany_max = box.box_limit(LX,LY,LZ,R0,dmax*DX)
     z_low = args.zmin
@@ -346,13 +314,13 @@ def main():
     cut = (lambda_vec > lambda_min)  # cut pixel bellow 3530 A
     R_vec = R_vec[cut]
     lambda_vec = lambda_vec[cut]
-    print ("z0 =",z0, "=> R0=",R0,"and", Rmin,"<R<", Rmax,"thetax,y <",tanx_max, tany_max)
-    print ("   ",z_low,"< z <",z_high,";   ",(1+z_low)*lya,"< lambda <",(1+z_high)*lya,"  =>",npixeltot,"pixels")
+    print("z0 =",z0, "=> R0=",R0,"and", Rmin,"<R<", Rmax,"thetax,y <",tanx_max, tany_max)
+    print("   ",z_low,"< z <",z_high,";   ",(1+z_low)*lya,"< lambda <",(1+z_high)*lya,"  =>",npixeltot,"pixels")
     print("+ cut spectro : {} < lambda < {} => {} pixels".format(
         np.min(lambda_vec), np.max(lambda_vec), len(lambda_vec)))
     npixeltot = len(lambda_vec)
 
-    #...................................................	read QSO file
+    #...................................................    read QSO file
     if args.NQSOfile < 0:
         NQSOfile = NSlice
     else:
@@ -368,7 +336,7 @@ def main():
         # Z/X > Z/X of lower right edge of the slice
         tanx_slice_max = (DX * (nHDU/NSlice) * (iSlice+1) -LX/2) / (R0-LZ/2)
         # lower right edge of the slice
-        #print ((DX * nHDU/NSlice) * (iSlice+1), LX/2, R0-LZ/2, tanx_slice_max)
+        #print((DX * nHDU/NSlice) * (iSlice+1), LX/2, R0-LZ/2, tanx_slice_max)
         #ra_max = np.atan(tanx_slice_max)
         #   ra and dec properly computed, here and in DrawQSO ?   <==
     else :
@@ -382,9 +350,9 @@ def main():
         tanx_slice_min = (DX * (nHDU/NSlice) * iSlice -LX/2) / (R0-LZ/2)
         # lower right edge of the slice
         tanx_slice_max = np.abs(tanx_slice_min)
-        #print ((DX * nHDU/NSlice) * (iSlice), LX/2, R0-LZ/2, tanx_slice_max)
+        #print((DX * nHDU/NSlice) * (iSlice), LX/2, R0-LZ/2, tanx_slice_max)
         #ra_min = np.atan(tan_min)
-    print ("use QSO files:",ifile0, "to", ifile1-1)
+    print("use QSO files:",ifile0, "to", ifile1-1)
 
     qsos = []
     first = True
@@ -411,7 +379,7 @@ def main():
     if len(qsos) == 0:
         print("No QSO read. ==> Exit.")
         sys.exit(0)
-    print (len(qsos),"QSO read")
+    print(len(qsos),"QSO read")
 
     #............................. draw non parallel l.o.s. between Rmin and R_QSO
     #   for dmax=3 produce array([[-3, -3, -3], [-3, -3, -2], [-3, -3, -1],
@@ -441,8 +409,7 @@ def main():
     fiber_list = []
     pmf_list = []
     t0 = time.time()
-    print("Starting loop on qso...")
-    for qso in (qsos) :		#............................  loop over qso
+    for qso in (qsos) :        #............................  loop over qso
         if ((nqsomax > 0) & (iqso >= nqsomax)) :break
         ra = qso['RA']
         dec = qso['DEC']
@@ -506,26 +473,22 @@ def main():
         iqso += 1
 
         # Read boxes along l.o.s and apply smoothing
-        if rsd:
-            if dla:
-                delta_l, eta_par, velo_par = ReadSpec(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, eta_xx, eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z,imin=imin, imax=imax)
-                #try:           <==
-                     #delta_l, eta_par, velo_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
-                #except:
-                    #print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
-                    #continue
-            #else:
-                #try:
-                    #delta_l, eta_par = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
-                #except:
-                    #print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
-                    #continue
-        else:
-            #delta_l = ReadSpec(Xvec, XvecSlice, Yvec, Zvec, imin=imin, imax=imax)
-            delta_l = ReadSpecNo(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0, imin=imin, imax=imax)
-
-        # LX,LY,LZ,DX,DY,DZ are hidden parameters,
-        # as well as fullrho and eta_x, eta_y eta_z
+        if (rsd==False):
+            eta_xx = np.array([],dtype=np.float32)
+            eta_yy = np.array([],dtype=np.float32)
+            eta_zz = np.array([],dtype=np.float32)
+            eta_xy = np.array([],dtype=np.float32)
+            eta_xz = np.array([],dtype=np.float32)
+            eta_yz = np.array([],dtype=np.float32)
+        if (dla==False):
+            velo_x = np.array([],dtype=np.float32)
+            velo_y = np.array([],dtype=np.float32)
+            velo_z = np.array([],dtype=np.float32)
+        try:
+            delta_l, eta_par, velo_par = ReadSpec(fullrho,NX,NY,NZ,Xvec, XvecSlice, Yvec, Zvec, grid,cells,LX,LY,LZ,DX,DY,DZ,R0,int(rsd),int(dla), eta_xx, eta_yy, eta_zz, eta_xy,eta_xz, eta_yz, velo_x,velo_y,velo_z, imin=imin, imax=imax)
+        except:
+            print("***WARNING ReadSpec:\n    ID {}***".format(QSOid))
+            continue
 
         lrf =  mylambda/(1+zQSO)
         cut = ((lrf<lya) & (lrf>lylimit))
@@ -631,11 +594,11 @@ def main():
         outfits.close()
 
     print("Done. {} s".format(time.time()-t1))
-    print (iqso, "QSO written")
+    print(iqso, "QSO written")
     if (iqso != 0):
-        print (1000*(t1-t0)/iqso, "ms per spectra")
-        if (pixtot != 0) : print (1000*(t1-t0)/pixtot, "ms per pixel")
-        print (pixtot," / ",iqso," = ", pixtot/iqso,"pixels / spectra")
+        print(1000*(t1-t0)/iqso, "ms per spectra")
+        if (pixtot != 0) : print(1000*(t1-t0)/pixtot, "ms per pixel")
+        print(pixtot," / ",iqso," = ", pixtot/iqso,"pixels / spectra")
 
     print("Slice {} done. Took {}s".format(iSlice, time.time()-t_init))
 

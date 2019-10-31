@@ -64,6 +64,8 @@ class TestCor(unittest.TestCase):
         with open(path,'r') as f:
             for l in f:
                 l = l.replace('\n','').replace('==',' ').replace('>=',' ').split()
+                if 'git+https://github.com/' in l[0]:
+                    l[0] = l[0].split('.git')[-2].split('/')[-1]
                 if len(l)==1:
                     req[l[0]] = 0
                 elif len(l)==2:
@@ -84,6 +86,8 @@ class TestCor(unittest.TestCase):
                 local_ver = __import__(req_lib).__version__
                 if local_ver!=req_ver:
                     print("WARNING: The local version of {}: {} is different from the required version: {}".format(req_lib,local_ver,req_ver))
+            #except ModuleNotFoundError: ### TODO: does not work for Python2.7
+            #    print("WARNING: Module {} has some errors".format(req_lib))
             except ImportError:
                 print("WARNING: Module {} can't be found".format(req_lib))
             except AttributeError:
@@ -113,10 +117,11 @@ class TestCor(unittest.TestCase):
         print("\n")
         tl = ''
         for i in range(10):
-            print("\n",i,"\n")
             tl += '/*/'
-            print(self._branchFiles+'/Products/{}/*.log*'.format(tl))
             fs = glob.glob(self._branchFiles+'/Products/{}/*.log*'.format(tl))
+            if len(fs)==0: continue
+            print(fs)
+            print("\n",i,"\n")
             for f in fs:
                 with open(f) as tf:
                     print(tf.read())
@@ -125,15 +130,20 @@ class TestCor(unittest.TestCase):
         print("\n")
         tl = ''
         for i in range(10):
-            print("\n",i,"\n")
             tl += '/*/'
-            print(self._branchFiles+'/Products/{}/*.log*'.format(tl))
             fs = glob.glob(self._branchFiles+'/Products/{}/*.log*'.format(tl))
+            if len(fs)==0: continue
+            print(fs)
+            print("\n",i,"\n")
             for f in fs:
+                with open(f) as tf:
+                    tff = sp.hstack([ l.replace('\n','') for l in tf ])
+                    self.assertFalse('Command exited with non-zero status 1' in tff,"ERROR: 'Command exited with non-zero status 1' in {}".format(f))
                 with open(f) as tf:
                     tff = sp.hstack([ l.split() for l in tf ])
                     self.assertFalse('Abort!' in tff,"ERROR: 'Abort!' in {}".format(f))
                     self.assertFalse('Error' in tff,"ERROR: 'Error' in {}".format(f))
+                    self.assertFalse(sp.any(['Error' in el for el in tff]),"ERROR: 'Error' in {}".format(f))
 
         ### Test
         #if self._test:

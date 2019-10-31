@@ -18,7 +18,7 @@ class P_1D() :
         if (kmax>0) :
             k=k[np.where(k<=kmax)]
             P=P[np.where(k<=kmax)]
-#        print k.shape,P.shape
+#        print(k.shape,P.shape)
         P1D=np.zeros(len(k))
         for i in np.arange(len(k)) :      #  (1/2PI) int_{k_//}^\infty P(k)kdk
             P1D[i] = np.trapz((P*k)[i:],k[i:]) /2/np.pi
@@ -136,18 +136,18 @@ def xi_from_pk(k,pk,nk=32*1024,direct=True):
     kmax=np.max(k)
     if direct:
         if (kmax < 10) :
-            print "**** WARNING kmax=",kmax," while kmax >= 10 advised ****"
+            print("**** WARNING kmax=",kmax," while kmax >= 10 advised ****")
         rmax = np.pi * nk / kmax
         if (rmax < 1000) :
-            print "**** WARNING rmax=",rmax," while rmax >= 1000 advised ****"
+            print("**** WARNING rmax=",rmax," while rmax >= 1000 advised ****")
         #print direct,kmax, 2*kmax/nk, rmax, 2*rmax/nk
     else:
         myrmax = kmax   # in this case variable kmax is actually rmax
         mykmax = np.pi * nk / myrmax
         if (mykmax < 10) :
-            print "**** WARNING rmax=",mykmax," while kmax >= 10 advised ****"
+            print("**** WARNING rmax=",mykmax," while kmax >= 10 advised ****")
         if (myrmax < 1000) :
-            print "**** WARNING rmax=",myrmax," while rmax >= 1000 advised ****"
+            print("**** WARNING rmax=",myrmax," while rmax >= 1000 advised ****")
         #print direct,mykmax, 2*mykmax/nk, myrmax, 2*myrmax/nk
     kIn=np.linspace(0,kmax,nk)
     pkIn=pkInter(kIn)
@@ -158,8 +158,8 @@ def xi_from_pk(k,pk,nk=32*1024,direct=True):
     r[0]=0
     pkInter=interpolate.InterpolatedUnivariateSpline(k,pk*k*k) #,kind='cubic')
     cric[0]=pkInter.integral(0,kmax) /2/np.pi**2    #   (1/2 PI^2) int P(k) k^2 dk
-    r=r[0:nk/2]
-    cric=cric[0:nk/2]
+    r=r[0:int(nk//2)]
+    cric=cric[0:int(nk//2)]
     return r,cric
 
 #********************************************************************
@@ -239,11 +239,11 @@ def xi_predicted(xi_g, f, dfbar, delta_s=False, sigma=np.inf):
         return integrate.nquad(integrand, [[-sigma, sigma], [-sigma, sigma], [-sigma, sigma], [-sigma, sigma]])
     else:
         if ( (abs(xi_g) > 1) | (xi_g == -1) ) :
-            print "******** error in xi_predicted, xi_g=", xi_g
+            print("******** error in xi_predicted, xi_g=", xi_g)
             exit(0)
         if ( (xi_g > 0.995) & (xi_g < 1) ) :
-            print "**** Warning, computation of xi_predicted not reliable for 0.995 < xi_g < 1 *****"
-            print "should rather interpolate linearly bewteen 0.995 and 1."
+            print("**** Warning, computation of xi_predicted not reliable for 0.995 < xi_g < 1 *****")
+            print("should rather interpolate linearly bewteen 0.995 and 1.")
         if (xi_g==1) :
             def integrand(dl):
                 num = np.exp(-dl**2/2)
@@ -268,17 +268,17 @@ class xi_prediction() :
         return np.exp(-self.a * np.exp (self.b * delta) )
 
     def F_pdf(self,F):   # returns F x pdf(F)
-#	F=exp[ -a exp(b g)] = exp[-exp(bg+ln(a))]
-#	where g = gaus(0,1) and bg+ln(a) = Gaus(ln(a),b)
-#	pdf(F) = 1/(F tau \sqrt{2PI} b) exp [-(ln(tau)-ln(a))^2/(2b^2)]
+#    F=exp[ -a exp(b g)] = exp[-exp(bg+ln(a))]
+#    where g = gaus(0,1) and bg+ln(a) = Gaus(ln(a),b)
+#    pdf(F) = 1/(F tau \sqrt{2PI} b) exp [-(ln(tau)-ln(a))^2/(2b^2)]
 #       with tau = -ln(F)
         b=self.b
         a=self.a
         if (b==0):
-            print "b=0 in F_pdf\n"
+            print("b=0 in F_pdf\n")
             exit(0)
         if ((F<=0) | (F>=1)):
-            print "F=",F, "in F_pdf\n"
+            print("F=",F, "in F_pdf\n")
             exit(0)
         tau = - np.log(F)
         xx = np.log(tau/a)
@@ -293,7 +293,7 @@ class xi_prediction() :
         a=self.a
         u = np.log(a) -np.log(-np.log(Fmax))
         xx = 0.5 * ( 1 + sp.special.erf( u/b/np.sqrt(2) ) )
-        #print 1-Fmax,a,b,1-xx
+        #print(1-Fmax,a,b,1-xx)
         return xx
 
     def ComputeFmean(self):     # checked wrt simu1D.cpp
@@ -303,7 +303,7 @@ class xi_prediction() :
         # analytically compute integral pdf over [1-epsilon,1]
         epsilon = 1E-8
         Fmean , error = sp.integrate.quad(self.F_pdf,0,1-epsilon,limit=50)
-        #print epsilon,a,b,Fmean
+        #print(epsilon,a,b,Fmean)
         Fmean += 1- self.pdf_integrale(1-epsilon) # \int_{1-epsilon}^1
         #print self.a,self.b,Fmean
         return Fmean
@@ -336,7 +336,7 @@ class xi_prediction() :
         xi_F_array = np.zeros(len(xi_g_array))
         for i in range(len(xi_g_array)):
             xi_F_array[i], err = xi_predicted(xi_g_array[i], self.F, Fmean)
-            #print i, xi_g_array[i], xi_F_array[i]
+            #print(i, xi_g_array[i], xi_F_array[i])
         self.xig2xiF=interpolate.InterpolatedUnivariateSpline(xi_g_array,xi_F_array)
         self.xi_g_array=xi_g_array
         self.xi_F_array=xi_F_array
@@ -531,7 +531,7 @@ def xi_from_pk_old(k,pk):
     #   nk=1024
     kmax=np.max(k)
     kmin=np.min(k)
-    print kmin,kmax
+    print(kmin,kmax)
     kIn=np.linspace(kmin,kmax,nk)
     pkIn=pkInter(kIn)
 #    plt.plot(kIn,pkIn) # prov
@@ -541,7 +541,7 @@ def xi_from_pk_old(k,pk):
     r=2.*np.pi/kmax*np.arange(nk)
     pkk=kIn*pkIn
     cric=-np.imag(np.fft.fft(pkk)/nk) * kmax /r/2./np.pi**2
-    print cric
+    print(cric)
     cric[0]=0  #   should be (1/2 PI^2) int P(k) k^2 dk
     return r,cric
 
