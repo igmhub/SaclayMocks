@@ -426,6 +426,59 @@ def IntegratePKaiser(P,beta,k_max):
     intk2P , error = integrate.quad(k2P,0,k_max,limit=100)
     return 4*np.pi*(1+2*beta/3.+beta*beta/5.) * intk2P
 
+#********************************************************************
+def xi_from_pk_1D(k,P1): # k should go from 0 to kmax with constant steps
+    kmax=np.max(k)
+    #if (kmax<100):  # zero padding
+        #PP=np.zeros(1)
+    N = len(k)
+    P2 = np.flipud(P1[1:-1])
+    P=np.hstack((P1,P2))        #  P0,P1, .. PN,PN-1, ... P1
+    xi=np.real( np.fft.rfft(P) )
+    xi *= kmax/N
+    rmax = np.pi * N / 2 / kmax
+    r=np.linspace(0,rmax,N)
+    return r,xi
+
+#********************************************************************
+class GenerateData() :
+    '''generate data according to a given P1D(k) '''
+    def __init__(self,k,P): # k=np.linspace(0,kny,)
+        if (len(k) != len(P)) : print("***** error len(k) != len(P) *****")
+        k_ny = k[-1]
+        self.NX = 2*(len(k)-1)  # => NX even
+        self.DX = np.pi / k_ny
+        self.weight=np.sqrt(P/self.DX)
+# https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
+# https://pythonconquerstheuniverse.wordpress.com/2010/03/17/multiple-constructors-in-a-python-class/
+        #def __init__(self,DX,P):
+        #self.DX=DX
+        #k_ny = PI /DX
+        #k = np.fft.rfftfreq(NX) * 2 * k_ny	# rfftfreq 0 -> 0.5
+        #self.weight = np.sqrt(P(k)/DX)
+    def oneArray(self):
+        NX = self.NX
+        nkBin = NX/2 + 1   # NX even
+        xx = self.weight * sp.random.standard_normal(nkBin)
+        yy = self.weight * sp.random.standard_normal(nkBin)
+        z = (xx + 1j * yy)/np.sqrt(2)
+        z[0] = xx[0]
+        if NX%2 == 0 : z[NX/2] = xx[NX/2]
+        delta = np.fft.irfft(z) * np.sqrt(NX)  # to get normalized iDFT
+        return delta,self.DX
+
+
+#********************************************************************
+def GenerateSpectrumDirect(N_X,weight):
+#......................... generate spectrum, weight^2 should be (P(k)/DX)
+    nkBin = N_X/2 + 1   # NX even
+    xx = weight * sp.random.standard_normal(nkBin)
+    yy = weight * sp.random.standard_normal(nkBin)
+    z = (xx + 1j * yy)/np.sqrt(2)
+    z[0] = xx[0]
+    if N_X%2 == 0 : z[N_X/2] = xx[N_X/2]
+    delta = np.fft.irfft(z) * np.sqrt(N_X)  # to get normalized iDFT
+    return delta
 
 
 #********************************************************************
