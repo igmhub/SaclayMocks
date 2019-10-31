@@ -429,9 +429,8 @@ def IntegratePKaiser(P,beta,k_max):
 #********************************************************************
 def xi_from_pk_1D(k,P1): # k should go from 0 to kmax with constant steps
     kmax=np.max(k)
-    if (kmax<100):  # zero padding
-        #k
-        PP=np.zeros(1)
+    #if (kmax<100):  # zero padding
+        #PP=np.zeros(1)
     N = len(k)
     P2 = np.flipud(P1[1:-1])
     P=np.hstack((P1,P2))        #  P0,P1, .. PN,PN-1, ... P1
@@ -460,26 +459,26 @@ class GenerateData() :
     def oneArray(self):
         NX = self.NX
         nkBin = NX/2 + 1   # NX even
-        xx = self.weight * sp.random.standard_normal(nkBin) 	
-        yy = self.weight * sp.random.standard_normal(nkBin) 	
+        xx = self.weight * sp.random.standard_normal(nkBin)
+        yy = self.weight * sp.random.standard_normal(nkBin)
         z = (xx + 1j * yy)/np.sqrt(2)
         z[0] = xx[0]
         if NX%2 == 0 : z[NX/2] = xx[NX/2]
         delta = np.fft.irfft(z) * np.sqrt(NX)  # to get normalized iDFT
-        return delta,self.DX 
-        
+        return delta,self.DX
+
 
 #********************************************************************
 def GenerateSpectrumDirect(N_X,weight):
 #......................... generate spectrum, weight^2 should be (P(k)/DX)
     nkBin = N_X/2 + 1   # NX even
-    xx = weight * sp.random.standard_normal(nkBin) 	
-    yy = weight * sp.random.standard_normal(nkBin) 	
+    xx = weight * sp.random.standard_normal(nkBin)
+    yy = weight * sp.random.standard_normal(nkBin)
     z = (xx + 1j * yy)/np.sqrt(2)
     z[0] = xx[0]
     if N_X%2 == 0 : z[N_X/2] = xx[N_X/2]
     delta = np.fft.irfft(z) * np.sqrt(N_X)  # to get normalized iDFT
-    return delta 
+    return delta
 
 
 #********************************************************************
