@@ -28,12 +28,16 @@ use_dmat=0
 use_xdmat=0
 
 fit_cf=1
-fit_xcf=1
+fit_xcf=0
 fit_co=0
 object=QSO  # QSO or DLA
 
 
-zeff=2.25
+zeff=2.64
+
+zbins=1
+zmin=2.75
+zmax=3.6
 
 if [ $do_deltas -gt 0 ]
 then
@@ -122,6 +126,9 @@ fi
 if [ $fit_pred -gt 0 ]; then
     outfile=${outfile}"_pred"
 fi
+if [ $zbins -gt 0 ]; then
+    outfile=${outfile}_z_${zmin}_${zmax}
+fi
 outfile=${outfile}".h5"
 cat > ${inpath}/Fit/chi2.ini << EOF
 [data sets]
@@ -149,6 +156,9 @@ then
 	    filename=${inpath}/Correlations/e_cf_pred.fits
 	else
 	    filename=${inpath}/Correlations/e_cf.fits
+	fi
+	if [ $zbins -gt 0 ]; then
+	    filename=${inpath}/Correlations/e_cf_z_${zmin}_${zmax}.fits
 	fi
     fi
     cat > ${inpath}/Fit/config_cf.ini <<EOF
@@ -213,6 +223,9 @@ then
 	filename=${inpath}/Correlations/e_xcf_dmat.fits
     else
 	filename=${inpath}/Correlations/e_xcf.fits
+	if [ $zbins -gt 0 ]; then
+	    filename=${inpath}/Correlations/e_xcf_z_${zmin}_${zmax}.fits
+	fi
     fi
     cat > ${inpath}/Fit/config_xcf.ini <<EOF
 [data]
@@ -281,6 +294,10 @@ fi
 # config_co.ini
 if [ $fit_co -gt 0 ]
 then
+    filename=${inpath}/Correlations/e_co_${object}.fits
+    if [ $zbins -gt 0 ]; then
+	filename=${inpath}/Correlations/e_co_z_${zmin}_${zmax}.fits
+    fi
     echo -e "-- config_co.ini"
     cat > ${inpath}/Fit/config_co_${object}.ini <<EOF
 [data]
@@ -289,7 +306,7 @@ tracer1 = QSO
 tracer2 = QSO
 tracer1-type = discrete
 tracer2-type = discrete
-filename = ${inpath}/Correlations/e_co_${object}.fits
+filename = $filename
 ell-max = 6
 
 [cuts]
@@ -354,6 +371,9 @@ if [ $fit_co -gt 0 ]; then
 fi
 if [ $fit_pred -gt 0 ]; then
     logfile=${logfile}"_pred"
+fi
+if [ $zbins -gt 0 ]; then
+    logfile=${logfile}_z_${zmin}_${zmax}
 fi
 logfile=${logfile}".log"
 

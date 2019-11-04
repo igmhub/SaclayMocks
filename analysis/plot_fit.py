@@ -22,6 +22,7 @@ parser.add_argument("--mu-max", type=float, default=1.)
 parser.add_argument("--r-pow", type=int, default=2)
 parser.add_argument("--title", default="")
 parser.add_argument("--pred", default=False)
+parser.add_argument("--z-bin", nargs='*', default=None)
 parser.add_argument("--save-cf", default=False)
 
 args = parser.parse_args()
@@ -61,7 +62,11 @@ if "cf" in args.to_do:
     print("Starting plotting for CF...")
     # Read data
     if dir_option:
-        data = fitsio.FITS(indir+"/Correlations/e_cf.fits")
+        filename = indir+"/Correlations/e_cf"
+        if args.z_bin:
+            filename += "_z_"+args.z_bin[0]+"_"+args.z_bin[1]
+        filename += ".fits"
+        data = fitsio.FITS(filename)
     else:
         data = fitsio.FITS(cf_file)
     da = data[1].read()['DA']
@@ -70,7 +75,11 @@ if "cf" in args.to_do:
 
     # Read fit
     if dir_option:
-        ff = h5py.File(indir+"/Fit/result_cf.h5")
+        filename = indir+"/Fit/result_cf"
+        if args.z_bin:
+            filename += "_z_"+args.z_bin[0]+"_"+args.z_bin[1]
+        filename += ".h5"
+        ff = h5py.File(filename)
     else:
         ff = h5py.File(fitcf_file)
 
@@ -208,7 +217,11 @@ if "xcf" in args.to_do:
     print("Starting plotting for XCF...")
     # Read data
     if dir_option:
-        data = fitsio.FITS(indir+"/Correlations/e_xcf.fits")
+        filename = indir+"/Correlations/e_xcf"
+        if args.z_bin:
+            filename += "_z_"+args.z_bin[0]+"_"+args.z_bin[1]
+        filename += ".fits"
+        data = fitsio.FITS(filename)
     else:
         data = fitsio.FITS(xcf_file)
     da = data[1].read()['DA']
@@ -217,7 +230,11 @@ if "xcf" in args.to_do:
 
     # Read fit
     if dir_option:
-        ff = h5py.File(indir+"/Fit/result_xcf.h5")
+        filename = indir+"/Fit/result_xcf"
+        if args.z_bin:
+            filename += "_z_"+args.z_bin[0]+"_"+args.z_bin[1]
+        filename += ".h5"
+        ff = h5py.File(filename)
     else:
         ff = h5py.File(fitxcf_file)
 
@@ -311,7 +328,11 @@ if "co" in args.to_do:
     print("Starting plotting for CO...")
     # Read data
     if dir_option:
-        data = fitsio.FITS(indir+"/Correlations/e_co_{}.fits".format(args.to_do[1]))
+        filename = indir+"/Correlations/e_co_{}".format(args.to_do[1])
+        if args.z_bin:
+            filename += "_z_"+args.z_bin[0]+"_"+args.z_bin[1]
+        filename += ".fits"
+        data = fitsio.FITS(filename)
     else:
         data = fitsio.FITS(cf_file)
     da = data[1].read()['DA']
@@ -320,7 +341,11 @@ if "co" in args.to_do:
 
     # Read fit
     if dir_option:
-        ff = h5py.File(indir+"/Fit/result_co_{}.h5".format(args.to_do[1]))
+        filename = indir+"/Fit/result_co_{}".format(args.to_do[1])
+        if args.z_bin:
+            filename += "_z_"+args.z_bin[0]+"_"+args.z_bin[1]
+        filename += ".h5"
+        ff = h5py.File(filename)
     else:
         ff = h5py.File(fitcf_file)
 
