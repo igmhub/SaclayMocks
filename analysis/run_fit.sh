@@ -7,6 +7,8 @@
 #SBATCH -A eboss
 #SBATCH --output=logs/fit.log
 
+root=/global/cscratch1/sd/tetourne/Out/
+
 # Parameters :
 fit_pred=0
 sbatch=0
@@ -26,7 +28,7 @@ use_dmat=0
 use_xdmat=0
 
 fit_cf=1
-fit_xcf=0
+fit_xcf=1
 fit_co=0
 object=QSO  # QSO or DLA
 
@@ -35,12 +37,12 @@ zeff=2.25
 
 if [ $do_deltas -gt 0 ]
 then
-    inpath=Out/${version}/from_quickquasars/
+    inpath=$root/${version}/from_quickquasars/
 else
-    inpath=Out/${version}/from_transmissions/
+    inpath=$root/${version}/from_transmissions/
 fi
 if [ $fit_co -gt 0 ]; then
-    inpath=Out/${version}/CO/
+    inpath=$root/${version}/CO/
 fi
 if [ ! -e ${inpath}/Fit ]; then mkdir ${inpath}/Fit; fi
 
@@ -117,6 +119,9 @@ fi
 if [ $fit_co -gt 0 ]; then
     outfile=${outfile}"_co_${object}"
 fi
+if [ $fit_pred -gt 0 ]; then
+    outfile=${outfile}"_pred"
+fi
 outfile=${outfile}".h5"
 cat > ${inpath}/Fit/chi2.ini << EOF
 [data sets]
@@ -163,7 +168,7 @@ rp-max = 200.
 rt-min = 0.
 rt-max = 200.
 
-r-min = 40.
+r-min = 10.
 r-max = 180.
 
 mu-min = 0.
@@ -258,7 +263,7 @@ bao_amp = 1. 0. None None fixed
 sigmaNL_per = 0     0. None None fixed
 sigmaNL_par = 0 0 None None fixed
 # 1+f         = 1.966    0. None None fixed
-growth_rate = 0.962524 0. None None fixed
+growth_rate = 0.966 0. None None fixed
 
 bias_eta_LYA  = -0.12  0.017 None None free
 beta_LYA  = 1.8    0.1   None None free
@@ -267,8 +272,8 @@ alpha_LYA = 2.9     0.   None None fixed
 par binsize LYA(LYA)xQSO = 4 0.1 None None fixed
 per binsize LYA(LYA)xQSO = 4 0.1 None None fixed
 
-par_sigma_smooth = 2.19 0.4 0 None free
-per_sigma_smooth = 2.19 0.4 0 None free
+par_sigma_smooth = 3.1 0.4 0 None free
+per_sigma_smooth = 3.1 0.4 0 None free
 
 EOF
 fi
@@ -346,6 +351,9 @@ if [ $fit_xcf -gt 0 ]; then
 fi
 if [ $fit_co -gt 0 ]; then
     logfile=${logfile}"_co_${object}"
+fi
+if [ $fit_pred -gt 0 ]; then
+    logfile=${logfile}"_pred"
 fi
 logfile=${logfile}".log"
 

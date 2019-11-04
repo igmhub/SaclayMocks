@@ -5,7 +5,7 @@ import h5py
 import fitsio
 import picca.wedgize
 import argparse
-from LyaMocks import PowerSpectrum
+from SaclayMocks import powerspectrum
 
 
 parser = argparse.ArgumentParser()
@@ -222,9 +222,9 @@ if "xcf" in args.to_do:
         ff = h5py.File(fitxcf_file)
 
     # Plot
-    # w = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mumin,mumax=mumax,absoluteMu=True)
+    w = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mumin,mumax=mumax,absoluteMu=True)
     # w = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=0,mumax=1,absoluteMu=False)
-    w = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=-1,mumax=0, absoluteMu=False)
+    # w = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=-1,mumax=0, absoluteMu=False)
     data_wedge = w.wedge(da,co)
     try:
         r,f,_ = w.wedge(ff["LYA(LYA)xQSO/fit"][...],co)
@@ -253,8 +253,8 @@ if "xcf" in args.to_do:
         ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
     
     # Plot wedges
-    # mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
-    mu0, mu1, mu2, mu3, mu4 = -1, -0.95, -0.8, -0.5, 0
+    mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
+    # mu0, mu1, mu2, mu3, mu4 = -1, -0.95, -0.8, -0.5, 0
     w1 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu0,mumax=mu1,absoluteMu=False)
     w2 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu1,mumax=mu2,absoluteMu=False)
     w3 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu2,mumax=mu3,absoluteMu=False)
@@ -352,10 +352,10 @@ if "co" in args.to_do:
 
     if args.pred:
         #.............................  xi_CAMB
-        Pcamb = PowerSpectrum.P_0()
+        Pcamb = powerspectrum.P_0()
         k = np.linspace(0,10,10000)
         P = Pcamb.P(k)
-        r,xi = PowerSpectrum.xi_from_pk(k,P)
+        r,xi = powerspectrum.xi_from_pk(k,P)
         cut=np.where(r<300)
         r=r[cut]
         xi=xi[cut]
@@ -366,7 +366,7 @@ if "co" in args.to_do:
         xi *= xx
 
         #.........................  xibar, xibarbar, xi_0. xi_2, xi4 from Hamilton
-        xi_Ham = PowerSpectrum.xi_Hamilton(r,xi,300)
+        xi_Ham = powerspectrum.xi_Hamilton(r,xi,300)
         if args.to_do[1] == "QSO":
             bias = 3.7  # according to Constant.py
             beta = 0.96 / bias

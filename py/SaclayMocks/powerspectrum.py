@@ -314,19 +314,21 @@ class xi_prediction() :
         self.sigma_g = sigma_g
         self.c = c
         self.DX = DX
-            #...........................       P(k)
+        #...........................       P(k)
         k = np.linspace(0,10,10000)
         Pcamb = P_0()
         P = Pcamb.P(k)
         W = np.exp(-k*k*self.DX*self.DX/2)
         P *= W*W
-            #...........................       xi_g(r)
+        #...........................       xi_g(r)
         r,xi = xi_from_pk(k,P)
         rmax=300
         cut=np.where(r<rmax)
         self.r=r[cut]
         self.xi=xi[cut]
         self.xi_Ham = xi_Hamilton(r,xi,rmax)
+        # Call xig_xiF in order to define xig2xiF function
+        _, _ = self.xig_xiF()
 
     def xig_xiF(self,nbin=41):      # computes xi_g -> xi_F
         Fmean = self.ComputeFmean()
@@ -346,14 +348,14 @@ class xi_prediction() :
         return self.xi_Ham.xi(self.c,r,mu)
 
 
-#................. main function, returns the predicted xi_F
+    #................. main function, returns the predicted xi_F
     def xi_F(self,r,mu):
         xi_g = self.xi_Ham.xi(self.c,r,mu) / self.sigma_g**2
         return self.xig2xiF( xi_g )
 
-#.... BEWARE:  the next three functions return xig2xiF applied
-# to the multipoles of xi_g. But since F(g) is non linear, these
-# are not exactly the multipoles of xi_F.
+    #.... BEWARE:  the next three functions return xig2xiF applied
+    # to the multipoles of xi_g. But since F(g) is non linear, these
+    # are not exactly the multipoles of xi_F.
     def xi0_F(self,r):
         xi_g = self.xi_Ham.xi0(self.c,r) / self.sigma_g**2
         return self.xig2xiF( xi_g )
