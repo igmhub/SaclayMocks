@@ -166,7 +166,7 @@ def P1D_datafit(k, z):
     return P
 
 
-def read_P1D(redshift, filename="$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"):
+def read_P1D(redshift, filename="$SACLAYMOCKS_BASE/etc/pk_1d_DR12_13bins_noSi.out"):
     """
     Read Pk file from Nathalie. Si III oscillations have been removed.
     Format is z, k, pk, pkerr, 0, 0, 0

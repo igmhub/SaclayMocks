@@ -47,7 +47,7 @@ class Fitter(object):
         k in km/s and pk and pkerr in (km/s)**-1 translated to Mpc/h
         """
         if filename is None:
-            filename = "$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"
+            filename = "$SACLAYMOCKS_BASE/etc/pk_1d_DR12_13bins_noSi.out"
         print("Reading data from {}".format(filename))
         k, pk, pkerr = util.read_P1D(self.z, filename=filename)
         convert_factor = util.kms2mpc(self.z)
@@ -109,13 +109,13 @@ class Fitter(object):
             self.mock['delta'] = self.mock['delta_l'] + self.mock['delta_s']
             self.mock['eta_par'] = np.float64(ma.concatenate(eta_par))
             self.mock['g_field'] = self.mock['delta'] + self.mock['cc']*self.mock['eta_par']
-            sigma_l = self.mock['delta_l'].std()
-            sigma_s = self.mock['delta_s'].std()
-            sigma = np.sqrt(sigma_l**2 + sigma_s**2)
-            self.mock['sigma_s'] = sigma_s
-            self.mock['sigma_l'] = sigma_l
-            self.mock['sigma'] = sigma
-            print("Sigma_l = {} ; sigma_s = {} --> sigma = {}".format(sigma_l, sigma_s, sigma))
+            # sigma_l = self.mock['delta_l'].std()
+            # sigma_s = self.mock['delta_s'].std()
+            # sigma = np.sqrt(sigma_l**2 + sigma_s**2)
+            # self.mock['sigma_s'] = sigma_s
+            # self.mock['sigma_l'] = sigma_l
+            # self.mock['sigma'] = sigma
+            # print("Sigma_l = {} ; sigma_s = {} --> sigma = {}".format(sigma_l, sigma_s, sigma))
         self.mock['mask_size'] = self.mock['spectra'].mask.size
         print("Done.")
 
@@ -139,7 +139,7 @@ class Fitter(object):
 
     def read_model(self, filename=None):
         if filename is None:
-            filename = "$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"
+            filename = "$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"
         print("Reading model from {}".format(filename))
         k, p1d = util.read_P1D_model(self.z)
         convert_factor = util.kms2mpc(self.z)

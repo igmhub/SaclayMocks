@@ -78,6 +78,7 @@ if args.compute_spectra:
     command = 'p1d_missing.py '
     command += '--out-file ' + indir + '/mock_0/chunk_1/p1dmiss.fits '
     command += '--beta {} '.format(c)
+    command += '--zref {} '.format(z)
     if do_plots:
         command += '--plot-p1d'
     print("\n\nRunning {} ...\n".format(command))

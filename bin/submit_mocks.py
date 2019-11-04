@@ -1230,8 +1230,8 @@ def main():
         print("P1D fitting procedure")
         print("zfix, a, b, c, seed = {}".format(args.fit_p1d))
         mock_args['fit_p1d'] = True
-        mock_args['nx'] = 512
-        mock_args['ny'] = 512
+        mock_args['nx'] = 256
+        mock_args['ny'] = 256
         mock_args['nz'] = 1536
         mock_args['zfix'] = "-zfix {}".format(args.fit_p1d[0])
         mock_args['a'] = args.fit_p1d[1]
