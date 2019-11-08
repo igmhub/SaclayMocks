@@ -355,6 +355,7 @@ def sigma_g(redshift, pkfile="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", paramfi
     var_g += sigma_p1d(redshift, pkfile, pixel, N)**2
     var_g +=c*(constant.mean_delta_l_eta - constant.mean_delta_l*constant.mean_eta)  # covariance between delta_l and eta_par
     sigma_g = np.sqrt(var_g)
+    sigma_g *= constant.sigma_g_tuning
     return sigma_g
 
 

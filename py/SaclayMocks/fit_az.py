@@ -313,7 +313,7 @@ class Fitter(object):
         self.export_p1d()
         print("Iteration {} done.\n".format(self.niter))
 
-    def check_p1d(self, a=None, title='', debug=False):
+    def check_p1d(self, a=None, title='', debug=False, save=False):
         if debug:
             self.compute_p1d(1, debug=True)
         else:
@@ -329,7 +329,8 @@ class Fitter(object):
         ax1.set_title(title)
         ax1.grid()
         ax1.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
-        ax1.errorbar(self.data['k'], self.data['Pk'], yerr=self.data['Pkerr'], fmt='+', label='data')
+        ax1.errorbar(self.data['k_model'], self.data['p1d_model'], label='model')
+        # ax1.errorbar(self.data['k'], self.data['Pk'], yerr=self.data['Pkerr'], fmt='+', label='data')
         # convert_factor = util.kms2mpc(self.z)
         # ax1.plot(k[msk], util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax1.legend()
@@ -342,12 +343,15 @@ class Fitter(object):
         ax2.set_ylabel('k * Pk / pi')
         convert_factor = util.kms2mpc(self.z)
         ax2.errorbar(self.mock['k']/convert_factor, self.mock['k']*self.mock['p1d']/np.pi, yerr=self.mock['k']*self.mock['err_p1d']/np.pi, fmt='.', label='mock')
-        ax2.errorbar(self.data['k']/convert_factor, self.data['k']*self.data['Pk']/np.pi, yerr=self.data['k']*self.data['Pkerr']/np.pi, fmt='+', label='data')
+        ax2.errorbar(self.data['k_model']/convert_factor, self.data['k_model']*self.data['p1d_model']/np.pi, label='model')
+        # ax2.errorbar(self.data['k']/convert_factor, self.data['k']*self.data['Pk']/np.pi, yerr=self.data['k']*self.data['Pkerr']/np.pi, fmt='+', label='data')
         # ax2.errorbar(self.data['k'][msk]/convert_factor, self.data['k'][msk]*self.data['Pk'][msk]/np.pi, yerr=self.data['k'][msk]*self.data['Pkerr'][msk]/np.pi, fmt='+', label='data')
         # ax2.plot(k[msk]/convert_factor, k[msk]*util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax2.grid()
         ax2.legend()
 
+        if save:
+            plt.savefig(self.mock['indir']+'/p1d_check.pdf')
         plt.show()
 
     def check_pdf(self, a=None, bins=100, title=''):

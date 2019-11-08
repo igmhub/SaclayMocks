@@ -127,4 +127,5 @@ if args.fit_p1d:
     else:
         for n in range(args.n_iter):
             fitter.iterate(a=a, bins=k, plot=do_plots)
+    fitter.check_p1d(title='z={} ; a={} ; c={}'.format(z, a, c), save=True)
     print("\nTunning done. Took {} s".format(time() - t0))

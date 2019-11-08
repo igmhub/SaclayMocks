@@ -47,3 +47,7 @@ mean_eta = 0.004
 mean_delta_l_eta = 0.47
 sigma_l = 1.189
 sigma_eta = 0.53
+sigma_g_tuning = 1.01  # 1% extra factor on sigma_g
+
+# Colors for plotting:
+colors = ['blue', 'red', 'darkgreen', 'orange', 'dodgerblue', 'hotpink', 'lime', 'saddlebrown', 'darkviolet', 'olive']
