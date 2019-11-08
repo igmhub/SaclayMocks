@@ -7,16 +7,17 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", type=str, help="input file", default=None)
+parser.add_argument("-i", type=str, help="input file")
 parser.add_argument("-o", type=str, help="output file")
 parser.add_argument("--kind", type=str, help="specify if the prediction is Kaiser or FGPA. Default FGPA", default='FGPA')
 parser.add_argument("--zeff", type=float, help="specify a given redshift. If not specify, takes zeff from input file.", default=None)
 # parser.add_argument("--to-do", type=str, nargs="*", help="ex: cf xcf")
-parser.add_argument("-a", type=float, default=None)
-parser.add_argument("-b", type=float, default=None)
-parser.add_argument("-c", type=float, default=None)
-parser.add_argument("-growthf", type=float, default=None)
-parser.add_argument("-sigma", type=float, default=None)
+parser.add_argument("--a", type=float, default=None)
+parser.add_argument("--b", type=float, default=None)
+parser.add_argument("--c", type=float, default=None)
+parser.add_argument("--growthf", type=float, default=None)
+parser.add_argument("--sigma", type=float, default=None)
+parser.add_argument("--p1d-file", type=str, default=None)
 
 args = parser.parse_args()
 # a=args.aa
@@ -62,7 +63,12 @@ if G is None:
 
 sigma_g = args.sigma
 if sigma_g is None:
-    sigma_g = util.sigma_g(zeff)
+    if args.p1d_file is not None:
+        data_p1d = fitsio.read(args.p1d_file, ext=1)
+        p1dmiss = sp.interpolate.interp1d(data_p1d['k'], data_p1d['P1DmissRSD'])
+        sigma_g = util.sigma_g(zeff, p1dmiss=p1dmiss, c=c)
+    else:
+        sigma_g = util.sigma_g(zeff, c=c)
 
 print("zeff = {}".format(zeff))
 print("a = {}".format(a))

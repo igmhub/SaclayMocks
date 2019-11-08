@@ -326,36 +326,44 @@ class desi_footprint():
         return np.where(self.healpix_weight[healpix] > 0.99)[0]
 
 
-def sigma_p1d(redshift, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", pixel=0.2, N=10000):
+def sigma_p1d(redshift, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", p1dmiss=None, pixel=0.2, N=10000):
     '''
-    Return the sigma of delta_s for a given redshift
-    and a given P1Dmissing
+    Return the sigma of delta_s for a given redshift and a given P1Dmissing
+    the p1d can be directly given via p1dmiss argument (it must be a function)
     '''
-    redshift = np.array(redshift).reshape(-1)
-    sigma_s = np.zeros_like(redshift)
-    filename = os.path.expandvars(filename)
-    p1dmiss = InterpP1Dmissing(filename)
     L = N*pixel
     kj = 2*np.pi / L * np.arange(1, N/2)
-    for i, z in enumerate(redshift):
-        var_s = 2*p1dmiss(z, kj).sum() / L
-        var_s += p1dmiss(z, 0) / L  # kj=0 term
-        var_s += p1dmiss(z, np.pi/pixel) / L  # kj=k_nyquist term
-        sigma_s[i] = np.sqrt(var_s)
+    if p1dmiss is None:
+        redshift = np.array(redshift).reshape(-1)
+        sigma_s = np.zeros_like(redshift)
+        filename = os.path.expandvars(filename)
+        p1dmiss = InterpP1Dmissing(filename)
+        for i, z in enumerate(redshift):
+            var_s = 2*p1dmiss(z, kj).sum() / L
+            var_s += p1dmiss(z, 0) / L  # kj=0 term
+            var_s += p1dmiss(z, np.pi/pixel) / L  # kj=k_nyquist term
+            sigma_s[i] = np.sqrt(var_s)
+    else:
+        var_s = 2*p1dmiss(kj).sum() / L
+        var_s += p1dmiss(0) / L  # kj=0 term
+        var_s += p1dmiss(np.pi/pixel) / L  # kj=k_nyquist term
+        sigma_s = np.sqrt(var_s)
+
     return sigma_s
 
 
-def sigma_g(redshift, pkfile="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", paramfile="$SACLAYMOCKS_BASE/etc/params.fits", pixel=0.2, N=10000):
+def sigma_g(redshift, pkfile="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", paramfile="$SACLAYMOCKS_BASE/etc/params.fits", p1dmiss=None, c=None, pixel=0.2, N=10000):
     '''
     Returns the sigma of g = delta_l + delta_s + c*eta_par field
     '''
-    c_of_z = InterpFitsTable(paramfile, 'z', 'c')
-    c = c_of_z.interp(redshift)
+    if c is None:
+        c_of_z = InterpFitsTable(paramfile, 'z', 'c')
+        c = c_of_z.interp(redshift)
     var_g = constant.sigma_l**2 + c*constant.sigma_eta**2
-    var_g += sigma_p1d(redshift, pkfile, pixel, N)**2
+    var_g += sigma_p1d(redshift, pkfile, p1dmiss, pixel, N)**2
     var_g +=c*(constant.mean_delta_l_eta - constant.mean_delta_l*constant.mean_eta)  # covariance between delta_l and eta_par
     sigma_g = np.sqrt(var_g)
-    sigma_g *= constant.sigma_g_tuning
+    sigma_g *= constant.sigma_g_tuning  # prov
     return sigma_g
 
 
