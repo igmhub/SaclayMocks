@@ -10,7 +10,7 @@
 root=/global/cscratch1/sd/tetourne/Out/
 
 # Parameters :
-fit_pred=0
+fit_pred=1
 sbatch=0
 do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 
@@ -18,7 +18,7 @@ do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 # version=debug_v4.4
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
-version=v4.7_1
+version=fit_z2.2
 
 # do_dmat=0  # run dmat only if continuum fitting
 # do_export=0  # if run dmat, then run export
@@ -33,9 +33,9 @@ fit_co=0
 object=QSO  # QSO or DLA
 
 
-zeff=2.64
+zeff=2.2
 
-zbins=1
+zbins=0  # set to 1 if you want to fit a particular redshift bin
 zmin=2.75
 zmax=3.6
 

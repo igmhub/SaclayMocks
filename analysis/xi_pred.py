@@ -7,16 +7,16 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", type=str, help="input file")
+parser.add_argument("-i", type=str, help="input file", default=None)
 parser.add_argument("-o", type=str, help="output file")
 parser.add_argument("--kind", type=str, help="specify if the prediction is Kaiser or FGPA. Default FGPA", default='FGPA')
 parser.add_argument("--zeff", type=float, help="specify a given redshift. If not specify, takes zeff from input file.", default=None)
 # parser.add_argument("--to-do", type=str, nargs="*", help="ex: cf xcf")
-# parser.add_argument("-aa", type=float)
-# parser.add_argument("-bb", type=float)
-# parser.add_argument("-cc", type=float)
-# parser.add_argument("-growthf", type=float)
-# parser.add_argument("-sigma", type=float)
+parser.add_argument("-a", type=float, default=None)
+parser.add_argument("-b", type=float, default=None)
+parser.add_argument("-c", type=float, default=None)
+parser.add_argument("-growthf", type=float, default=None)
+parser.add_argument("-sigma", type=float, default=None)
 
 args = parser.parse_args()
 # a=args.aa
@@ -33,23 +33,38 @@ print("Reading {} ...".format(infile))
 ecf = fitsio.read(infile, ext=1)
 head = fitsio.read_header(infile, ext=1)
 
-if args.zeff is None:
-    zeff = util.zeff(infile)
-else:
-    zeff = args.zeff
-print("zeff = {}".format(zeff))
 filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/params.fits")
 a_of_z = util.InterpFitsTable(filename, 'z', 'a')
 c_of_z = util.InterpFitsTable(filename, 'z', 'c')
-Om = constant.omega_M_0
-growthf_24 = util.fgrowth(2.4, Om)
-a = a_of_z.interp(zeff)
-b = 1.58
-c = c_of_z.interp(zeff)
-G = growthf_24*(1+2.4)/(1+zeff)
-sigma_g = util.sigma_g(zeff)
-# sigma_g = 8.2  # sigma = 7.6 mesured at z=2.25
-# sigma_g = 2.55
+
+# Read parameters
+zeff = args.zeff
+if zeff is None:
+    zeff = util.zeff(infile)
+
+a = args.a
+if a is None:
+    a = a_of_z.interp(zeff)
+
+b = args.b
+if b is None:
+    b = 1.58
+
+c = args.c
+if c is None:
+    c = c_of_z.interp(zeff)
+
+G = args.growthf
+if G is None:
+    Om = constant.omega_M_0
+    growthf_24 = util.fgrowth(2.4, Om)
+    G = growthf_24*(1+2.4)/(1+zeff)
+
+sigma_g = args.sigma
+if sigma_g is None:
+    sigma_g = util.sigma_g(zeff)
+
+print("zeff = {}".format(zeff))
 print("a = {}".format(a))
 print("b = {}".format(b))
 print("c = {}".format(c))
@@ -88,6 +103,7 @@ if args.kind == 'Kaiser':
     mu = rp / rr
     xi = bias**2 * xi_ham.xi(f, rr, mu)
 
+z = np.ones_like(ecf['Z'])*zeff
 table = [ecf['RP'], ecf['RT'], ecf['Z'], xi, ecf['CO'], ecf['DM'], ecf['NB']]
 names = ['RP', 'RT', 'Z', 'DA', 'CO', 'DM', 'NB']
 outfits = fitsio.FITS(outfile, 'rw', clobber=True)
