@@ -56,6 +56,7 @@ parser.add_argument("--check-plots", action='store_true', required=False,
 
 args = parser.parse_args()
 
+t_init = time()
 indir = args.in_dir
 z = args.z
 a = args.a
@@ -72,7 +73,9 @@ if args.compute_spectra:
     command += ' --mock-dir ' + indir
     command += ' --fit-p1d {} {} {} {} {}'.format(z, a, b, c, seed)
     print("Running {} ...\n".format(command))
+    t0 = time()
     subprocess.check_call(command, shell=True)
+    print("Done. {} s".format(time() - t0))
 
     # Compute P1D missing
     command = 'p1d_missing.py '
@@ -82,12 +85,16 @@ if args.compute_spectra:
     if do_plots:
         command += '--plot-p1d'
     print("\n\nRunning {} ...\n".format(command))
+    t0 = time()
     subprocess.check_call(command, shell=True)
+    print("Done. {} s".format(time() - t0))
 
     # Run submit.sh
     command = indir + '/mock_0/output/runs/submit.sh'
     print("\n\nRunning {} ...\n".format(command))
+    t0 = time()
     subprocess.check_call(command, shell=True)
+    print("Done. {} s".format(time() - t0))
 
 indir += '/mock_0/chunk_1/'
 # Fitting a(z)
@@ -116,6 +123,7 @@ if args.fit_p1d:
         a = fitter.fit['a']
     t0 = time()
     k = np.concatenate((np.arange(0, 3, 0.1), np.arange(3, 20, 0.5)))
+    fitter.read_data()  # prov
     fitter.read_model()
     fitter.read_p1dmiss()
     fitter.compute_p1d(a, bins=k)
@@ -127,5 +135,6 @@ if args.fit_p1d:
     else:
         for n in range(args.n_iter):
             fitter.iterate(a=a, bins=k, plot=do_plots)
-    fitter.check_p1d(title='z={} ; a={} ; c={}'.format(z, a, c), save=True)
     print("\nTunning done. Took {} s".format(time() - t0))
+    print("Fitting procedure done. Took {} s".format(time() - t_init))
+    fitter.check_p1d(a=a, title='z={} ; a={} ; c={}'.format(z, a, c), save=True, bins=k)

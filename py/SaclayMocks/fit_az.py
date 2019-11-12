@@ -142,8 +142,6 @@ class Fitter(object):
             filename = "$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"
         print("Reading model from {}".format(filename))
         k, p1d = util.read_P1D_model(self.z)
-        k = np.append(0, k)  # prov
-        p1d = np.append(0, p1d)
         convert_factor = util.kms2mpc(self.z)
         k *= convert_factor
         p1d /= convert_factor
@@ -315,13 +313,13 @@ class Fitter(object):
         self.export_p1d()
         print("Iteration {} done.\n".format(self.niter))
 
-    def check_p1d(self, a=None, title='', debug=False, save=False):
+    def check_p1d(self, a=None, title='', bins=None, debug=False, save=False):
         if debug:
-            self.compute_p1d(1, debug=True)
+            self.compute_p1d(1, debug=True, bins=bins)
         else:
             if not a:
                 a = self.fit['a']
-            self.compute_p1d(a)
+            self.compute_p1d(a, bins=bins)
 
         # Pk vs k [h.Mpc^-1]
         f1, ax1 = plt.subplots()
@@ -332,8 +330,7 @@ class Fitter(object):
         ax1.grid()
         ax1.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
         ax1.errorbar(self.data['k'], self.data['Pk'], yerr=self.data['Pkerr'], fmt='+', label='data')
-        if hasattr(self, "data['k_model']"):
-            ax1.errorbar(self.data['k_model'], self.data['p1d_model'], label='model')
+        ax1.plot(self.data['k_model'], self.data['p1d_model'], label='model')
         # convert_factor = util.kms2mpc(self.z)
         # ax1.plot(k[msk], util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax1.legend()
@@ -347,8 +344,7 @@ class Fitter(object):
         convert_factor = util.kms2mpc(self.z)
         ax2.errorbar(self.mock['k']/convert_factor, self.mock['k']*self.mock['p1d']/np.pi, yerr=self.mock['k']*self.mock['err_p1d']/np.pi, fmt='.', label='mock')
         ax2.errorbar(self.data['k']/convert_factor, self.data['k']*self.data['Pk']/np.pi, yerr=self.data['k']*self.data['Pkerr']/np.pi, fmt='+', label='data')
-        if hasattr(self, "data['k_model']"):
-            ax2.errorbar(self.data['k_model']/convert_factor, self.data['k_model']*self.data['p1d_model']/np.pi, label='model')
+        ax2.plot(self.data['k_model']/convert_factor, self.data['k_model']*self.data['p1d_model']/np.pi, label='model')
         # ax2.errorbar(self.data['k'][msk]/convert_factor, self.data['k'][msk]*self.data['Pk'][msk]/np.pi, yerr=self.data['k'][msk]*self.data['Pkerr'][msk]/np.pi, fmt='+', label='data')
         # ax2.plot(k[msk]/convert_factor, k[msk]*util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax2.grid()

@@ -113,10 +113,10 @@ filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
 P_camb = powerspectrum.P_0(filename)
 Pcamb = P_camb.P(kk)
 kny = PI/DX
-kp = np.arange(PI/0.2/dk)*dk  # k for plot
+# kp = np.arange(PI/0.2/dk)*dk  # k for plot
 
 #.................................     compute P1D
-P1Dcamb = powerspectrum.P_1D(kk,Pcamb).P1D(kp)
+P1Dcamb = powerspectrum.P_1D(kk,Pcamb).P1D(kk)
 
 if RSD:
     k_par = np.arange(kmax/dk)*dk
@@ -128,7 +128,7 @@ if RSD:
     else :
         Growth = util.fgrowth(zref, constant.omega_M_0)
         PRSD = P_RSD_Prats(k_par_t,k_perp,P_camb.P, beta, zref,Growth)
-    P1DcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
+    P1DcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kk)
 
 #print ("0")
 #plt.show()
@@ -141,13 +141,13 @@ if RSD:
 # # so, indistinguishable from cut at k_N and W^2
 # if(False) :
 #     W = np.exp(- DX*DX*kk*kk/2)
-#     P1DWcamb = powerspectrum.P_1D(kk,Pcamb*W*W).P1D(kp)
-#     plt.plot(kp,P1DWcamb,color="blue")
+#     P1DWcamb = powerspectrum.P_1D(kk,Pcamb*W*W).P1D(kk)
+#     plt.plot(kk,P1DWcamb,color="blue")
     
 #     if (RSD) :
 #         PRSD = P_RSD(k_par_t,k_perp,PW2)
-#         P1DWcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
-#         plt.plot(kp,P1DWcambRSD,color="black")
+#         P1DWcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kk)
+#         plt.plot(kk,P1DWcambRSD,color="black")
 #     print ("1")
 
 # #.................................     compute P1D with cut at k_Nyquist
@@ -155,14 +155,14 @@ if RSD:
 # kk_cut=kk[cut]
 # Pcamb_cut=Pcamb[cut]
 # if (False):
-#     P1Dcutcamb = powerspectrum.P_1D(kk_cut,Pcamb_cut).P1D(kp)
-#     plt.plot(kp,P1Dcutcamb,color="blue")
-#     #plt.plot(kp,P1Dcutcamb,color="green")
+#     P1Dcutcamb = powerspectrum.P_1D(kk_cut,Pcamb_cut).P1D(kk)
+#     plt.plot(kk,P1Dcutcamb,color="blue")
+#     #plt.plot(kk,P1Dcutcamb,color="green")
 
 #     if (RSD) :
 #         PRSD = P_RSD(k_par_t,k_perp,Pcut)
-#         P1DcutcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
-#         plt.plot(kp,P1DcutcambRSD,color="green")
+#         P1DcutcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kk)
+#         plt.plot(kk,P1DcutcambRSD,color="green")
 #     print ("2")
 
 #.................................     compute P1D with cut at k_N and W^2
@@ -170,25 +170,25 @@ cut = kk <= kny
 kk_cut = kk[cut]
 Pcamb_cut = Pcamb[cut]
 W = np.exp(- DX*DX*kk_cut*kk_cut/2)
-P1DWcutcamb = powerspectrum.P_1D(kk_cut,Pcamb_cut*W*W).P1D(kp)
+P1DWcutcamb = powerspectrum.P_1D(kk_cut,Pcamb_cut*W*W).P1D(kk)
 
 if RSD:
     PRSD = P_RSD(k_par_t,k_perp,PW2cut, beta)
-    P1DWcutcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
+    P1DWcutcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kk)
 
 #.................................      missing P^1D(k)
-P1Dmissing = interpolate.InterpolatedUnivariateSpline(kp, np.maximum(P1Dcamb - P1DWcutcamb, 0))
+P1Dmissing = interpolate.InterpolatedUnivariateSpline(kk, np.maximum(P1Dcamb - P1DWcutcamb, 0))
 
 if RSD:
-    P1DmissingRSD = interpolate.InterpolatedUnivariateSpline(kp, np.maximum(P1DcambRSD - P1DWcutcambRSD, 0))
+    P1DmissingRSD = interpolate.InterpolatedUnivariateSpline(kk, np.maximum(P1DcambRSD - P1DWcutcambRSD, 0))
 
 # Write to fits file
 print("P1D computed. Writting file...")
 outfits = fitsio.FITS(outfile, 'rw', clobber=True)
-table = [kp, P1Dmissing(kp)]
+table = [kk, P1Dmissing(kk)]
 names = ['k', 'P1Dmiss']
 if RSD:
-    table.append(P1DmissingRSD(kp))
+    table.append(P1DmissingRSD(kk))
     names.append('P1DmissRSD')
 outfits.write(table, names=names, extname='P1D')
 outfits[-1].write_key('beta', beta)
@@ -210,12 +210,12 @@ if do_plots:
     z0 = 2.2
     i = np.argsort(np.abs(z-z0))[0]
     f, ax = plt.subplots()
-    ax.plot(kp, P1Dcamb, color="blue", label='Pcamb')
-    ax.plot(kp, P1DcambRSD, color="green", label='PcambRSD')
-    ax.plot(kp, P1DWcutcamb, color="blue", label='Pcamb_Wcut')
-    ax.plot(kp, P1DWcutcambRSD, color="green", label='PcambRSD_Wcut')
-    ax.plot(kp, P1Dmissing(kp), color="red", label='Pmissing')
-    ax.plot(kp, P1DmissingRSD(kp), color="red", label='PmissingRSD')
+    ax.plot(kk, P1Dcamb, color="blue", label='Pcamb')
+    ax.plot(kk, P1DcambRSD, color="green", label='PcambRSD')
+    ax.plot(kk, P1DWcutcamb, color="blue", label='Pcamb_Wcut')
+    ax.plot(kk, P1DWcutcambRSD, color="green", label='PcambRSD_Wcut')
+    ax.plot(kk, P1Dmissing(kk), color="red", label='Pmissing')
+    ax.plot(kk, P1DmissingRSD(kk), color="red", label='PmissingRSD')
     ax.plot(kk[i], Pk[i], color="orange", label='Pmiss_old')
     ax.set_xlabel('k [h/Mpc]')
     ax.grid()
