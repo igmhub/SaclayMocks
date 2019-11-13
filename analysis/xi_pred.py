@@ -110,7 +110,7 @@ if args.kind == 'Kaiser':
     xi = bias**2 * xi_ham.xi(f, rr, mu)
 
 z = np.ones_like(ecf['Z'])*zeff
-table = [ecf['RP'], ecf['RT'], ecf['Z'], xi, ecf['CO'], ecf['DM'], ecf['NB']]
+table = [ecf['RP'], ecf['RT'], z, xi, ecf['CO'], ecf['DM'], ecf['NB']]
 names = ['RP', 'RT', 'Z', 'DA', 'CO', 'DM', 'NB']
 outfits = fitsio.FITS(outfile, 'rw', clobber=True)
 outfits.write(table, names=names, header=head)
