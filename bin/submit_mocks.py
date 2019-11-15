@@ -631,7 +631,7 @@ def chunk_parameters(cells):
         dec0=['0', '0', '0', '0', '12.8', '12.8', '12.8', '12.8']
         ddec=['6.4', '6.4', '6.4', '6.4', '6.4', '6.4', '6.4', '6.4']
         chunkid=['1', '2', '3', '4', '5', '6', '7', '8']
-        nslice = 16
+        nslice = 8
 
     if cells == 1024:
         ra0=['190']
@@ -895,6 +895,9 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_merge_spectra'] += " -rsd "+str(mock_args['rsd'])
                         mock_args['args_merge_spectra'] += " -addnoise "+str(mock_args['small_scales'])
                         mock_args['args_merge_spectra'] += " -dla "+str(mock_args['dla'])
+                        if mock_args['p1dfile'] is not None:
+                            mock_args['args_merge_spectra'] += " --fit-p1d True "  # in order to read the p1dfile format
+                            mock_args['args_merge_spectra'] += " -p1dfile "+mock_args['p1dfile']                            
                         if mock_args['fit_p1d']:
                             mock_args['args_merge_spectra'] += " --fit-p1d True "
                             mock_args['args_merge_spectra'] += " -p1dfile "+mock_args['chunk_dir-'+cid]+"/p1dmiss.fits"
@@ -1092,6 +1095,9 @@ def main():
         help="Set up parameters for the 1D power spectrum fitting procedure:\n"
             +"give in order: z, a, b, c, seed")
 
+    parser.add_argument("--p1d-file", type=str, default=None, required=False,
+        help="p1dfile to generate small scales. Default is to read from etc/pkmiss_interp.fits")
+
     parser.add_argument("--seed", type=int, default=None, required=False,
         help="Specify a particular seed (optional)")
 
@@ -1146,19 +1152,19 @@ def main():
     mock_args['ny'] = args.box_size
     mock_args['nz'] = 1536  # This one is fixed to get the whole redshift range
     mock_args['pixel_size'] = 2.19  # pixel size in Mpc/h
-    mock_args['a'] = -1  # a parameter in FGPA; -1 is to read a(z) from etc/params.fits
+    mock_args['a'] = 0.011  # a parameter in FGPA; -1 is to read a(z) from etc/params.fits
     mock_args['b'] = 1.58  # b parameter in FGPA; a(z) and c(z) are tuned for b=1.58
-    mock_args['c'] = -1  # c paramter in FGPA; -1 is to read c(z) from etc/params.fits
+    mock_args['c'] = 1.75  # c paramter in FGPA; -1 is to read c(z) from etc/params.fits
     mock_args['zmin'] = 1.8  # minimal redshift to draw QSO
     mock_args['zmax'] = 3.6  # maximal redshift to draw QSO
-    mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
+    mock_args['zfix'] = "-zfix 2.2"  # "-zfix 2.6" to fix the redshift to a special value
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
-    mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
+    mock_args['desifootprint'] = False  # If True, cut QSO outside desi footprint
     mock_args['NQSO'] = -1  # If >0, limit the number of QSO treated in make_spectra
     mock_args['small_scales'] = True  # If True, add small scales in FGPA
     mock_args['rsd'] = True  # If True, add RSD
-    mock_args['dla'] = True  # If True, add DLA
+    mock_args['dla'] = False  # If True, add DLA
     mock_args['nmin'] = 17.2  # log(N_HI) min for DLA
     mock_args['nmax'] = 22.5  # log(N_HI) max for DLA
     # Run options:
@@ -1175,21 +1181,21 @@ def main():
     # pk:
     run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = False  # Produce GRF boxes
+    run_args['run_boxes'] = True  # Produce GRF boxes
     # chunks:
     run_args['run_chunks'] = True  # produce chunks
-    run_args['draw_qso'] = False  # run draw_qso.py
+    run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = False  # run draw_qso.py for randoms
-    run_args['make_spectra'] = False  # run make_spectra.py
+    run_args['make_spectra'] = True  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
-    run_args['merge_qso'] = False  # Compute master.fits file
+    run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = False  # Compute master_randoms.fits file
-    run_args['compute_dla'] = True  # Compute dla catalog of each chunks
-    run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
-    run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
+    run_args['compute_dla'] = False  # Compute dla catalog of each chunks
+    run_args['dla_randoms'] = False  # Compute dla randoms catalogs of each chunks
+    run_args['merge_dla'] = False  # Compute master_DLA.fits file
+    run_args['merge_rand_dla'] = False  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
     run_args['run_create'] = False  # Create persistent reservation
@@ -1223,6 +1229,7 @@ def main():
         chunkid = chunkid[m]
 
     ### 1D power spectrum fitting procedure
+    mock_args['p1dfile'] = args.p1d_file
     mock_args['fit_p1d'] = False
     if args.fit_p1d:
         if len(args.fit_p1d) != 5:

@@ -2,14 +2,16 @@
 
 #SBATCH -N 1
 #SBATCH -C haswell
-#SBATCH -p regular
+#SBATCH -p debug
 #SBATCH -J do_cf
-#SBATCH -t 04:00:00
+#SBATCH -t 00:30:00
 #SBATCH -A eboss
-#SBATCH --output=logs/do_cf_v4.7_1_3.log
+#SBATCH --output=logs/do_cf_fit_z2.2_1.log
+
+root=/global/cscratch1/sd/tetourne/Out/
 
 # OMP_NUM_THREADS=1
-sbatch=1
+sbatch=0
 # Parameters :
 # indir=DesiMocks/debug/1024-1024-1536/mock_70/output/
 # indir=/global/projecta/projectdirs/desi/mocks/lya_forest/develop/saclay/v4.1/
@@ -20,26 +22,27 @@ sbatch=1
 # indir=/global/cscratch1/sd/tetourne/DesiMocks/debug2/dc339d72/mock_0/output/
 # indir=/global/cscratch1/sd/tetourne/DesiMocks/debug2/v4.6_38/mock_1/output/
 # indir=/global/cscratch1/sd/legoff/DesiMocks/prod/256/mock_0/output/
-indir=/global/cscratch1/sd/tetourne/DesiMocks/v4.7/mock_1/output/
+# indir=/global/cscratch1/sd/tetourne/DesiMocks/v4.7/mock_1/output/
+indir=/global/cscratch1/sd/tetourne/DesiMocks/fit/z2.2_check/mock_4/output/
 
 quick_folder=quick-0.2/
 # version=debug_1024_71
 # version=debug_256_17
 # version=debug_1024_71
 # version=debug_v4.6_38
-version=v4.7_1
+version=fit_z2.2_check_4
 
 Om=0.3147
-zmin=2.45
-zmax=2.75
+zmin=0
+zmax=10
 rpmax=200
 rtmax=200
 downsampling_z_cut_min=0
 downsampling_z_cut_max=10
-downsampling_nb=1000000
+downsampling_nb=50000000
 # nspec="--nspec 20000"  # comment if you don't want to set npec
-nproc="--nproc 32"  # comment if you don't want to limit number of proc
-compute_deltas=0
+nproc="--nproc 8"  # comment if you don't want to limit number of proc
+compute_deltas=1
 delta_from_do_deltas=0  # 0 is delta from transmission; use no-project in this case
 no_project="--no-project"  # comment if you don't want to use --no-project option
 do_cf=1
@@ -47,7 +50,7 @@ do_dmat=0
 use_dmat=0
 do_exp=1
 
-coadd=1
+coadd=0  # set to 1 to produce CF in redshift bin
 
 if [ $coadd -gt 0 ]; then
     exp="e_cf_z_${zmin}_${zmax}"
@@ -66,14 +69,14 @@ fi
 start=$SECONDS
 ### Create directories
 echo "Creating directories"
-if [ ! -e Out/${version}/ ]; then mkdir Out/${version}/; fi
+if [ ! -e ${root}/${version}/ ]; then mkdir ${root}/${version}/; fi
 if [ $delta_from_do_deltas -gt 0 ]
 then
-    if [ ! -e Out/${version}/from_quickquasars ]; then mkdir Out/${version}/from_quickquasars; fi
-    inpath=Out/${version}/from_quickquasars
+    if [ ! -e ${root}/${version}/from_quickquasars ]; then mkdir ${root}/${version}/from_quickquasars; fi
+    inpath=${root}/${version}/from_quickquasars
 else
-    if [ ! -e Out/${version}/from_transmissions ]; then mkdir Out/${version}/from_transmissions; fi
-    inpath=Out/${version}/from_transmissions
+    if [ ! -e ${root}/${version}/from_transmissions ]; then mkdir ${root}/${version}/from_transmissions; fi
+    inpath=${root}/${version}/from_transmissions
 fi
 if [ ! -e ${inpath}/Catalog ]; then mkdir ${inpath}/Catalog; fi
 if [ ! -e ${inpath}/Correlations ]; then mkdir ${inpath}/Correlations; fi
