@@ -36,7 +36,8 @@ r_pow = args.r_pow
 if labels is None:
     labels = np.arange(len(files))
 
-fmt = ['-', '--', '-.', ':', '-', '--', '-.', ':']
+# fmt = ['-', '--', '-.', ':', '-', '--', '-.', ':']
+colors = ['b', 'g', 'orange', 'red', 'hotpink', 'saddlebrown', 'darkviolet']
 
 mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
 w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
@@ -63,17 +64,17 @@ for i, f in enumerate(files):
     data_wedge4 = w4.wedge(da,co)
     coef4 = data_wedge4[0]**r_pow
     if args.error_bar:
-        ax1.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])),fmt=fmt[i], label=labels[i])
-        ax2.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])),fmt=fmt[i], label=labels[i], color='b')
-        ax2.errorbar(data_wedge2[0],coef2*data_wedge2[1],yerr=coef2*np.sqrt(np.diag(data_wedge2[2])),fmt=fmt[i], color='g')
-        ax2.errorbar(data_wedge3[0],coef3*data_wedge3[1],yerr=coef3*np.sqrt(np.diag(data_wedge3[2])),fmt=fmt[i], color='orange')
-        ax2.errorbar(data_wedge4[0],coef4*data_wedge4[1],yerr=coef4*np.sqrt(np.diag(data_wedge4[2])),fmt=fmt[i], color='red')
+        ax1.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])), label=labels[i], color=colors[i])
+        ax2.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])), label=labels[i], color=colors[i])
+        ax2.errorbar(data_wedge2[0],coef2*data_wedge2[1],yerr=coef2*np.sqrt(np.diag(data_wedge2[2])), color=colors[i])
+        ax2.errorbar(data_wedge3[0],coef3*data_wedge3[1],yerr=coef3*np.sqrt(np.diag(data_wedge3[2])), color=colors[i])
+        ax2.errorbar(data_wedge4[0],coef4*data_wedge4[1],yerr=coef4*np.sqrt(np.diag(data_wedge4[2])), color=colors[i])
     else:
-        ax1.plot(data_wedge[0],coef*data_wedge[1], fmt[i], label=labels[i])
-        ax2.plot(data_wedge1[0],coef1*data_wedge1[1], fmt[i], label=labels[i], color='b')
-        ax2.plot(data_wedge2[0],coef2*data_wedge2[1], fmt[i], color='g')
-        ax2.plot(data_wedge3[0],coef3*data_wedge3[1], fmt[i], color='orange')
-        ax2.plot(data_wedge4[0],coef4*data_wedge4[1], fmt[i], color='red')
+        ax1.plot(data_wedge[0],coef*data_wedge[1], label=labels[i], color=colors[i])
+        ax2.plot(data_wedge1[0],coef1*data_wedge1[1], label=labels[i], color=colors[i])
+        ax2.plot(data_wedge2[0],coef2*data_wedge2[1], color=colors[i])
+        ax2.plot(data_wedge3[0],coef3*data_wedge3[1], color=colors[i])
+        ax2.plot(data_wedge4[0],coef4*data_wedge4[1], color=colors[i])
 
 for ax in [ax1, ax2]:
     ax.grid()

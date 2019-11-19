@@ -10,7 +10,7 @@
 root=/global/cscratch1/sd/tetourne/Out/
 
 # Parameters :
-fit_pred=1
+fit_pred=0
 sbatch=0
 do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 
@@ -18,7 +18,7 @@ do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 # version=debug_v4.4
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
-version=fit_z2.2_check_1
+version=fit_z2.2_check_4-6
 
 # do_dmat=0  # run dmat only if continuum fitting
 # do_export=0  # if run dmat, then run export

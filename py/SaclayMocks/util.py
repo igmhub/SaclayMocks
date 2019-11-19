@@ -509,6 +509,39 @@ def extract_h5file(fname):
     return free_p, fixed_p, pars, err_pars
 
 
+def print_h5file(fname):
+    '''
+    This function print the h5 output file from picca fitter2
+    '''
+    f = h5py.File(os.path.expandvars(fname), 'r')
+    free_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of free pars'] ]
+    fixed_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of fixed pars'] ]
+
+    print("- Free params:")
+    for p in free_p:
+        print("{} = {} +/- {}".format(p, f['best fit'].attrs[p][0], f['best fit'].attrs[p][1]))
+
+    print("\n- Fixed params:")
+    for p in fixed_p:
+        print("{} = {}".format(p, f['best fit'].attrs[p][0]))
+
+    print("\n- Cov:")
+    for p in f['best fit'].attrs:
+        if 'cov[' in p:
+            print("{} = {}".format(p, f['best fit'].attrs[p]))
+    
+    print("\n- Cor:")
+    for p in f['best fit'].attrs:
+        if 'cov[' in p:
+            idx = p.find(',')
+            el1 = p[4:idx]
+            el2 = p[idx+2:-1]
+            cor = f['best fit'].attrs[p] / (f['best fit'].attrs[el1][1] * f['best fit'].attrs[el2][1])
+            print("cor({},{}) = {}".format(el1, el2, cor))
+    f.close()
+    return
+
+
 class cosmo:
     '''
     From picca.constant.py

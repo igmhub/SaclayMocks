@@ -64,10 +64,12 @@ if G is None:
 sigma_g = args.sigma
 if sigma_g is None:
     if args.p1d_file is not None:
+        print("sigma_g is computed using {}".format(args.p1d_file))
         data_p1d = fitsio.read(args.p1d_file, ext=1)
         p1dmiss = sp.interpolate.interp1d(data_p1d['k'], data_p1d['P1DmissRSD'])
         sigma_g = util.sigma_g(zeff, p1dmiss=p1dmiss, c=c)
     else:
+        print("sigma_g is computed using standard p1dmissing")
         sigma_g = util.sigma_g(zeff, c=c)
 
 print("zeff = {}".format(zeff))
@@ -80,6 +82,7 @@ print("sigma_g = {}".format(sigma_g))
 ### Compute xi pred
 # FGPA
 if args.kind == 'FGPA':
+    print("Computing FGPA model...")
     xipred = powerspectrum.xi_prediction(a=a,b=b,G=G,sigma_g=sigma_g,c=c)
     rr = np.sqrt(ecf['RP']**2 + ecf['RT']**2)
     mu = ecf['RP'] / rr
@@ -87,6 +90,7 @@ if args.kind == 'FGPA':
 
 # Kaiser
 if args.kind == 'Kaiser':
+    print("Computeing Kaiser model...")
     dx = 2.19
     k_ny = np.pi / dx
     rmax = 300
