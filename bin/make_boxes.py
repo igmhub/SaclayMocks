@@ -74,20 +74,14 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
 #.............................  FFT
     global boxk   # use global variable boxk
     t0=time.time()
-    boxk_save = np.copy(boxk)
-    print("copy took {} s".format(time.time()-t0))
     t2 = time.time()
     NX = boxk.shape[0]
     NY = boxk.shape[1]
     NZ = boxk.shape[2]
     # box = np.zeros([NX,NY,2*(NZ-1)],dtype=np.float32)
     box = pyfftw.empty_aligned((NX, NY, 2*(NZ-1)), dtype='float32')
-    # myfft = pyfftw.FFTW(boxkbix,box,axes=(0,1,2),direction='FFTW_BACKWARD',threads=ncpu, flags=('FFTW_DESTROY_INPUT',))
-    # myfft.execute()
     pyfftw.FFTW(boxk,box,axes=(0,1,2),direction='FFTW_BACKWARD',threads=ncpu, flags=('FFTW_DESTROY_INPUT',)).execute()
     del boxk
-    # del boxkbix
-    gc.collect()
     box /= NX*NY*2*(NZ-1)
     t3 = time.time()
     print("FFT done", t3-t2, "s")
@@ -104,12 +98,7 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
       if box_null:
         raise ValueError("/!\ box is null /!\ \n    Box name: {}\nWisdom saved before exiting.".format(boxfilename))
       print("/!\ Box was null. Wisdom has been saved, trying again FFTW...")
-      print("Loading wisdom {}".format(wisdomFile))
-      pyfftw.import_wisdom(sp.load(wisdomFile))
-      del box
-      gc.collect()
-      boxk = boxk_save
-      FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, True)
+      box_null = True
     else:
       #...............................      write to fits file
       if box_null:
@@ -238,7 +227,16 @@ def main() :
     print("{} files already exist ! Skiping this step.".format(boxfile))
   else:
     boxk *= fitsio.read(Pfilename, ext='Pln1')
-    FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile)
+    box_null = FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile)
+    # This box_null thing is in case the FFT went bad with the wisdom file
+    if box_null:
+      print("Starting again FFTandStore...")
+      print("Loading wisdom {}".format(wisdomFile))
+      pyfftw.import_wisdom(sp.load(wisdomFile))
+      boxk = np.load(boxkfile)
+      boxk *= fitsio.read(Pfilename, ext=0)
+      FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile, box_null)
+
   # Second lognormal
   boxfile = outDir+'/boxln_2'
   command = "ls -l {}* | wc -l".format(boxfile)
