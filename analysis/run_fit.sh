@@ -10,7 +10,7 @@
 root=/global/cscratch1/sd/tetourne/Out/
 
 # Parameters :
-fit_pred=0
+fit_pred=1
 sbatch=0
 do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 
@@ -18,7 +18,8 @@ do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 # version=debug_v4.4
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
-version=fit_z2.2_check_4-6
+version=fit_z2.2
+# version=tmp
 
 # do_dmat=0  # run dmat only if continuum fitting
 # do_export=0  # if run dmat, then run export
@@ -35,6 +36,7 @@ object=QSO  # QSO or DLA
 
 zeff=2.2
 
+hesse=1  # set to 1 to print correlations between parameters
 zbins=0  # set to 1 if you want to fit a particular redshift bin
 zmin=2.75
 zmax=3.6
@@ -138,6 +140,9 @@ ini files = ${ini_files}
 [fiducial]
 filename = PlanckDR12/PlanckDR12.fits
 
+[hesse]
+level = $hesse
+
 [cosmo-fit type]
 cosmo fit func = ap_at
 
@@ -178,7 +183,7 @@ rp-max = 200.
 rt-min = 0.
 rt-max = 200.
 
-r-min = 10.
+r-min = 40.
 r-max = 180.
 
 mu-min = 0.

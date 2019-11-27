@@ -131,7 +131,7 @@ class Fitter(object):
         pk = data[field]
         # msk = kk > 0
         # msk = kk > 0.12  # prov
-        if not hasattr(self, "data['k_model']"):
+        if 'k_model' not in self.data:
             self.read_model()
         msk = (kk >= self.data['k_model'].min()) & (kk <= self.data['k_model'].max())  # avoid interpolation issue in computation of rr in iterate()
         self.mock['kmiss'] = kk[msk]
@@ -330,7 +330,8 @@ class Fitter(object):
         ax1.grid()
         ax1.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
         ax1.errorbar(self.data['k'], self.data['Pk'], yerr=self.data['Pkerr'], fmt='+', label='data')
-        ax1.plot(self.data['k_model'], self.data['p1d_model'], label='model')
+        if 'k_model' in self.data:
+            ax1.plot(self.data['k_model'], self.data['p1d_model'], label='model')
         # convert_factor = util.kms2mpc(self.z)
         # ax1.plot(k[msk], util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax1.legend()
@@ -344,7 +345,8 @@ class Fitter(object):
         convert_factor = util.kms2mpc(self.z)
         ax2.errorbar(self.mock['k']/convert_factor, self.mock['k']*self.mock['p1d']/np.pi, yerr=self.mock['k']*self.mock['err_p1d']/np.pi, fmt='.', label='mock')
         ax2.errorbar(self.data['k']/convert_factor, self.data['k']*self.data['Pk']/np.pi, yerr=self.data['k']*self.data['Pkerr']/np.pi, fmt='+', label='data')
-        ax2.plot(self.data['k_model']/convert_factor, self.data['k_model']*self.data['p1d_model']/np.pi, label='model')
+        if 'k_model' in self.data:
+            ax2.plot(self.data['k_model']/convert_factor, self.data['k_model']*self.data['p1d_model']/np.pi, label='model')
         # ax2.errorbar(self.data['k'][msk]/convert_factor, self.data['k'][msk]*self.data['Pk'][msk]/np.pi, yerr=self.data['k'][msk]*self.data['Pkerr'][msk]/np.pi, fmt='+', label='data')
         # ax2.plot(k[msk]/convert_factor, k[msk]*util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax2.grid()

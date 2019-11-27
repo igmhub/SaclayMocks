@@ -72,17 +72,17 @@ if sigma_g is None:
         print("sigma_g is computed using standard p1dmissing")
         sigma_g = util.sigma_g(zeff, c=c)
 
-print("zeff = {}".format(zeff))
-print("a = {}".format(a))
-print("b = {}".format(b))
-print("c = {}".format(c))
-print("G = {}".format(G))
-print("sigma_g = {}".format(sigma_g))
 
 ### Compute xi pred
 # FGPA
 if args.kind == 'FGPA':
     print("Computing FGPA model...")
+    print("zeff = {}".format(zeff))
+    print("a = {}".format(a))
+    print("b = {}".format(b))
+    print("c = {}".format(c))
+    print("G = {}".format(G))
+    print("sigma_g = {}".format(sigma_g))
     xipred = powerspectrum.xi_prediction(a=a,b=b,G=G,sigma_g=sigma_g,c=c)
     rr = np.sqrt(ecf['RP']**2 + ecf['RT']**2)
     mu = ecf['RP'] / rr
@@ -90,15 +90,18 @@ if args.kind == 'FGPA':
 
 # Kaiser
 if args.kind == 'Kaiser':
-    print("Computeing Kaiser model...")
+    print("Computing Kaiser model...")
     dx = 2.19
     k_ny = np.pi / dx
     rmax = 300
     # fgrowth = util.fgrowth(zeff, constant.omega_M_0)
-    fgrowth = 1.
-    bias = b*G
+    # fgrowth = 1.
+    bias = b
     beta = c
-    f = beta
+    # f = beta
+    print("bias = {}".format(bias))
+    print("G = {}".format(G))
+    print("beta = {}".format(beta))
 
     k = np.linspace(0, 10, 100000)
     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
@@ -111,7 +114,7 @@ if args.kind == 'Kaiser':
     rt = ecf['RT']
     rr = np.sqrt(rp**2 + rt**2)
     mu = rp / rr
-    xi = bias**2 * xi_ham.xi(f, rr, mu)
+    xi = bias**2 * G**2 * xi_ham.xi(beta, rr, mu)
 
 z = np.ones_like(ecf['Z'])*zeff
 table = [ecf['RP'], ecf['RT'], z, xi, ecf['CO'], ecf['DM'], ecf['NB']]

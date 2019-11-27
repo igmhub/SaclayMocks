@@ -202,12 +202,15 @@ def main() :
     print("{} already exists ! Reading boxk.npy file to compute density and velocity boxes...".format(boxkfile))
     boxk = np.load(boxkfile)
     print("Done.")
-    print("Dividing boxk by P0(k) and saving...")
-    t0 = time.time()
-    boxk /= fitsio.read(Pfilename, ext='P0')
-    boxk[0,0,0] = 0j
-    np.save(boxkfile, boxk)
-    print("Done. {} s".format(time.time()-t0))
+    sigma = boxk.std()
+    if sigma > 180000:
+      print("Sigma of boxk is {} > 180000:".format(sigma))
+      print("dividing boxk by P0(k) and saving...")
+      t0 = time.time()
+      boxk /= fitsio.read(Pfilename, ext='P0')
+      boxk[0,0,0] = 0j
+      np.save(boxkfile, boxk)
+      print("Done. {} s".format(time.time()-t0))
   else:
     t0 = time.time()
     print(NX,NY,NZ)
@@ -258,7 +261,7 @@ def main() :
   # Density field
   nHDU_bis = NX   # we want 1 HDU per ix
   boxfile = outDir+'/box'
-  command = "ls -l {}* | wc -l".format(boxfile)
+  command = "ls -l {}-* | wc -l".format(boxfile)
   if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]):
     print("{} files already exist ! Skiping this step.".format(boxfile))
     print("Reading and multiplying boxk by P0(k), and saving...")
