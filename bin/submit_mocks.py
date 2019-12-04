@@ -1124,7 +1124,7 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "04:00:00"  # default "01:30:00"
+    sbatch_args['time_boxes'] = "05:00:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
@@ -1152,19 +1152,19 @@ def main():
     mock_args['ny'] = args.box_size
     mock_args['nz'] = 1536  # This one is fixed to get the whole redshift range
     mock_args['pixel_size'] = 2.19  # pixel size in Mpc/h
-    mock_args['a'] = 0.011  # a parameter in FGPA; -1 is to read a(z) from etc/params.fits
+    mock_args['a'] = -1  # a parameter in FGPA; -1 is to read a(z) from etc/params.fits
     mock_args['b'] = 1.58  # b parameter in FGPA; a(z) and c(z) are tuned for b=1.58
-    mock_args['c'] = 1.75  # c paramter in FGPA; -1 is to read c(z) from etc/params.fits
+    mock_args['c'] = -1  # c paramter in FGPA; -1 is to read c(z) from etc/params.fits
     mock_args['zmin'] = 1.8  # minimal redshift to draw QSO
     mock_args['zmax'] = 3.6  # maximal redshift to draw QSO
-    mock_args['zfix'] = "-zfix 2.2"  # "-zfix 2.6" to fix the redshift to a special value
+    mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
-    mock_args['desifootprint'] = False  # If True, cut QSO outside desi footprint
+    mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
     mock_args['NQSO'] = -1  # If >0, limit the number of QSO treated in make_spectra
     mock_args['small_scales'] = True  # If True, add small scales in FGPA
     mock_args['rsd'] = True  # If True, add RSD
-    mock_args['dla'] = False  # If True, add DLA
+    mock_args['dla'] = True  # If True, add DLA
     mock_args['nmin'] = 17.2  # log(N_HI) min for DLA
     mock_args['nmax'] = 22.5  # log(N_HI) max for DLA
     # Run options:
@@ -1179,17 +1179,17 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = True  # Produce Pk
+    run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = True  # Produce GRF boxes
+    run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
     run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
-    run_args['randoms'] = False  # run draw_qso.py for randoms
+    run_args['randoms'] = True  # run draw_qso.py for randoms
     run_args['make_spectra'] = True  # run make_spectra.py
-    run_args['merge_spectra'] = True  # run merge_spectra.py
+    run_args['merge_spectra'] = False  # run merge_spectra.py
     # merge chunks:
-    run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
+    run_args['run_mergechunks'] = False  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = False  # Compute master_randoms.fits file
     run_args['compute_dla'] = False  # Compute dla catalog of each chunks
