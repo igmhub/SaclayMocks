@@ -198,29 +198,29 @@ outfits[-1].write_key('dk', dk)
 outfits.close()
 print("Wrote {}".format(outfile))
 
-# Plots
-if do_plots:
-    print("plotting...")
-    filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
-    f = fitsio.FITS(filename)
-    data=f[1].read()
-    kk=data["k"]
-    z=data["z"]
-    Pk=data["Pk"]
-    z0 = 2.2
-    i = np.argsort(np.abs(z-z0))[0]
-    f, ax = plt.subplots()
-    ax.plot(kk, P1Dcamb, color="blue", label='Pcamb')
-    ax.plot(kk, P1DcambRSD, color="green", label='PcambRSD')
-    ax.plot(kk, P1DWcutcamb, color="blue", label='Pcamb_Wcut')
-    ax.plot(kk, P1DWcutcambRSD, color="green", label='PcambRSD_Wcut')
-    ax.plot(kk, P1Dmissing(kk), color="red", label='Pmissing')
-    ax.plot(kk, P1DmissingRSD(kk), color="red", label='PmissingRSD')
-    ax.plot(kk[i], Pk[i], color="orange", label='Pmiss_old')
-    ax.set_xlabel('k [h/Mpc]')
-    ax.grid()
-    ax.legend()
-    plt.show()
+# # Plots
+# if do_plots:
+#     print("plotting...")
+#     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
+#     f = fitsio.FITS(filename)
+#     data=f[1].read()
+#     kk=data["k"]
+#     z=data["z"]
+#     Pk=data["Pk"]
+#     z0 = 2.2
+#     i = np.argsort(np.abs(z-z0))[0]
+#     f, ax = plt.subplots()
+#     ax.plot(kk, P1Dcamb, color="blue", label='Pcamb')
+#     ax.plot(kk, P1DcambRSD, color="green", label='PcambRSD')
+#     ax.plot(kk, P1DWcutcamb, color="blue", label='Pcamb_Wcut')
+#     ax.plot(kk, P1DWcutcambRSD, color="green", label='PcambRSD_Wcut')
+#     ax.plot(kk, P1Dmissing(kk), color="red", label='Pmissing')
+#     ax.plot(kk, P1DmissingRSD(kk), color="red", label='PmissingRSD')
+#     ax.plot(kk[i], Pk[i], color="orange", label='Pmiss_old')
+#     ax.set_xlabel('k [h/Mpc]')
+#     ax.grid()
+#     ax.legend()
+#     plt.show()
 
 # f = fitsio.FITS("data/pkmiss_interp.fits")
 # data=f[1].read()

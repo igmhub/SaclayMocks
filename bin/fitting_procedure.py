@@ -122,19 +122,19 @@ if args.fit_p1d:
     else:
         a = fitter.fit['a']
     t0 = time()
-    k = np.concatenate((np.arange(0, 3, 0.1), np.arange(3, 20, 0.5)))
+    bins = np.concatenate(([0, 1e-5, 0.03], np.arange(0.05, 0.5, 0.05), np.arange(0.5, 3, 0.1), np.arange(3, 20, 0.5)))
     fitter.read_data()  # prov
     fitter.read_model()
     fitter.read_p1dmiss()
-    fitter.compute_p1d(a, bins=k)
+    fitter.compute_p1d(a, bins=bins)
     fitter.smooth_p1d()
     print("nspec = {}\n".format(fitter.mock['spectra'].shape))
     if convergence_criterium:
         while not fitter.converged:
-            fitter.iterate(a=a, bins=k, plot=do_plots)
+            fitter.iterate(a=a, bins=bins, plot=do_plots)
     else:
         for n in range(args.n_iter):
-            fitter.iterate(a=a, bins=k, plot=do_plots)
+            fitter.iterate(a=a, bins=bins, plot=do_plots)
     print("\nTunning done. Took {} s".format(time() - t0))
     print("Fitting procedure done. Took {} s".format(time() - t_init))
-    fitter.check_p1d(a=a, title='z={} ; a={} ; c={} - niter={}'.format(z, a, c, args.n_iter), save=True, bins=k)
+    fitter.check_p1d(a=a, title='z={} ; a={} ; c={} - niter={}'.format(z, a, c, args.n_iter), save=True, bins=bins)
