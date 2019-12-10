@@ -21,11 +21,10 @@ finally, export results of minimisation
 can also check plots with check_plot()
 """
 class Fitter(object):
-    def __init__(self, indir, z, a_ref, cc, bb=1.58, Nreg=1, pixel=0.2, cell_size=2.19, convergence_factor=1, convergence_criterium=None):
+    def __init__(self, indir, z, cc, bb=1.58, Nreg=1, pixel=0.2, cell_size=2.19, convergence_factor=1, convergence_criterium=None):
         self.data = {}
         self.mock = {}
         self.fit = {}
-        self.mock['a_ref'] = a_ref
         self.mock['indir'] = indir
         self.z = z
         self.Nreg = Nreg
@@ -141,7 +140,7 @@ class Fitter(object):
         if filename is None:
             filename = "$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"
         print("Reading model from {}".format(filename))
-        k, p1d = util.read_P1D_model(self.z)
+        k, p1d = util.read_P1D_model(self.z, filename=filename)
         convert_factor = util.kms2mpc(self.z)
         k *= convert_factor
         p1d /= convert_factor
@@ -173,7 +172,7 @@ class Fitter(object):
         # if self.mock['cc'] > 0:
         #     field += 'RSD'
         # P1Dmissing = sp.interpolate.InterpolatedUnivariateSpline(p1d_data['k'], p1d_data[field])
-        self.read_p1dmiss()
+        self.read_p1dmiss(filename=filename)
         P1Dmissing = sp.interpolate.InterpolatedUnivariateSpline(self.mock['kmiss'], self.mock['p1dmiss'])
         delta_s = []
         nz = len(self.mock['wav'])
@@ -280,15 +279,34 @@ class Fitter(object):
         '''
         Iterative procedure to tune the shape of the 1D powerspectrum
         '''
+        # check if interpolation of mock p1d is negative:
+        # mask = self.mock['p1d_interp'](self.mock['kmiss']) >= 0
+        # rr = np.ones_like(self.mock['kmiss'])
+        # rr[mask] = self.data['p1d_model_interp'](self.mock['kmiss'])[mask] / self.mock['p1d_interp'](self.mock['kmiss'])[mask]
+        
         rr = self.data['p1d_model_interp'](self.mock['kmiss']) / self.mock['p1d_interp'](self.mock['kmiss'])
-        p1dmiss = self.mock['p1dmiss'] * (1 + self.convergence_factor*(rr - 1))
+        s = len(self.mock['kmiss'])*self.mock['err_p1d'].mean()**2 * 3
+        rr_smooth = sp.interpolate.UnivariateSpline(self.mock['kmiss'], rr, s=s)
+        m1 = self.mock['p1d'] < 0
+        m2 = self.mock['p1d_interp'](self.mock['kmiss']) < 0
+        print("p1d_interp negative for k = {}".format(self.mock['kmiss'][m2]))
+        # p1dmiss = self.mock['p1dmiss'] * (1 + self.convergence_factor*(rr - 1))
+        p1dmiss = self.mock['p1dmiss'] * (1 + self.convergence_factor*(rr_smooth(self.mock['kmiss']) - 1))
+        mask = (rr_smooth(self.mock['kmiss']) > -1) & (rr_smooth(self.mock['kmiss']) < 2)
+        print("number of points removed in the p1dmiss smoothing : {}".format((~mask).sum()))
+        s *= 2
+        p1dmiss_smooth = sp.interpolate.UnivariateSpline(self.mock['kmiss'][mask], p1dmiss[mask], s=s)
         if plot:
             plt.plot(self.mock['kmiss'], self.data['p1d_model_interp'](self.mock['kmiss']), label='model')
             plt.plot(self.mock['kmiss'], self.mock['p1d_interp'](self.mock['kmiss']), label='mock smoothed')
             plt.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
             plt.plot(self.mock['kmiss'], self.mock['p1dmiss'] / 50, label='p1dmiss_{}'.format(self.niter))
             plt.plot(self.mock['kmiss'], rr, label='ratio rr')
+            plt.plot(self.mock['kmiss'], rr_smooth(self.mock['kmiss']), label='ratio smooth', linestyle='--'
+            )
             plt.plot(self.mock['kmiss'], p1dmiss / 50, label='p1dmiss_{}'.format(self.niter+1))
+            plt.plot(self.mock['kmiss'], p1dmiss_smooth(self.mock['kmiss']) / 50, label='p1dmiss_{}_s'.format(self.niter+1), linestyle='--')
+            # plt.yscale('log')
             plt.grid()
             plt.legend()
             plt.xlabel('k [h/Mpc/]')
@@ -302,7 +320,10 @@ class Fitter(object):
                 print("Iterative procedure has converged in {} iterations.".format(self.niter))
                 return
 
-        self.mock['p1dmiss'] = p1dmiss
+        m3 = p1dmiss_smooth(self.mock['kmiss']) < 0
+        print("p1dmiss_interp negative for k = {}".format(self.mock['kmiss'][m3]))
+        self.mock['p1dmiss'] = p1dmiss_smooth(self.mock['kmiss'])
+        self.mock['p1dmiss'] = np.maximum(p1dmiss_smooth(self.mock['kmiss']),0)
         self.niter += 1
         self.export_p1dmiss()
         self.gen_small_scales()

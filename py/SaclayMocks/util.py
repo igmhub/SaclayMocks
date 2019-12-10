@@ -326,7 +326,7 @@ class desi_footprint():
         return np.where(self.healpix_weight[healpix] > 0.99)[0]
 
 
-def sigma_p1d(redshift, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", p1dmiss=None, pixel=0.2, N=10000):
+def sigma_p1d(redshift=None, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", p1dmiss=None, pixel=0.2, N=10000):
     '''
     Return the sigma of delta_s for a given redshift and a given P1Dmissing
     the p1d can be directly given via p1dmiss argument (it must be a function)
@@ -334,6 +334,9 @@ def sigma_p1d(redshift, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", p1d
     L = N*pixel
     kj = 2*np.pi / L * np.arange(1, N/2)
     if p1dmiss is None:
+        if redshift is None:
+            print("Please enter a valid redshift")
+            sys.exit(1)
         redshift = np.array(redshift).reshape(-1)
         sigma_s = np.zeros_like(redshift)
         filename = os.path.expandvars(filename)

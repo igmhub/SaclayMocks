@@ -101,7 +101,7 @@ indir += '/mock_0/chunk_1/'
 if args.fit_az:
     print("\n\nFitting a...\n")
     t0 = time()
-    fitter = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2,
+    fitter = fit_az.Fitter(indir, z, c, bb=b, Nreg=1, pixel=0.2,
         convergence_factor=convergence_factor, convergence_criterium=convergence_criterium)
     fitter.read_data()
     fitter.read_mock()
@@ -116,7 +116,7 @@ if args.fit_p1d:
     print("\nTunning the shape of 1D power spectrum...")
     if not args.fit_az:
         print("Tunning of P1D shape is done using a={}".format(a))
-        fitter = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2,
+        fitter = fit_az.Fitter(indir, z, c, bb=b, Nreg=1, pixel=0.2,
             convergence_factor=convergence_factor, convergence_criterium=convergence_criterium)
         fitter.read_mock()
     else:
