@@ -123,7 +123,7 @@ if args.fit_p1d:
         a = fitter.fit['a']
     t0 = time()
     bins = np.concatenate(([0, 1e-5, 0.03], np.arange(0.05, 0.5, 0.05), np.arange(0.5, 3, 0.1), np.arange(3, 20, 0.5)))
-    fitter.read_data()  # prov
+    # fitter.read_data()  # prov
     fitter.read_model()
     fitter.read_p1dmiss()
     fitter.compute_p1d(a, bins=bins)
