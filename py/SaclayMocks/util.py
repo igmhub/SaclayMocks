@@ -218,13 +218,27 @@ def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"
     z = fits[0].read()
     k = fits[1].read()
     pk = fits[2].read()
-    # select the redshift bin
-    msk = np.abs(z - redshift) < 1e-2
-    if msk.sum() == 0:
-        print("ERROR -- You entered a wrong redshift: {}. Here is the list of redshifts : {}".format(redshift, np.unique(z)))
-        sys.exit(1)
-    k = k[msk]
-    pk = pk[msk]
+    ### select the redshift bin
+    # extrapole z=2.2 to z=2.0
+    if np.abs(redshift - 2) < 1e-2:
+        msk1 = np.abs(z - 2.2) < 1e-2
+        msk2 = np.abs(z - 2.4) < 1e-2
+        k = k[msk1]
+        pk = pk[msk1]**2 / pk[msk2]
+    # extrapole z=2.2 to z=1.8
+    elif np.abs(redshift - 1.8) < 1e-2:
+        msk1 = np.abs(z - 2.2) < 1e-2
+        msk2 = np.abs(z - 2.4) < 1e-2
+        k = k[msk1]
+        pk = pk[msk1]**3 / pk[msk2]**2
+    # read P1D(z)
+    else:
+        msk = np.abs(z - redshift) < 1e-2
+        if msk.sum() == 0:
+            print("ERROR -- You entered a wrong redshift: {}. Here is the list of redshifts : {}".format(redshift, np.unique(z)))
+            sys.exit(1)
+        k = k[msk]
+        pk = pk[msk]
     return k, pk
 
 

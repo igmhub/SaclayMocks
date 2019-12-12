@@ -18,7 +18,7 @@ do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 # version=debug_v4.4
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
-version=fit_z3.4
+version=fit_z1.8
 # version=tmp
 
 # do_dmat=0  # run dmat only if continuum fitting
@@ -34,7 +34,7 @@ fit_co=0
 object=QSO  # QSO or DLA
 
 
-zeff=3.4
+zeff=1.8
 
 hesse=1  # set to 1 to print correlations between parameters
 zbins=0  # set to 1 if you want to fit a particular redshift bin

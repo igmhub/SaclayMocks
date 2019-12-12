@@ -294,7 +294,8 @@ class Fitter(object):
         s = len(self.mock['k'])*self.mock['err_p1d'].mean()**2 * 3
         p1dmiss_interp = sp.interpolate.UnivariateSpline(self.mock['k'], p1dmiss, s=s)
         if plot:
-            plt.plot(self.mock['k'], self.data['p1d_model_interp'](self.mock['k']), label='model')
+            if 'k' in self.data:
+                plt.plot(self.mock['k'], self.data['p1d_model_interp'](self.mock['k']), label='model')
             # plt.plot(self.mock['k'], self.mock['p1d_interp'](self.mock['k']), '--', label='mock smoothed')
             plt.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
             plt.plot(self.mock['k'], self.mock['p1dmiss_interp'](self.mock['k']) / 50, '.', label='p1dmiss_{}'.format(self.niter))
@@ -343,7 +344,8 @@ class Fitter(object):
         ax1.set_title(title)
         ax1.grid()
         ax1.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
-        ax1.errorbar(self.data['k'], self.data['Pk'], yerr=self.data['Pkerr'], fmt='+', label='data')
+        if 'k' in self.data:
+            ax1.errorbar(self.data['k'], self.data['Pk'], yerr=self.data['Pkerr'], fmt='+', label='data')
         if 'k_model' in self.data:
             ax1.plot(self.data['k_model'], self.data['p1d_model'], label='model')
         # convert_factor = util.kms2mpc(self.z)
@@ -358,7 +360,8 @@ class Fitter(object):
         ax2.set_ylabel('k * Pk / pi')
         convert_factor = util.kms2mpc(self.z)
         ax2.errorbar(self.mock['k']/convert_factor, self.mock['k']*self.mock['p1d']/np.pi, yerr=self.mock['k']*self.mock['err_p1d']/np.pi, fmt='.', label='mock')
-        ax2.errorbar(self.data['k']/convert_factor, self.data['k']*self.data['Pk']/np.pi, yerr=self.data['k']*self.data['Pkerr']/np.pi, fmt='+', label='data')
+        if 'k' in self.data:
+            ax2.errorbar(self.data['k']/convert_factor, self.data['k']*self.data['Pk']/np.pi, yerr=self.data['k']*self.data['Pkerr']/np.pi, fmt='+', label='data')
         if 'k_model' in self.data:
             ax2.plot(self.data['k_model']/convert_factor, self.data['k_model']*self.data['p1d_model']/np.pi, label='model')
         # ax2.errorbar(self.data['k'][msk]/convert_factor, self.data['k'][msk]*self.data['Pk'][msk]/np.pi, yerr=self.data['k'][msk]*self.data['Pkerr'][msk]/np.pi, fmt='+', label='data')

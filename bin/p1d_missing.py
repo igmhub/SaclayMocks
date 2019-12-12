@@ -15,7 +15,8 @@ def P_RSD(k_par,k_perp,P, beta):
     return (1+beta*mu**2)**2 * P(k)
 
 def D_Prats(k,mu,P,zref,Growth):
-    if (abs(zref-3.0)<0.0001):
+    # if (abs(zref-3.0)<0.0001):
+    if zref >= 2.9999:
         q1 = 0.792; q2=0; k_p = 17.1; k_v = 1.16; a_v = 0.578; b_v = 1.63 # Planck Tab 7 
     if (abs(zref-2.8)<0.0001):
         q1 = 0.773; q2=0; k_p = 19.2; k_v = 1.16; a_v = 0.608; b_v = 1.65 # Planck Tab 7 
@@ -24,7 +25,8 @@ def D_Prats(k,mu,P,zref,Growth):
     if (abs(zref-2.4)<0.0001):
         q1 = 0.851; q2=0; k_p = 19.5; k_v = 1.06; a_v = 0.548; b_v = 1.61 # Planck Tab 7 
         #q1 = -0.0020; q2=0.623; k_p = 10.9; k_v = 0.517; a_v = 0.152; b_v = 1.62 # Planck Tab 5 
-    if (abs(zref-2.2)<0.0001):
+    # if (abs(zref-2.2)<0.0001):
+    if zref <= 2.2001:
         q1 = 0.867; q2=0; k_p = 19.4; k_v = 1.06; a_v = 0.514; b_v = 1.60 # Planck Tab 7 
     Delta2 = k**3 * P(k) * Growth * Growth /2/np.pi**2
     return np.exp ( (q1 * Delta2 + q2 * Delta2**2) * (1-(k/k_v)**a_v * mu**b_v ) - (k/k_p)**2 )
@@ -104,9 +106,10 @@ print("It will be computed with "+
 "RSD={} and beta={}; voxcel={}; kmax={}; dk={}".format(RSD, beta, DX, kmax, dk))
 if not linear:
     print("z_ref = {}".format(zref))
-    if zref > 3:
-        zref = 3
-        print("Redshift is set to {} for all z > 3".format(zref))
+    if zref > 3 or zref < 2.2:
+        # zref = 3
+        # print("Redshift is set to {} for all z > 3".format(zref))
+        print("Redshift above 3 will be extrapolated from z=3, bellow 2.2 will be extrapolated from z=2.2")
 PI = np.pi
 kk=np.arange(kmax/dk)*dk
 filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
