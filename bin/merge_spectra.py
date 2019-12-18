@@ -27,7 +27,7 @@ def main():
     parser.add_argument("-bb", type=float, help="b param in FGPA. Default 1.58", default=1.58)
     parser.add_argument("-cc", type=float, help="c param in FGPA. Default is to read c(z) from etc/params.fits.", default=-1)
     parser.add_argument("-paramfile", help="fits file for parameters, default is etc/params.fits", default=None)
-    parser.add_argument("-p1dfile", help="P1Dmissing fits file, default is etc/pkmiss_interp.fits", default=None)
+    parser.add_argument("-p1dfile", help="P1Dmissing fits file, default is etc/pkmiss_interp.fits.gz", default=None)
     parser.add_argument("-pixsize", type=float, help="spectrum pixsize in Mpc/h, default 0.2", default=0.2)
     parser.add_argument("-nside", type=int, help="nside for healpix. Default 16", default=16)
     parser.add_argument("-nest", help="If True, healpix scheme is nest. Default True", default='True')
@@ -100,16 +100,16 @@ def main():
     # .......... Load P1D missing
     filename = args.p1dfile
     if filename is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits.gz")
     print("Reading P1D file {}".format(filename))
-    p1d_data = fitsio.read(filename, ext=1)
     if fit_p1d:
+        p1d_data = fitsio.read(filename, ext=1)
         field = 'P1Dmiss'
         if rsd: field += 'RSD'
         p1dmiss = sp.interpolate.InterpolatedUnivariateSpline(p1d_data['k'], p1d_data[field])
     else:
         p1dmiss = util.InterpP1Dmissing(filename)
-        sigma_s_interp = sp.interpolate.interp1d(p1d_data['z'], p1d_data['sigma'])
+        sigma_s_interp = sp.interpolate.interp1d(fitsio.read(filename, ext='z'), fitsio.read(filename, ext='sigma'))
 
     # ........... Open fits files
     print("Opening fits files...")

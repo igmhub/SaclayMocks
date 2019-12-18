@@ -340,7 +340,7 @@ class desi_footprint():
         return np.where(self.healpix_weight[healpix] > 0.99)[0]
 
 
-def sigma_p1d(redshift=None, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", p1dmiss=None, pixel=0.2, N=10000):
+def sigma_p1d(redshift=None, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits.gz", p1dmiss=None, pixel=0.2, N=10000):
     '''
     Return the sigma of delta_s for a given redshift and a given P1Dmissing
     the p1d can be directly given via p1dmiss argument (it must be a function)
@@ -369,7 +369,7 @@ def sigma_p1d(redshift=None, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits"
     return sigma_s
 
 
-def sigma_g(redshift, pkfile="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits", paramfile="$SACLAYMOCKS_BASE/etc/params.fits", p1dmiss=None, c=None, pixel=0.2, N=10000):
+def sigma_g(redshift, pkfile="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits.gz", paramfile="$SACLAYMOCKS_BASE/etc/params.fits", p1dmiss=None, c=None, pixel=0.2, N=10000):
     '''
     Returns the sigma of g = delta_l + delta_s + c*eta_par field
     '''
@@ -419,10 +419,10 @@ def pol(x, p):
 class InterpP1Dmissing():
     '''Read P1D from fits file, and compute the interpolate function'''
     def __init__(self, infile):
-        data = fitsio.read(infile, ext=1)
-        z = data['z']
-        k = data['k']
-        pk = data['Pk']
+        fits = fitsio.FITS(infile)
+        z = fits['z'].read()
+        k = fits['k'].read()
+        pk = fits['pk'].read()
         self.z = z
         self.k = k
         self.pk = pk
@@ -435,7 +435,7 @@ class InterpP1Dmissing():
             raise ValueError("ERROR: Redshift {} is out of range !\nPlease enter a redshift between {} and {}".format(redshift, self.zmin, self.zmax))
         iz = np.argsort(np.abs(self.z - redshift))[0]
         z = self.z[iz]
-        self.pk_interp[str(z)] = interpolate.interp1d(self.k[iz], self.pk[iz])
+        self.pk_interp[str(z)] = interpolate.interp1d(self.k, self.pk[iz])
 
     def __call__(self, redshift, k):
         iz = np.argsort(np.abs(self.z - redshift))[0]

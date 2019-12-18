@@ -204,7 +204,7 @@ print("Wrote {}".format(outfile))
 # # Plots
 # if do_plots:
 #     print("plotting...")
-#     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
+#     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits.gz")
 #     f = fitsio.FITS(filename)
 #     data=f[1].read()
 #     kk=data["k"]
@@ -225,7 +225,7 @@ print("Wrote {}".format(outfile))
 #     ax.legend()
 #     plt.show()
 
-# f = fitsio.FITS("data/pkmiss_interp.fits")
+# f = fitsio.FITS("data/pkmiss_interp.fits.gz")
 # data=f[1].read()
 # kk=data["k"]
 # z=data["z"]

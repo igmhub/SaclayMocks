@@ -1096,7 +1096,7 @@ def main():
             +"give in order: z, a, b, c, seed")
 
     parser.add_argument("--p1d-file", type=str, default=None, required=False,
-        help="p1dfile to generate small scales. Default is to read from etc/pkmiss_interp.fits")
+        help="p1dfile to generate small scales. Default is to read from etc/pkmiss_interp.fits.gz")
 
     parser.add_argument("--seed", type=int, default=None, required=False,
         help="Specify a particular seed (optional)")
