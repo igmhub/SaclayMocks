@@ -21,7 +21,7 @@ parser.add_argument("--mu-min", type=float, default=-1.)
 parser.add_argument("--mu-max", type=float, default=1.)
 parser.add_argument("--r-pow", type=int, default=2)
 parser.add_argument("--title", default="")
-parser.add_argument("--pred", default=False)
+parser.add_argument("--pred", action='store_true')
 parser.add_argument("--z-bin", nargs='*', default=None)
 parser.add_argument("--save-cf", default=False)
 

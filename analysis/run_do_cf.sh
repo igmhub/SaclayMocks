@@ -13,36 +13,25 @@ root=/global/cscratch1/sd/tetourne/Out/
 # OMP_NUM_THREADS=1
 sbatch=0
 # Parameters :
-# indir=DesiMocks/debug/1024-1024-1536/mock_70/output/
-# indir=/global/projecta/projectdirs/desi/mocks/lya_forest/develop/saclay/v4.1/
-# indir=/global/projecta/projectdirs/desi/mocks/lya_forest/develop/london/v8.0/v8.0.0/
-# indir=/global/cscratch1/sd/tetourne/DesiMocks/v4.6/mock_1/output/
-# indir=/global/cscratch1/sd/tetourne/DesiMocks/debug/v4.0/mock_0/output/
-# indir=/global/cscratch1/sd/tetourne/DesiMocks/debug/4705a65/mock_0/output/
-# indir=/global/cscratch1/sd/tetourne/DesiMocks/debug2/dc339d72/mock_0/output/
-# indir=/global/cscratch1/sd/tetourne/DesiMocks/debug2/v4.6_38/mock_1/output/
-# indir=/global/cscratch1/sd/legoff/DesiMocks/prod/256/mock_0/output/
-# indir=/global/cscratch1/sd/tetourne/DesiMocks/v4.7/mock_1/output/
-indir=/global/cscratch1/sd/tetourne/DesiMocks/fit/z2.2_check/mock_6/output/
+# indir=/global/cscratch1/sd/tetourne/DesiMocks/fit/z2.2_check/mock_6/output/
+indir=/global/projecta/projectdirs/desi/mocks/lya_forest/develop/saclay/v4.7/intermediate_files_21-30/mock_22/output/
 
 quick_folder=quick-0.2/
-# version=debug_1024_71
-# version=debug_256_17
-# version=debug_1024_71
-# version=debug_v4.6_38
-version=fit_z2.2_check_6
+
+# version=fit_z2.2_check_6
+version=v4.7.22_4
 
 Om=0.3147
-zmin=0
+zmin=3.05
 zmax=10
 rpmax=200
 rtmax=200
-downsampling_z_cut_min=0
+downsampling_z_cut_min=1.8
 downsampling_z_cut_max=10
-downsampling_nb=50000000
+downsampling_nb=350000
 # nspec="--nspec 20000"  # comment if you don't want to set npec
-nproc="--nproc 4"  # comment if you don't want to limit number of proc
-compute_deltas=1
+nproc="--nproc 8"  # comment if you don't want to limit number of proc
+compute_deltas=0
 delta_from_do_deltas=0  # 0 is delta from transmission; use no-project in this case
 no_project="--no-project"  # comment if you don't want to use --no-project option
 do_cf=1

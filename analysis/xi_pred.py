@@ -18,6 +18,7 @@ parser.add_argument("--c", type=float, default=None)
 parser.add_argument("--growthf", type=float, default=None)
 parser.add_argument("--sigma", type=float, default=None)
 parser.add_argument("--p1d-file", type=str, default=None)
+parser.add_argument("--no-proj", action='store_true', help='do not do the projection with the distorsion matrix')
 
 args = parser.parse_args()
 # a=args.aa
@@ -87,6 +88,8 @@ if args.kind == 'FGPA':
     rr = np.sqrt(ecf['RP']**2 + ecf['RT']**2)
     mu = ecf['RP'] / rr
     xi = xipred.xi_F(rr, mu)
+    if args.no_proj is not None:
+        np.dot(xi, ecf['DM'], out=xi)
 
 # Kaiser
 if args.kind == 'Kaiser':

@@ -16,15 +16,15 @@ parser.add_argument("--nhi-max", type=float, default=None, required=False, help=
 args = parser.parse_args()
 
 ### Data
-print("Reading {}".format(args.dla_cat))
-data = fitsio.read(args.dla_cat, ext='DLACAT')
+print("Reading {}".format(args.i))
+data = fitsio.read(args.i, ext='DLACAT')
 if args.nhi_max is not None:
     msk = data['N_HI_DLA'] < args.nhi_max
     print("Removing {} DLAs with log(n_HI) > {} out of {} total DLAs".format(msk.sum(), args.nhi_max, data.size))
 else:
     msk = np.bool_(np.ones(data.size))
 
-outfits = fitsio.FITS(args.out, 'rw', clobber=True)
+outfits = fitsio.FITS(args.o, 'rw', clobber=True)
 names = ['RA', 'DEC', 'THING_ID', 'Z', 'PLATE', 'MJD', 'FIBERID', 'NHI', 'ZQSO']
 table = []
 table.append(data['RA'][msk])
@@ -37,6 +37,6 @@ table.append(data['MOCKID'][msk])
 table.append(data['N_HI_DLA'][msk])
 table.append(data['Z_QSO_RSD'][msk])
 
-print("Writting out {}".format(args.out))
+print("Writting out {}".format(args.o))
 outfits.write(table, names=names, extname='DLACAT')
 outfits.close()

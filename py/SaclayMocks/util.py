@@ -618,3 +618,7 @@ def kms2mpc(redshift, omega_m=None, omega_k=None, h=None):
     hubble_z = cosmo_fid.hubble(redshift)
     factor = hubble_z / (1+redshift) / h
     return factor
+
+
+def bias_err(bias_eta, bias_eta_err, beta, beta_err, cor):
+    return bias_eta / beta * np.sqrt((bias_eta_err/bias_eta)**2 + (beta_err/beta)**2 - 2*cor*bias_eta_err/bias_eta*beta_err/beta)

@@ -86,12 +86,12 @@ def main():
     print("Writting merged file...")
     if not random_cond:
         filename = args.outdir + "/master_DLA.fits"
-        table = [ra, dec, z_qso, z_qso_rsd, z, z_rsd, nhi, mockid, mockid, dla_id, pixnum]
-        names = ['RA', 'DEC', 'Z_QSO_NO_RSD', 'Z_QSO_RSD', 'Z_DLA_NO_RSD', 'Z_DLA_RSD', 'N_HI_DLA', 'MOCKID', 'THING_ID', 'DLAID', 'PIXNUM']
+        table = [ra, dec, z_qso, z_qso_rsd, z, z_rsd, nhi, mockid, dla_id, pixnum]
+        names = ['RA', 'DEC', 'Z_QSO_NO_RSD', 'Z_QSO_RSD', 'Z_DLA_NO_RSD', 'Z_DLA_RSD', 'N_HI_DLA', 'MOCKID', 'DLAID', 'PIXNUM']
     else:
         filename = args.outdir + "/master_DLA_randoms.fits"
-        table = [ra, dec, z_qso, z_qso_rsd, z, mockid, mockid]
-        names = ['RA', 'DEC', 'Z_QSO_NO_RSD', 'Z_QSO_RSD', 'Z', 'MOCKID', 'THING_ID']
+        table = [ra, dec, z_qso, z_qso_rsd, z, mockid]
+        names = ['RA', 'DEC', 'Z_QSO_NO_RSD', 'Z_QSO_RSD', 'Z', 'MOCKID']
     outfits = fitsio.FITS(filename, 'rw', clobber=True)
     outfits.write(table, names=names, extname='DLACAT')
     print("Done. {} s. Written {} DLAs in {}".format(time.time()-t2, len(ra), filename))
