@@ -18,14 +18,14 @@ plot_pred1 = True
 plot_pred2 = True
 plot_shades = False
 
-correct_beff = True
+correct_beff = False
 
 def f(x, a, gamma):
     return a*(1+x)**gamma
 
 if correct_beff:
     z0 = 2.4
-    print("beff is corrected by G(z0)/G(z) with z0 = {}".format(z0))
+    print("beff is corrected by G(zz)/G(z0) with z0 = {}".format(z0))
 
 # les mocks avec quickquasars (distorsion matrix) + DLAs
 zmock1 = np.array([2.09, 2.21, 2.52, 2.85])
@@ -40,7 +40,7 @@ cor_mock1 = -0.87
 bias_err_mock1 = util.bias_err(bias_eta_mock1, bias_eta_err_mock1, beta_mock1, beta_err_mock1, cor_mock1)
 beff_mock1 = bias_mock1 * np.sqrt(1+2/3*beta_mock1+1/5*beta_mock1**2)
 if correct_beff:
-    beff_mock1 *= (1+zmock1) / (1+z0)
+    beff_mock1 *= (1+z0) / (1+zmock1)
 beff_err_mock1 = bias_err_mock1 
 
 print("Fits on mock1:")
@@ -65,7 +65,7 @@ cor_mock2 = -0.87
 bias_err_mock2 = util.bias_err(bias_eta_mock2, bias_eta_err_mock2, beta_mock2, beta_err_mock2, cor_mock2)
 beff_mock2 = bias_mock2 * np.sqrt(1+2/3*beta_mock2+1/5*beta_mock2**2)
 if correct_beff:
-    beff_mock2 *= (1+zmock2) / (1+z0)
+    beff_mock2 *= (1+z0) / (1+zmock2)
 beff_err_mock2 = bias_err_mock2
 
 print("Fits on mock2:")
@@ -92,7 +92,7 @@ cor_mock_raw = -0.96
 bias_err_mock_raw = util.bias_err(bias_eta_mock_raw, bias_eta_err_mock_raw, beta_mock_raw, beta_err_mock_raw, cor_mock_raw)
 beff_mock_raw = bias_mock_raw * np.sqrt(1+2/3*beta_mock_raw+1/5*beta_mock_raw**2)
 if correct_beff:
-    beff_mock_raw *= (1+zmock_raw) / (1+z0)
+    beff_mock_raw *= (1+z0) / (1+zmock_raw)
 beff_err_mock_raw = bias_err_mock_raw
 
 print("Fits on mock_raw:")
@@ -125,7 +125,7 @@ cor_data = -0.9
 bias_err_data = util.bias_err(bias_eta_data, bias_eta_err_data, beta_data, beta_err_data, cor_data)
 beff_data = bias_data * np.sqrt(1+2/3*beta_data+1/5*beta_data**2)
 if correct_beff:
-    beff_data *= (1+zdata) / (1+z0)
+    beff_data *= (1+z0) / (1+zdata)
 beff_err_data = bias_err_data
 
 print("Fits on data:")
@@ -330,6 +330,9 @@ if plot_beff:
     ax.legend()
     ax.grid()
     ax.set_xlabel('z')
-    ax.set_ylabel('beff')
+    ylabel='b_eff'
+    if correct_beff:
+        ylabel += ' G(z) / G({})'.format(z0)
+    ax.set_ylabel(ylabel)
 
 plt.show()

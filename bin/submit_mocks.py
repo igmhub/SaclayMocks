@@ -1130,7 +1130,7 @@ def main():
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:10:00"  # default "00:30:00"
+    sbatch_args['time_chunk'] = "00:30:00"  # default "00:30:00"
     sbatch_args['queue_chunk'] = "debug"  # default "regular"
     sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
