@@ -19,7 +19,7 @@ do_deltas=1  # 1 is delta from do_delta, 0 is from transmission
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
 # version=fit_z1.8
-version=v4.7.22_masked_dla_2
+version=v4.7.27_2
 
 # do_dmat=0  # run dmat only if continuum fitting
 # do_export=0  # if run dmat, then run export

@@ -13,12 +13,13 @@ plot_beff = True
 plot_data = True
 plot_mock1 = True
 plot_mock2 = True
+plot_mock3 = True
 plot_mock_raw = True
 plot_pred1 = True
 plot_pred2 = True
 plot_shades = False
 
-correct_beff = False
+correct_beff = True
 
 def f(x, a, gamma):
     return a*(1+x)**gamma
@@ -27,7 +28,7 @@ if correct_beff:
     z0 = 2.4
     print("beff is corrected by G(zz)/G(z0) with z0 = {}".format(z0))
 
-# les mocks avec quickquasars (distorsion matrix) + DLAs
+# les mocks avec quickquasars (distorsion matrix) + DLAs (v4.7.22)
 zmock1 = np.array([2.09, 2.21, 2.52, 2.85])
 bias_eta_mock1 = np.array([-0.172, -0.195, -0.226, -0.267])
 bias_eta_err_mock1 = np.array([0.003, 0.004, 0.007, 0.017])
@@ -54,7 +55,7 @@ p_beff_mock1 = sp.optimize.curve_fit(f, zmock1, beff_mock1, sigma=beff_err_mock1
 print("beff(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_beff_mock1[0][0], p_beff_mock1[1][0,0], p_beff_mock1[0][1], p_beff_mock1[1][1,1]))
 
 
-# les mocks avec quickquasars + masked DLAs log(n_HI) > 20
+# les mocks avec quickquasars + masked DLAs log(n_HI) > 20 (v4.7.22)
 zmock2 = np.array([2.09, 2.21, 2.52, 2.85])
 bias_eta_mock2 = np.array([-0.174, -0.195, -0.227, -0.279])
 bias_eta_err_mock2 = np.array([0.003, 0.004, 0.006, 0.018])
@@ -79,7 +80,31 @@ p_beff_mock2 = sp.optimize.curve_fit(f, zmock2, beff_mock2, sigma=beff_err_mock2
 print("beff(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_beff_mock2[0][0], p_beff_mock2[1][0,0], p_beff_mock2[0][1], p_beff_mock2[1][1,1]))
 
 
-# les mocks directement sur les transmissions
+# les mocks qvec quickquasars + masked DLAs with log(n_HI) > 20 (v4.7.27)
+zmock3 = np.array([2.09, 2.21, 2.52, 2.85])
+bias_eta_mock3 = np.array([-0.169, -0.196, -0.235, -0.277])
+bias_eta_err_mock3 = np.array([0.003, 0.003, 0.007, 0.018])
+beta_mock3 = np.array([1.56, 1.61, 1.32, 1.03])
+beta_err_mock3 = np.array([0.07, 0.07, 0.09, 0.15])
+bias_mock3 = bias_eta_mock3 * 0.97 / beta_mock3
+cor_mock3 = -0.87
+bias_err_mock3 = util.bias_err(bias_eta_mock3, bias_eta_err_mock3, beta_mock3, beta_err_mock3, cor_mock3)
+beff_mock3 = bias_mock3 * np.sqrt(1+2/3*beta_mock3+1/5*beta_mock3**2)
+if correct_beff:
+    beff_mock3 *= (1+z0) / (1+zmock3)
+beff_err_mock3 = bias_err_mock3
+
+print("Fits on mock3:")
+p_bias_mock3 = sp.optimize.curve_fit(f, zmock3, bias_mock3, sigma=bias_err_mock3)
+print("bias(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_bias_mock3[0][0], p_bias_mock3[1][0,0], p_bias_mock3[0][1], p_bias_mock3[1][1,1]))
+p_beta_mock3 = sp.optimize.curve_fit(f, zmock3, beta_mock3, sigma=beta_err_mock3)
+print("beta(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_beta_mock3[0][0], p_beta_mock3[1][0,0], p_beta_mock3[0][1], p_beta_mock3[1][1,1]))
+p_bias_eta_mock3 = sp.optimize.curve_fit(f, zmock3, bias_eta_mock3, sigma=bias_eta_err_mock3)
+print("bias_eta(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_bias_eta_mock3[0][0], p_bias_eta_mock3[1][0,0], p_bias_eta_mock3[0][1], p_bias_eta_mock3[1][1,1]))
+p_beff_mock3 = sp.optimize.curve_fit(f, zmock3, beff_mock3, sigma=beff_err_mock3)
+print("beff(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_beff_mock3[0][0], p_beff_mock3[1][0,0], p_beff_mock3[0][1], p_beff_mock3[1][1,1]))
+
+# les mocks directement sur les transmissions (v4.7.22)
 zmock_raw = np.array([2.10, 2.24, 2.53, 2.87])
 bias_eta_mock_raw = np.array([-0.1786, -0.2054, -0.244, -0.277])
 bias_eta_err_mock_raw = np.array([0.002, 0.0022, 0.004, 0.013])
@@ -182,6 +207,14 @@ if plot_bias:
             plt.fill_between(z, f(z, p_bias_mock2[0][0]+p_bias_mock2[1][0,0], p_bias_mock2[0][1]-p_bias_mock2[1][1,1]),
                          f(z, p_bias_mock2[0][0]-p_bias_mock2[1][0,0], p_bias_mock2[0][1]+p_bias_mock2[1][1,1]),
                          color='red', alpha=0.2)
+    if plot_mock3:
+        ax.errorbar(zmock3, bias_mock3, yerr=bias_err_mock3, fmt='.', label='mock3', color='magenta')
+        z = np.linspace(zmock3.min(), zmock3.max(), 100)
+        plt.plot(z, f(z, p_bias_mock3[0][0], p_bias_mock3[0][1]), linestyle='--', color='magenta')
+        if plot_shades:
+            plt.fill_between(z, f(z, p_bias_mock3[0][0]+p_bias_mock3[1][0,0], p_bias_mock3[0][1]-p_bias_mock3[1][1,1]),
+                         f(z, p_bias_mock3[0][0]-p_bias_mock3[1][0,0], p_bias_mock3[0][1]+p_bias_mock3[1][1,1]),
+                         color='magenta', alpha=0.2)
     if plot_mock_raw:
         ax.errorbar(zmock_raw, bias_mock_raw, yerr=bias_err_mock_raw, fmt='.', label='mock_raw', color='green')
         z = np.linspace(zmock_raw.min(), zmock_raw.max(), 100)
@@ -226,6 +259,14 @@ if plot_beta:
             plt.fill_between(z, f(z, p_beta_mock2[0][0]+p_beta_mock2[1][0,0], p_beta_mock2[0][1]-p_beta_mock2[1][1,1]),
                          f(z, p_beta_mock2[0][0]-p_beta_mock2[1][0,0], p_beta_mock2[0][1]+p_beta_mock2[1][1,1]),
                          color='red', alpha=0.2)
+    if plot_mock3:
+        ax.errorbar(zmock3, beta_mock3, yerr=beta_err_mock3, fmt='.', label='mock3', color='magenta')
+        z = np.linspace(zmock3.min(), zmock3.max(), 100)
+        plt.plot(z, f(z, p_beta_mock3[0][0], p_beta_mock3[0][1]), linestyle='--', color='magenta')
+        if plot_shades:
+            plt.fill_between(z, f(z, p_beta_mock3[0][0]+p_beta_mock3[1][0,0], p_beta_mock3[0][1]-p_beta_mock3[1][1,1]),
+                         f(z, p_beta_mock3[0][0]-p_beta_mock3[1][0,0], p_beta_mock3[0][1]+p_beta_mock3[1][1,1]),
+                         color='magenta', alpha=0.2)
     if plot_mock_raw:
         ax.errorbar(zmock_raw, beta_mock_raw, yerr=beta_err_mock_raw, fmt='.', label='mock_raw', color='green')
         z = np.linspace(zmock_raw.min(), zmock_raw.max(), 100)
@@ -270,6 +311,14 @@ if plot_bias_eta:
             plt.fill_between(z, f(z, p_bias_eta_mock2[0][0]+p_bias_eta_mock2[1][0,0], p_bias_eta_mock2[0][1]-p_bias_eta_mock2[1][1,1]),
                          f(z, p_bias_eta_mock2[0][0]-p_bias_eta_mock2[1][0,0], p_bias_eta_mock2[0][1]+p_bias_eta_mock2[1][1,1]),
                          color='red', alpha=0.2)
+    if plot_mock3:
+        ax.errorbar(zmock3, bias_eta_mock3, yerr=bias_eta_err_mock3, fmt='.', label='mock3', color='magenta')
+        z = np.linspace(zmock3.min(), zmock3.max(), 100)
+        plt.plot(z, f(z, p_bias_eta_mock3[0][0], p_bias_eta_mock3[0][1]), linestyle='--', color='magenta')
+        if plot_shades:
+            plt.fill_between(z, f(z, p_bias_eta_mock3[0][0]+p_bias_eta_mock3[1][0,0], p_bias_eta_mock3[0][1]-p_bias_eta_mock3[1][1,1]),
+                         f(z, p_bias_eta_mock3[0][0]-p_bias_eta_mock3[1][0,0], p_bias_eta_mock3[0][1]+p_bias_eta_mock3[1][1,1]),
+                         color='magenta', alpha=0.2)
     if plot_mock_raw:
         ax.errorbar(zmock_raw, bias_eta_mock_raw, yerr=bias_eta_err_mock_raw, fmt='.', label='mock_raw', color='green')
         z = np.linspace(zmock_raw.min(), zmock_raw.max(), 100)
@@ -314,6 +363,14 @@ if plot_beff:
             plt.fill_between(z, f(z, p_beff_mock2[0][0]+p_beff_mock2[1][0,0], p_beff_mock2[0][1]-p_beff_mock2[1][1,1]),
                          f(z, p_beff_mock2[0][0]-p_beff_mock2[1][0,0], p_beff_mock2[0][1]+p_beff_mock2[1][1,1]),
                          color='red', alpha=0.2)
+    if plot_mock3:
+        ax.errorbar(zmock3, beff_mock3, yerr=beff_err_mock3, fmt='.', label='mock3', color='magenta')
+        z = np.linspace(zmock3.min(), zmock3.max(), 100)
+        plt.plot(z, f(z, p_beff_mock3[0][0], p_beff_mock3[0][1]), linestyle='--', color='magenta')
+        if plot_shades:
+            plt.fill_between(z, f(z, p_beff_mock3[0][0]+p_beff_mock3[1][0,0], p_beff_mock3[0][1]-p_beff_mock3[1][1,1]),
+                         f(z, p_beff_mock3[0][0]-p_beff_mock3[1][0,0], p_beff_mock3[0][1]+p_beff_mock3[1][1,1]),
+                         color='magenta', alpha=0.2)
     if plot_mock_raw:
         ax.errorbar(zmock_raw, beff_mock_raw, yerr=beff_err_mock_raw, fmt='.', label='mock_raw', color='green')
         z = np.linspace(zmock_raw.min(), zmock_raw.max(), 100)
