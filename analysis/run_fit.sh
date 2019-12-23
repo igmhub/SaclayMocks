@@ -12,14 +12,14 @@ root=/global/cscratch1/sd/tetourne/Out/
 # Parameters :
 fit_pred=0
 sbatch=0
-do_deltas=1  # 1 is delta from do_delta, 0 is from transmission
+do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 
 # version=debug_v4.1_2
 # version=debug_v4.4
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
 # version=fit_z1.8
-version=v4.7.27_2
+version=v4.7.22
 
 # do_dmat=0  # run dmat only if continuum fitting
 # do_export=0  # if run dmat, then run export
@@ -34,7 +34,7 @@ fit_co=0
 object=QSO  # QSO or DLA
 
 
-zeff=2.21
+zeff=2.25
 
 hesse=1  # set to 1 to print correlations between parameters
 zbins=0  # set to 1 if you want to fit a particular redshift bin
@@ -190,8 +190,8 @@ mu-min = -1.
 mu-max = 1.
 
 [model]
-# model-pk = pk_kaiser
-model-pk = pk_hcd_Rogers2018
+model-pk = pk_kaiser
+# model-pk = pk_hcd_Rogers2018
 model-xi = xi
 z evol LYA = bias_vs_z_std
 # growth function = growth_factor_no_de
@@ -215,9 +215,9 @@ bias_eta_LYA  = -0.14  0.017 None None free
 beta_LYA  = 1.8     0.1 None None free
 alpha_LYA = 2.9    0   None None fixed
 
-bias_hcd = -0.055543492131170824 0.1 None 0. free
-beta_hcd = 0.5499827447420765 0.1 None None free
-L0_hcd = 10. 1. None None fixed
+# bias_hcd = -0.055543492131170824 0.1 None 0. free
+# beta_hcd = 0.5499827447420765 0.1 None None free
+# L0_hcd = 10. 1. None None fixed
 
 par binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 per binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
@@ -225,8 +225,8 @@ per binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 par_sigma_smooth = 3.1 0.1 0 None free
 per_sigma_smooth = 3.1 0.1 0 None free
 
-[priors]
-beta_hcd = gaussian 0.5 0.2
+# [priors]
+# beta_hcd = gaussian 0.5 0.2
 EOF
 fi
 

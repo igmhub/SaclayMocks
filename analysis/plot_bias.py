@@ -4,34 +4,43 @@ import matplotlib.pyplot as plt
 from SaclayMocks import util
 
 
+SMALL_SIZE = 18
+MEDIUM_SIZE = 20
+BIGGER_SIZE = 22
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
 ### Options
 plot_bias = True
 plot_beta = True
 plot_bias_eta = True
 plot_beff = True
 
-# toplot = ['mock1', 'mock2', 'mock3', 'mock_raw', 'data', 'mock_mean']
-toplot = ['mock_mean', 'mock_raw', 'data']
-mocks = ['mock2', 'mock3']  # mocks used to compute means
+# toplot = ['v4.7.22_dla_nomask', 'v4.7.22_dla', 'v4.7.27_dla', 'v4.7.22', 'v4.7.27', 'v4.7.22_raw', 'data', 'dla_mean', 'mock_mean']
+# toplot = ['mock_mean', 'mock_coadd_mean', 'dla_mean', 'dla_coadd_mean', 'v4.7.22_raw', 'data']
+toplot = ['v4.7.22', 'v4.7.27', 'v4.7.22_dla', 'v4.7.27_dla', 'v4.7.22_raw', 'data']
 
-# plot_data = True
-# plot_mock1 = True
-# plot_mock2 = True
-# plot_mock3 = True
-# plot_mockmean = True
-# plot_mock_raw = True
+mean_items = {}  # mocks used to compute means
+mean_items['dla_mean'] = ['v4.7.22_dla', 'v4.7.27_dla']
+mean_items['dla_coadd_mean'] = ['v4.7.22_dla_coadd', 'v4.7.27_dla_coadd']
+mean_items['mock_mean'] = ['v4.7.22', 'v4.7.27']
+mean_items['mock_coadd_mean'] = ['v4.7.22_coadd', 'v4.7.27_coadd']
+
 plot_pred1 = True
 plot_pred2 = True
 plot_shades = False
 
-correct_beff = False
 
 def f(x, a, gamma):
     return a*(1+x)**gamma
 
-if correct_beff:
-    z0 = 2.4
-    print("beff is corrected by G(zz)/G(z0) with z0 = {}".format(z0))
+z0 = 2.4
 
 # create dictionnaries
 redshift = {}
@@ -50,42 +59,113 @@ p_beta = {}
 p_bias_eta = {}
 p_beff = {}
 
+# Choose colors
+colors['data'] = 'black'
+colors['v4.7.22'] = 'dodgerblue'
+colors['v4.7.22_coadd'] = 'dodgerblue'
+colors['v4.7.27'] = 'darkblue'
+colors['v4.7.27_coadd'] = 'darkblue'
+colors['mock_mean'] = 'royalblue'
+colors['mock_coadd_mean'] = 'royalblue'
+colors['v4.7.22_dla'] = 'darkorange'
+colors['v4.7.22_dla_coadd'] = 'darkorange'
+colors['v4.7.27_dla'] = 'darkred'
+colors['v4.7.27_dla_coadd'] = 'darkred'
+colors['dla_mean'] = 'r'
+colors['dla_coadd_mean'] = 'r'
+colors['v4.7.22_dla_nomask'] = 'magenta'
+colors['v4.7.22_raw'] = 'green'
+colors['v4.7.22_raw_coadd'] = 'green'
+
+
 ### Input : all the various data sets
-# les mocks avec quickquasars (distorsion matrix) + DLAs (v4.7.22)
-redshift['mock1'] = np.array([2.09, 2.21, 2.52, 2.85])
-bias_eta['mock1'] = np.array([-0.172, -0.195, -0.226, -0.267])
-bias_eta_err['mock1'] = np.array([0.003, 0.004, 0.007, 0.017])
-beta['mock1'] = np.array([1.55, 1.49, 1.07, 1.11])
-beta_err['mock1'] = np.array([0.07, 0.07, 0.07, 0.16])
-cor['mock1'] = -0.87
-colors['mock1'] = 'darkorange'
+# les mocks avec quickquasars (distorsion matrix) + DLAs (v4.7.22_eboss-0.2_thomas)
+redshift['v4.7.22_dla_nomask'] = np.array([2.09, 2.21, 2.52, 2.85])
+bias_eta['v4.7.22_dla_nomask'] = np.array([-0.172, -0.195, -0.226, -0.267])
+bias_eta_err['v4.7.22_dla_nomask'] = np.array([0.003, 0.004, 0.007, 0.017])
+beta['v4.7.22_dla_nomask'] = np.array([1.55, 1.49, 1.07, 1.11])
+beta_err['v4.7.22_dla_nomask'] = np.array([0.07, 0.07, 0.07, 0.16])
+cor['v4.7.22_dla_nomask'] = -0.87
 
-# les mocks avec quickquasars + masked DLAs log(n_HI) > 20 (v4.7.22)
-redshift['mock2'] = np.array([2.09, 2.21, 2.52, 2.85])
-bias_eta['mock2'] = np.array([-0.174, -0.195, -0.227, -0.279])
-bias_eta_err['mock2'] = np.array([0.003, 0.004, 0.006, 0.018])
-beta['mock2'] = np.array([1.69, 1.58, 1.16, 1.29])
-beta_err['mock2'] = np.array([0.08, 0.07, 0.07, 0.21])
-cor['mock2'] = -0.87
-colors['mock2'] = 'darkviolet'
+# les mocks avec quickquasars + masked DLAs log(n_HI) > 20 (v4.7.22_eboss-0.2)
+redshift['v4.7.22_dla'] = np.array([2.09, 2.21, 2.52, 2.85])
+bias_eta['v4.7.22_dla'] = np.array([-0.174, -0.195, -0.227, -0.279])
+bias_eta_err['v4.7.22_dla'] = np.array([0.003, 0.004, 0.006, 0.018])
+beta['v4.7.22_dla'] = np.array([1.69, 1.58, 1.16, 1.29])
+beta_err['v4.7.22_dla'] = np.array([0.08, 0.07, 0.07, 0.21])
+cor['v4.7.22_dla'] = -0.87
 
-# les mocks qvec quickquasars + masked DLAs with log(n_HI) > 20 (v4.7.27)
-redshift['mock3'] = np.array([2.09, 2.21, 2.52, 2.85])
-bias_eta['mock3'] = np.array([-0.169, -0.196, -0.235, -0.277])
-bias_eta_err['mock3'] = np.array([0.003, 0.003, 0.007, 0.018])
-beta['mock3'] = np.array([1.56, 1.61, 1.32, 1.03])
-beta_err['mock3'] = np.array([0.07, 0.07, 0.09, 0.15])
-cor['mock3'] = -0.87
-colors['mock3'] = 'magenta'
+# le coadd de v4.7.22_eboss-0.2
+redshift['v4.7.22_dla_coadd'] = 2.20
+bias_eta['v4.7.22_dla_coadd'] = -0.1895
+bias_eta_err['v4.7.22_dla_coadd'] = 0.0029
+beta['v4.7.22_dla_coadd'] = 1.57
+beta_err['v4.7.22_dla_coadd'] = 0.06
+cor['v4.7.22_dla_coadd'] = -0.90
+
+# les mocks qvec quickquasars + masked DLAs with log(n_HI) > 20 (v4.7.27_eboss-0.2)
+redshift['v4.7.27_dla'] = np.array([2.09, 2.21, 2.52, 2.85])
+bias_eta['v4.7.27_dla'] = np.array([-0.169, -0.196, -0.235, -0.277])
+bias_eta_err['v4.7.27_dla'] = np.array([0.003, 0.003, 0.007, 0.018])
+beta['v4.7.27_dla'] = np.array([1.56, 1.61, 1.32, 1.03])
+beta_err['v4.7.27_dla'] = np.array([0.07, 0.07, 0.09, 0.15])
+cor['v4.7.27_dla'] = -0.87
+
+# le coadd de v4.7.27_eboss-0.2
+redshift['v4.7.27_dla_coadd'] = 2.20
+bias_eta['v4.7.27_dla_coadd'] = -0.1876
+bias_eta_err['v4.7.27_dla_coadd'] = 0.0028
+beta['v4.7.27_dla_coadd'] = 1.54
+beta_err['v4.7.27_dla_coadd'] = 0.05
+cor['v4.7.27_dla_coadd'] = -0.89
+
+# les mocks avec quickquasars sans DLAs (v4.7.22_eboss-0.0)
+redshift['v4.7.22'] = np.array([2.09, 2.21, 2.52, 2.85])
+bias_eta['v4.7.22'] = np.array([-0.1802, -0.1987, -0.246, -0.270])
+bias_eta_err['v4.7.22'] = np.array([0.0019, 0.0021, 0.004, 0.010])
+beta['v4.7.22'] = np.array([1.76, 1.553, 1.44, 1.06])
+beta_err['v4.7.22'] = np.array([0.03, 0.031, 0.04, 0.06])
+cor['v4.7.22'] = -0.97
+
+# le coadd de v4.7.22_eboss-0.0
+redshift['v4.7.22_coadd'] = 2.20
+bias_eta['v4.7.22_coadd'] = -0.1942
+bias_eta_err['v4.7.22_coadd'] = 0.0015
+beta['v4.7.22_coadd'] = 1.564
+beta_err['v4.7.22_coadd'] = 0.022
+cor['v4.7.22_coadd'] = -0.96
+
+# les mocks avec quickquasars sans DLAs (v4.7.27_eboss-0.0)
+redshift['v4.7.27'] = np.array([2.09, 2.21, 2.52, 2.85])
+bias_eta['v4.7.27'] = np.array([-0.1777, -0.1956, -0.241, -0.282])
+bias_eta_err['v4.7.27'] = np.array([0.0018, 0.0021, 0.004, 0.010])
+beta['v4.7.27'] = np.array([1.69, 1.525, 1.38, 1.14])
+beta_err['v4.7.27'] = np.array([0.03, 0.030, 0.04, 0.07])
+cor['v4.7.27'] = -0.965
+
+# le coadd de v4.7.27_eboss-0.0
+redshift['v4.7.27_coadd'] = 2.20
+bias_eta['v4.7.27_coadd'] = -0.1903
+bias_eta_err['v4.7.27_coadd'] = 0.0015
+beta['v4.7.27_coadd'] = 1.502
+beta_err['v4.7.27_coadd'] = 0.021
+cor['v4.7.27_coadd'] = -0.96
 
 # les mocks directement sur les transmissions (v4.7.22)
-redshift['mock_raw'] = np.array([2.10, 2.24, 2.53, 2.87])
-bias_eta['mock_raw'] = np.array([-0.1786, -0.2054, -0.244, -0.277])
-bias_eta_err['mock_raw'] = np.array([0.002, 0.0022, 0.004, 0.013])
-beta['mock_raw'] = np.array([1.73, 1.58, 1.39, 1.07])
-beta_err['mock_raw'] = np.array([0.04, 0.03, 0.04, 0.09])
-cor['mock_raw'] = -0.96
-colors['mock_raw'] = 'green'
+redshift['v4.7.22_raw'] = np.array([2.10, 2.24, 2.53, 2.87])
+bias_eta['v4.7.22_raw'] = np.array([-0.1786, -0.2054, -0.244, -0.277])
+bias_eta_err['v4.7.22_raw'] = np.array([0.002, 0.0022, 0.004, 0.013])
+beta['v4.7.22_raw'] = np.array([1.73, 1.58, 1.39, 1.07])
+beta_err['v4.7.22_raw'] = np.array([0.04, 0.03, 0.04, 0.09])
+cor['v4.7.22_raw'] = -0.96
+
+# le coadd de v4.7.22 raw mocks
+redshift['v4.7.22_raw_coadd'] = 2.25
+bias_eta['v4.7.22_raw_coadd'] = -0.2034
+bias_eta_err['v4.7.22_raw_coadd'] = 0.0016
+beta['v4.7.22_raw_coadd'] = 1.569
+beta_err['v4.7.22_raw_coadd'] = 0.023
+cor['v4.7.22_raw_coadd'] = -0.96
 
 # les donnees
 data_bias_eta= np.array( [[ 2.13781251, -0.18558474,  0.00650885],
@@ -102,16 +182,15 @@ bias_eta_err['data'] = data_bias_eta[:,2]
 beta['data'] = data_beta[:,1]
 beta_err['data'] = data_beta[:,2]
 cor['data'] = -0.9
-colors['data'] = 'royalblue'
 
-# Le fit de la pred, faites dans chaque bin de mock_raw sur 10 < r < 180:
+# Le fit de la pred, faites dans chaque bin de v4.7.22_raw sur 10 < r < 180:
 zpred1 = np.array([2.10, 2.24, 2.53, 2.87])
 bias_eta_pred1 = np.array([-0.1753, -0.2019, -0.237, -0.284])
 beta_pred1 = np.array([1.68, 1.57, 1.37, 1.18])
 bias_pred1 = bias_eta_pred1 * 0.97 / beta_pred1
 beff_pred1 = bias_pred1 * np.sqrt(1+2/3*beta_pred1+1/5*beta_pred1**2)
 
-# Le fit de la pred, faites dans chaque bin de mock_raw, sur 40 < r < 180 :
+# Le fit de la pred, faites dans chaque bin de v4.7.22_raw, sur 40 < r < 180 :
 zpred2 = np.array([2.10, 2.24, 2.53, 2.87])
 bias_eta_pred2 = np.array([-0.180, -0.205, -0.240, -0.290])
 beta_pred2 = np.array([1.76, 1.63, 1.40, 1.19])
@@ -119,25 +198,25 @@ bias_pred2 = bias_eta_pred2 * 0.97 / beta_pred2
 beff_pred2 = bias_pred2 * np.sqrt(1+2/3*beta_pred2+1/5*beta_pred2**2)
 
 # Compute means on mocks
-if 'mock_mean' in toplot:
-    redshift['mock_mean'] = np.array([redshift[m] for m in mocks]).mean(axis=0)
-    bias_eta['mock_mean'] = np.array([bias_eta[m] for m in mocks]).mean(axis=0)  # assume same errors
-    bias_eta_err['mock_mean'] = np.array([bias_eta_err[m] for m in mocks]).mean(axis=0)
-    bias_eta_err['mock_mean'] /= np.sqrt(len(mocks))
-    beta['mock_mean'] = np.array([beta[m] for m in mocks]).mean(axis=0)
-    beta_err['mock_mean'] = np.array([beta_err[m] for m in mocks]).mean(axis=0)
-    beta_err['mock_mean'] /= np.sqrt(len(mocks))
-    cor['mock_mean'] = np.mean([cor[m] for m in mocks])
-    colors['mock_mean'] = 'r'
+for h in toplot:
+    if 'mean' in h:
+        redshift[h] = np.array([redshift[m] for m in mean_items[h]]).mean(axis=0)
+        bias_eta[h] = np.array([bias_eta[m] for m in mean_items[h]]).mean(axis=0)  # assume same errors
+        bias_eta_err[h] = np.array([bias_eta_err[m] for m in mean_items[h]]).mean(axis=0)
+        bias_eta_err[h] /= np.sqrt(len(mean_items[h]))
+        beta[h] = np.array([beta[m] for m in mean_items[h]]).mean(axis=0)
+        beta_err[h] = np.array([beta_err[m] for m in mean_items[h]]).mean(axis=0)
+        beta_err[h] /= np.sqrt(len(mean_items[h]))
+        cor[h] = np.mean([cor[m] for m in mean_items[h]])
 
 ### Compute bias, b_eff, and fit with power law
 for item in toplot:
     bias[item] = bias_eta[item] * 0.97 / beta[item]
     bias_err[item] = util.bias_err(bias_eta[item], bias_eta_err[item], beta[item], beta_err[item], cor[item])
     beff[item] = bias[item] * np.sqrt(1+2/3*beta[item]+1/5*beta[item]**2)
-    if correct_beff:
-        beff[item] *= (1+z0) / (1+redshift[item])
     beff_err[item] = bias_err[item]
+
+    if 'coadd' in item: continue
 
     print("Fits on {}:".format(item))
     p_bias[item] = sp.optimize.curve_fit(f, redshift[item], bias[item], sigma=bias_err[item])
@@ -153,7 +232,13 @@ for item in toplot:
 if plot_bias_eta:
     fig, ax = plt.subplots()
     for i, item in enumerate(toplot):
-        ax.errorbar(redshift[item], bias_eta[item], yerr=bias_eta_err[item], fmt='.', label=item, color=colors[item])
+        label = item
+        fmt = 'o'
+        if 'coadd' in item:
+            label = None
+            fmt = 'x'
+        ax.errorbar(redshift[item], bias_eta[item], yerr=bias_eta_err[item], fmt=fmt, label=label, color=colors[item])
+        if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         plt.plot(z, f(z, p_bias_eta[item][0][0], p_bias_eta[item][0][1]), linestyle='--', color=colors[item])
         if plot_shades:
@@ -172,7 +257,13 @@ if plot_bias_eta:
 if plot_beta:
     fig, ax = plt.subplots()
     for i, item in enumerate(toplot):
-        ax.errorbar(redshift[item], beta[item], yerr=beta_err[item], fmt='.', label=item, color=colors[item])
+        label = item
+        fmt = 'o'
+        if 'coadd' in item:
+            label = None
+            fmt = 'x'
+        ax.errorbar(redshift[item], beta[item], yerr=beta_err[item], fmt=fmt, label=label, color=colors[item])
+        if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         plt.plot(z, f(z, p_beta[item][0][0], p_beta[item][0][1]), linestyle='--', color=colors[item])
         if plot_shades:
@@ -191,7 +282,13 @@ if plot_beta:
 if plot_bias:
     fig, ax = plt.subplots()
     for i, item in enumerate(toplot):
-        ax.errorbar(redshift[item], bias[item], yerr=bias_err[item], fmt='.', label=item, color=colors[item])
+        label = item
+        fmt = 'o'
+        if 'coadd' in item:
+            label = None
+            fmt = 'x'
+        ax.errorbar(redshift[item], bias[item], yerr=bias_err[item], fmt=fmt, label=label, color=colors[item])
+        if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         plt.plot(z, f(z, p_bias[item][0][0], p_bias[item][0][1]), linestyle='--', color=colors[item])
         if plot_shades:
@@ -210,7 +307,13 @@ if plot_bias:
 if plot_beff:
     fig, ax = plt.subplots()
     for i, item in enumerate(toplot):
-        ax.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt='.', label=item, color=colors[item])
+        label = item
+        fmt = 'o'
+        if 'coadd' in item:
+            label = None
+            fmt = 'x'
+        ax.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt=fmt, label=label, color=colors[item])
+        if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         plt.plot(z, f(z, p_beff[item][0][0], p_beff[item][0][1]), linestyle='--', color=colors[item])
         if plot_shades:
@@ -225,222 +328,33 @@ if plot_beff:
     ax.grid()
     ax.set_xlabel('z')
     ylabel='b_eff'
-    if correct_beff:
-        ylabel += ' G(z) / G({})'.format(z0)
     ax.set_ylabel(ylabel)
 
+if plot_beff:
+    fig, ax = plt.subplots()
+    for i, item in enumerate(toplot):
+        beff[item] *= (1+z0) / (1+redshift[item])
+        label = item
+        fmt = 'o'
+        if 'coadd' in item:
+            label = None
+            fmt = 'x'
+        ax.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt=fmt, label=label, color=colors[item])
+        if 'coadd' in item: continue
+        z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
+        plt.plot(z, f(z, p_beff[item][0][0], p_beff[item][0][1])*(1+z0)/(1+z), linestyle='--', color=colors[item])
+        if plot_shades:
+            plt.fill_between(z, f(z, p_beff[item][0][0]+p_beff[item][1][0,0], p_beff[item][0][1]-p_beff[item][1][1,1])*(1+z0)/(1+z),
+                         f(z, p_beff[item][0][0]-p_beff[item][1][0,0], p_beff[item][0][1]+p_beff[item][1][1,1])*(1+z0)/(1+z),
+                         color=colors[item], alpha=0.2)
+    if plot_pred1:
+        ax.plot(zpred1, beff_pred1*(1+z0)/(1+zpred1), 'x', color='darkgreen', label='pred 10<r<180')
+    if plot_pred2:
+        ax.plot(zpred2, beff_pred2*(1+z0)/(1+zpred2), 'x', color='limegreen', label='pred 40<r<180')
+    ax.legend()
+    ax.grid()
+    ax.set_xlabel('z')
+    ylabel = 'b_eff * G(z) / G({})'.format(z0)
+    ax.set_ylabel(ylabel)
 
 plt.show()
-
-# if plot_bias:
-#     fig, ax = plt.subplots()
-#     if plot_data:
-#         ax.errorbar(redshift['data'], bias['data'], yerr=bias_err['data'], fmt='.', label='data', color='royalblue')
-#         z = np.linspace(redshift['data'].min(), redshift['data'].max(), 100)
-#         plt.plot(z, f(z, p_bias['data'][0][0], p_bias['data'][0][1]), linestyle='--', color='royalblue')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias['data'][0][0]+p_bias['data'][1][0,0], p_bias['data'][0][1]-p_bias['data'][1][1,1]),
-#                          f(z, p_bias['data'][0][0]-p_bias['data'][1][0,0], p_bias['data'][0][1]+p_bias['data'][1][1,1]),
-#                          color='royalblue', alpha=0.2)
-#     if plot_mock1:
-#         ax.errorbar(redshift['mock1'], bias['mock1'], yerr=bias_err['mock1'], fmt='.', label='mock1', color='darkorange')
-#         z = np.linspace(redshift['mock1'].min(), redshift['mock1'].max(), 100)
-#         plt.plot(z, f(z, p_bias['mock1'][0][0], p_bias['mock1'][0][1]), linestyle='--', color='darkorange')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias['mock1'][0][0]+p_bias['mock1'][1][0,0], p_bias['mock1'][0][1]-p_bias['mock1'][1][1,1]),
-#                          f(z, p_bias['mock1'][0][0]-p_bias['mock1'][1][0,0], p_bias['mock1'][0][1]+p_bias['mock1'][1][1,1]),
-#                          color='darkorange', alpha=0.2)
-#     if plot_mock2:
-#         ax.errorbar(redshift['mock2'], bias['mock2'], yerr=bias_err['mock2'], fmt='.', label='mock2', color='red')
-#         z = np.linspace(redshift['mock2'].min(), redshift['mock2'].max(), 100)
-#         plt.plot(z, f(z, p_bias['mock2'][0][0], p_bias['mock2'][0][1]), linestyle='--', color='red')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias['mock2'][0][0]+p_bias['mock2'][1][0,0], p_bias['mock2'][0][1]-p_bias['mock2'][1][1,1]),
-#                          f(z, p_bias['mock2'][0][0]-p_bias['mock2'][1][0,0], p_bias['mock2'][0][1]+p_bias['mock2'][1][1,1]),
-#                          color='red', alpha=0.2)
-#     if plot_mock3:
-#         ax.errorbar(redshift['mock3'], bias['mock3'], yerr=bias_err['mock3'], fmt='.', label='mock3', color='magenta')
-#         z = np.linspace(redshift['mock3'].min(), redshift['mock3'].max(), 100)
-#         plt.plot(z, f(z, p_bias['mock3'][0][0], p_bias['mock3'][0][1]), linestyle='--', color='magenta')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias['mock3'][0][0]+p_bias['mock3'][1][0,0], p_bias['mock3'][0][1]-p_bias['mock3'][1][1,1]),
-#                          f(z, p_bias['mock3'][0][0]-p_bias['mock3'][1][0,0], p_bias['mock3'][0][1]+p_bias['mock3'][1][1,1]),
-#                          color='magenta', alpha=0.2)
-#     if plot_mock_raw:
-#         ax.errorbar(redshift['mock_raw'], bias['mock_raw'], yerr=bias_err['mock_raw'], fmt='.', label='mock_raw', color='green')
-#         z = np.linspace(redshift['mock_raw'].min(), redshift['mock_raw'].max(), 100)
-#         plt.plot(z, f(z, p_bias['mock_raw'][0][0], p_bias['mock_raw'][0][1]), linestyle='--', color='green')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias['mock_raw'][0][0]+p_bias['mock_raw'][1][0,0], p_bias['mock_raw'][0][1]-p_bias['mock_raw'][1][1,1]),
-#                          f(z, p_bias['mock_raw'][0][0]-p_bias['mock_raw'][1][0,0], p_bias['mock_raw'][0][1]+p_bias['mock_raw'][1][1,1]),
-#                          color='green', alpha=0.2)
-#     if plot_pred1:
-#         ax.plot(zpred1, bias_pred1, 'x', color='darkgreen', label='pred 10<r<180')
-#     if plot_pred2:
-#         ax.plot(zpred2, bias_pred2, 'x', color='limegreen', label='pred 40<r<180')
-
-#     ax.legend()
-#     ax.grid()
-#     ax.set_xlabel('z')
-#     ax.set_ylabel('bias')
-
-# if plot_beta:
-#     fig, ax = plt.subplots()
-#     if plot_data:
-#         ax.errorbar(redshift['data'], beta['data'], yerr=beta_err['data'], fmt='.', label='data', color='royalblue')
-#         z = np.linspace(redshift['data'].min(), redshift['data'].max(), 100)
-#         plt.plot(z, f(z, p_beta['data'][0][0], p_beta['data'][0][1]), linestyle='--', color='royalblue')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beta['data'][0][0]+p_beta['data'][1][0,0], p_beta['data'][0][1]-p_beta['data'][1][1,1]),
-#                          f(z, p_beta['data'][0][0]-p_beta['data'][1][0,0], p_beta['data'][0][1]+p_beta['data'][1][1,1]),
-#                          color='royalblue', alpha=0.2)
-#     if plot_mock1:
-#         ax.errorbar(redshift['mock1'], beta['mock1'], yerr=beta_err['mock1'], fmt='.', label='mock1', color='darkorange')
-#         z = np.linspace(redshift['mock1'].min(), redshift['mock1'].max(), 100)
-#         plt.plot(z, f(z, p_beta['mock1'][0][0], p_beta['mock1'][0][1]), linestyle='--', color='darkorange')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beta['mock1'][0][0]+p_beta['mock1'][1][0,0], p_beta['mock1'][0][1]-p_beta['mock1'][1][1,1]),
-#                          f(z, p_beta['mock1'][0][0]-p_beta['mock1'][1][0,0], p_beta['mock1'][0][1]+p_beta['mock1'][1][1,1]),
-#                          color='darkorange', alpha=0.2)
-#     if plot_mock2:
-#         ax.errorbar(redshift['mock2'], beta['mock2'], yerr=beta_err['mock2'], fmt='.', label='mock2', color='red')
-#         z = np.linspace(redshift['mock2'].min(), redshift['mock2'].max(), 100)
-#         plt.plot(z, f(z, p_beta['mock2'][0][0], p_beta['mock2'][0][1]), linestyle='--', color='red')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beta['mock2'][0][0]+p_beta['mock2'][1][0,0], p_beta['mock2'][0][1]-p_beta['mock2'][1][1,1]),
-#                          f(z, p_beta['mock2'][0][0]-p_beta['mock2'][1][0,0], p_beta['mock2'][0][1]+p_beta['mock2'][1][1,1]),
-#                          color='red', alpha=0.2)
-#     if plot_mock3:
-#         ax.errorbar(redshift['mock3'], beta['mock3'], yerr=beta_err['mock3'], fmt='.', label='mock3', color='magenta')
-#         z = np.linspace(redshift['mock3'].min(), redshift['mock3'].max(), 100)
-#         plt.plot(z, f(z, p_beta['mock3'][0][0], p_beta['mock3'][0][1]), linestyle='--', color='magenta')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beta['mock3'][0][0]+p_beta['mock3'][1][0,0], p_beta['mock3'][0][1]-p_beta['mock3'][1][1,1]),
-#                          f(z, p_beta['mock3'][0][0]-p_beta['mock3'][1][0,0], p_beta['mock3'][0][1]+p_beta['mock3'][1][1,1]),
-#                          color='magenta', alpha=0.2)
-#     if plot_mock_raw:
-#         ax.errorbar(redshift['mock_raw'], beta['mock_raw'], yerr=beta_err['mock_raw'], fmt='.', label='mock_raw', color='green')
-#         z = np.linspace(redshift['mock_raw'].min(), redshift['mock_raw'].max(), 100)
-#         plt.plot(z, f(z, p_beta['mock_raw'][0][0], p_beta['mock_raw'][0][1]), linestyle='--', color='green')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beta['mock_raw'][0][0]+p_beta['mock_raw'][1][0,0], p_beta['mock_raw'][0][1]-p_beta['mock_raw'][1][1,1]),
-#                          f(z, p_beta['mock_raw'][0][0]-p_beta['mock_raw'][1][0,0], p_beta['mock_raw'][0][1]+p_beta['mock_raw'][1][1,1]),
-#                          color='green', alpha=0.2)
-#     if plot_pred1:
-#         ax.plot(zpred1, beta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
-#     if plot_pred2:
-#         ax.plot(zpred2, beta_pred2, 'x', color='limegreen', label='pred 40<r<180')
-
-#     ax.legend()
-#     ax.grid()
-#     ax.set_xlabel('z')
-#     ax.set_ylabel('beta')
-
-# if plot_bias_eta:
-#     fig, ax = plt.subplots()
-#     if plot_data:
-#         ax.errorbar(redshift['data'], bias_eta['data'], yerr=bias_eta_err['data'], fmt='.', label='data', color='royalblue')
-#         z = np.linspace(redshift['data'].min(), redshift['data'].max(), 100)
-#         plt.plot(z, f(z, p_bias_eta['data'][0][0], p_bias_eta['data'][0][1]), linestyle='--', color='royalblue')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias_eta['data'][0][0]+p_bias_eta['data'][1][0,0], p_bias_eta['data'][0][1]-p_bias_eta['data'][1][1,1]),
-#                          f(z, p_bias_eta['data'][0][0]-p_bias_eta['data'][1][0,0], p_bias_eta['data'][0][1]+p_bias_eta['data'][1][1,1]),
-#                          color='royalblue', alpha=0.2)
-#     if plot_mock1:
-#         ax.errorbar(redshift['mock1'], bias_eta['mock1'], yerr=bias_eta_err['mock1'], fmt='.', label='mock1', color='darkorange')
-#         z = np.linspace(redshift['mock1'].min(), redshift['mock1'].max(), 100)
-#         plt.plot(z, f(z, p_bias_eta['mock1'][0][0], p_bias_eta['mock1'][0][1]), linestyle='--', color='darkorange')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias_eta['mock1'][0][0]+p_bias_eta['mock1'][1][0,0], p_bias_eta['mock1'][0][1]-p_bias_eta['mock1'][1][1,1]),
-#                          f(z, p_bias_eta['mock1'][0][0]-p_bias_eta['mock1'][1][0,0], p_bias_eta['mock1'][0][1]+p_bias_eta['mock1'][1][1,1]),
-#                          color='darkorange', alpha=0.2)
-#     if plot_mock2:
-#         ax.errorbar(redshift['mock2'], bias_eta['mock2'], yerr=bias_eta_err['mock2'], fmt='.', label='mock2', color='red')
-#         z = np.linspace(redshift['mock2'].min(), redshift['mock2'].max(), 100)
-#         plt.plot(z, f(z, p_bias_eta['mock2'][0][0], p_bias_eta['mock2'][0][1]), linestyle='--', color='red')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias_eta['mock2'][0][0]+p_bias_eta['mock2'][1][0,0], p_bias_eta['mock2'][0][1]-p_bias_eta['mock2'][1][1,1]),
-#                          f(z, p_bias_eta['mock2'][0][0]-p_bias_eta['mock2'][1][0,0], p_bias_eta['mock2'][0][1]+p_bias_eta['mock2'][1][1,1]),
-#                          color='red', alpha=0.2)
-#     if plot_mock3:
-#         ax.errorbar(redshift['mock3'], bias_eta['mock3'], yerr=bias_eta_err['mock3'], fmt='.', label='mock3', color='magenta')
-#         z = np.linspace(redshift['mock3'].min(), redshift['mock3'].max(), 100)
-#         plt.plot(z, f(z, p_bias_eta['mock3'][0][0], p_bias_eta['mock3'][0][1]), linestyle='--', color='magenta')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias_eta['mock3'][0][0]+p_bias_eta['mock3'][1][0,0], p_bias_eta['mock3'][0][1]-p_bias_eta['mock3'][1][1,1]),
-#                          f(z, p_bias_eta['mock3'][0][0]-p_bias_eta['mock3'][1][0,0], p_bias_eta['mock3'][0][1]+p_bias_eta['mock3'][1][1,1]),
-#                          color='magenta', alpha=0.2)
-#     if plot_mock_raw:
-#         ax.errorbar(redshift['mock_raw'], bias_eta['mock_raw'], yerr=bias_eta_err['mock_raw'], fmt='.', label='mock_raw', color='green')
-#         z = np.linspace(redshift['mock_raw'].min(), redshift['mock_raw'].max(), 100)
-#         plt.plot(z, f(z, p_bias_eta['mock_raw'][0][0], p_bias_eta['mock_raw'][0][1]), linestyle='--', color='green')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_bias_eta['mock_raw'][0][0]+p_bias_eta['mock_raw'][1][0,0], p_bias_eta['mock_raw'][0][1]-p_bias_eta['mock_raw'][1][1,1]),
-#                          f(z, p_bias_eta['mock_raw'][0][0]-p_bias_eta['mock_raw'][1][0,0], p_bias_eta['mock_raw'][0][1]+p_bias_eta['mock_raw'][1][1,1]),
-#                          color='green', alpha=0.2)
-#     if plot_pred1:
-#         ax.plot(zpred1, bias_eta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
-#     if plot_pred2:
-#         ax.plot(zpred2, bias_eta_pred2, 'x', color='limegreen', label='pred 40<r<180')
-
-#     ax.legend()
-#     ax.grid()
-#     ax.set_xlabel('z')
-#     ax.set_ylabel('bias_eta')
-
-# if plot_beff:
-#     fig, ax = plt.subplots()
-#     if plot_data:
-#         ax.errorbar(redshift['data'], beff['data'], yerr=beff_err['data'], fmt='.', label='data', color='royalblue')
-#         z = np.linspace(redshift['data'].min(), redshift['data'].max(), 100)
-#         plt.plot(z, f(z, p_beff['data'][0][0], p_beff['data'][0][1]), linestyle='--', color='royalblue')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beff['data'][0][0]+p_beff['data'][1][0,0], p_beff['data'][0][1]-p_beff['data'][1][1,1]),
-#                          f(z, p_beff['data'][0][0]-p_beff['data'][1][0,0], p_beff['data'][0][1]+p_beff['data'][1][1,1]),
-#                          color='royalblue', alpha=0.2)
-#     if plot_mock1:
-#         ax.errorbar(redshift['mock1'], beff['mock1'], yerr=beff_err['mock1'], fmt='.', label='mock1', color='darkorange')
-#         z = np.linspace(redshift['mock1'].min(), redshift['mock1'].max(), 100)
-#         plt.plot(z, f(z, p_beff['mock1'][0][0], p_beff['mock1'][0][1]), linestyle='--', color='darkorange')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beff['mock1'][0][0]+p_beff['mock1'][1][0,0], p_beff['mock1'][0][1]-p_beff['mock1'][1][1,1]),
-#                          f(z, p_beff['mock1'][0][0]-p_beff['mock1'][1][0,0], p_beff['mock1'][0][1]+p_beff['mock1'][1][1,1]),
-#                          color='darkorange', alpha=0.2)
-#     if plot_mock2:
-#         ax.errorbar(redshift['mock2'], beff['mock2'], yerr=beff_err['mock2'], fmt='.', label='mock2', color='red')
-#         z = np.linspace(redshift['mock2'].min(), redshift['mock2'].max(), 100)
-#         plt.plot(z, f(z, p_beff['mock2'][0][0], p_beff['mock2'][0][1]), linestyle='--', color='red')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beff['mock2'][0][0]+p_beff['mock2'][1][0,0], p_beff['mock2'][0][1]-p_beff['mock2'][1][1,1]),
-#                          f(z, p_beff['mock2'][0][0]-p_beff['mock2'][1][0,0], p_beff['mock2'][0][1]+p_beff['mock2'][1][1,1]),
-#                          color='red', alpha=0.2)
-#     if plot_mock3:
-#         ax.errorbar(redshift['mock3'], beff['mock3'], yerr=beff_err['mock3'], fmt='.', label='mock3', color='magenta')
-#         z = np.linspace(redshift['mock3'].min(), redshift['mock3'].max(), 100)
-#         plt.plot(z, f(z, p_beff['mock3'][0][0], p_beff['mock3'][0][1]), linestyle='--', color='magenta')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beff['mock3'][0][0]+p_beff['mock3'][1][0,0], p_beff['mock3'][0][1]-p_beff['mock3'][1][1,1]),
-#                          f(z, p_beff['mock3'][0][0]-p_beff['mock3'][1][0,0], p_beff['mock3'][0][1]+p_beff['mock3'][1][1,1]),
-#                          color='magenta', alpha=0.2)
-#     if plot_mock_raw:
-#         ax.errorbar(redshift['mock_raw'], beff['mock_raw'], yerr=beff_err['mock_raw'], fmt='.', label='mock_raw', color='green')
-#         z = np.linspace(redshift['mock_raw'].min(), redshift['mock_raw'].max(), 100)
-#         plt.plot(z, f(z, p_beff['mock_raw'][0][0], p_beff['mock_raw'][0][1]), linestyle='--', color='green')
-#         if plot_shades:
-#             plt.fill_between(z, f(z, p_beff['mock_raw'][0][0]+p_beff['mock_raw'][1][0,0], p_beff['mock_raw'][0][1]-p_beff['mock_raw'][1][1,1]),
-#                          f(z, p_beff['mock_raw'][0][0]-p_beff['mock_raw'][1][0,0], p_beff['mock_raw'][0][1]+p_beff['mock_raw'][1][1,1]),
-#                          color='green', alpha=0.2)
-#     if plot_pred1:
-#         ax.plot(zpred1, beff_pred1, 'x', color='darkgreen', label='pred 10<r<180')
-#     if plot_pred2:
-#         ax.plot(zpred2, beff_pred2, 'x', color='limegreen', label='pred 40<r<180')
-
-#     ax.legend()
-#     ax.grid()
-#     ax.set_xlabel('z')
-#     ylabel='b_eff'
-#     if correct_beff:
-#         ylabel += ' G(z) / G({})'.format(z0)
-#     ax.set_ylabel(ylabel)
-
-# plt.show()
