@@ -12,14 +12,14 @@ root=/global/cscratch1/sd/tetourne/Out/
 # Parameters :
 fit_pred=0
 sbatch=0
-do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
+do_deltas=1  # 1 is delta from do_delta, 0 is from transmission
 
 # version=debug_v4.1_2
 # version=debug_v4.4
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
 # version=fit_z1.8
-version=v4.7.22
+version=dr16
 
 # do_dmat=0  # run dmat only if continuum fitting
 # do_export=0  # if run dmat, then run export
@@ -32,9 +32,10 @@ fit_cf=1
 fit_xcf=0
 fit_co=0
 object=QSO  # QSO or DLA
+fit_metal=1
 
 
-zeff=2.25
+zeff=2.35
 
 hesse=1  # set to 1 to print correlations between parameters
 zbins=0  # set to 1 if you want to fit a particular redshift bin
@@ -166,6 +167,40 @@ then
 	    filename=${inpath}/Correlations/e_cf_z_${zmin}_${zmax}.fits
 	fi
     fi
+    if [ $fit_metal -gt 0 ]; then
+	metals="
+[metals]
+filename = ${inpath}/Correlations/metal_dmat.fits
+model-pk-met = pk_kaiser
+model-xi-met = xi
+z evol = bias_vs_z_std
+in tracer1 = SiII(1260) NV(1243) NV(1239) SiIII(1207) NI(1200) SiII(1193) SiII(1190)
+in tracer2 = SiII(1260) NV(1243) NV(1239) SiIII(1207) NI(1200) SiII(1193) SiII(1190)
+"
+	metal_pars="
+bias_eta_SiII(1260) = -0.00078 0.01 None 0. free
+beta_SiII(1260) = 0.5 0. None None fixed
+alpha_SiII(1260) = 1.0 0. None None fixed
+bias_eta_NV(1243) = -0.00025 0.01 None 0. free
+beta_NV(1243) = 0.5 0. None None fixed
+alpha_NV(1243) = 1.0 0. None None fixed
+bias_eta_NV(1239) = -0.0021 0.01 None 0. free
+beta_NV(1239) = 0.5 0. None None fixed
+alpha_NV(1239) = 1.0 0. None None fixed
+bias_eta_SiIII(1207) = -0.0051 0.01 None 0. free
+beta_SiIII(1207) = 0.5 0. None None fixed
+alpha_SiIII(1207) = 1.0 0. None None fixed
+bias_eta_NI(1200) = -0.0001 0.01 None 0. free
+beta_NI(1200) = 0.5 0. None None fixed
+alpha_NI(1200) = 1.0 0. None None fixed
+bias_eta_SiII(1193) = -0.0001 0.01 None 0. free
+beta_SiII(1193) = 0.5 0. None None fixed
+alpha_SiII(1193) = 1.0 0. None None fixed
+bias_eta_SiII(1190) = -0.0012 0.01 None 0. free
+beta_SiII(1190) = 0.5 0. None None fixed
+alpha_SiII(1190) = 1.0 0. None None fixed
+"
+    fi
     cat > ${inpath}/Fit/config_cf.ini <<EOF
 [data]
 name = LYA(LYA)xLYA(LYA)
@@ -190,24 +225,27 @@ mu-min = -1.
 mu-max = 1.
 
 [model]
-model-pk = pk_kaiser
-# model-pk = pk_hcd_Rogers2018
+# model-pk = pk_kaiser
+model-pk = pk_hcd_Rogers2018
 model-xi = xi
 z evol LYA = bias_vs_z_std
 # growth function = growth_factor_no_de
 growth function = growth_factor_de
 # tranfer-func-mock = data/xi_g_to_xi_F.fits.gz
-pk-gauss-smoothing = pk_gauss_smoothing
+# pk-gauss-smoothing = pk_gauss_smoothing
+
+${metals}
 
 [parameters]
-
-ap = 1. 0.1 0.5 1.5 fixed
-at = 1. 0.1 0.5 1.5 fixed
+${metal_pars}
+ap = 1. 0.1 0.5 1.5 free
+at = 1. 0.1 0.5 1.5 free
 bao_amp = 1. 0 None None fixed
 
-sigmaNL_per = 0     0 None None fixed
-sigmaNL_par = 0 0 None None fixed
-# 1+f         = 1.966    0 None None fixed
+# sigmaNL_per = 0     0 None None fixed
+# sigmaNL_par = 0 0 None None fixed
+sigmaNL_per = 3.26     0 None None fixed
+sigmaNL_par = 6.42 0 None None fixed
 # growth_rate = 0.966    0 None None fixed
 growth_rate = 0.970386193694752 0. None None fixed
 
@@ -215,18 +253,18 @@ bias_eta_LYA  = -0.14  0.017 None None free
 beta_LYA  = 1.8     0.1 None None free
 alpha_LYA = 2.9    0   None None fixed
 
-# bias_hcd = -0.055543492131170824 0.1 None 0. free
-# beta_hcd = 0.5499827447420765 0.1 None None free
-# L0_hcd = 10. 1. None None fixed
+bias_hcd = -0.055543492131170824 0.1 None 0. free
+beta_hcd = 0.5499827447420765 0.1 None None free
+L0_hcd = 10. 1. None None fixed
 
 par binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 per binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 
-par_sigma_smooth = 3.1 0.1 0 None free
-per_sigma_smooth = 3.1 0.1 0 None free
+# par_sigma_smooth = 3.1 0.1 0 None free
+# per_sigma_smooth = 3.1 0.1 0 None free
 
-# [priors]
-# beta_hcd = gaussian 0.5 0.2
+[priors]
+beta_hcd = gaussian 0.5 0.2
 EOF
 fi
 
