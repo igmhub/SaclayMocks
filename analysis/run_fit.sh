@@ -19,7 +19,7 @@ do_deltas=1  # 1 is delta from do_delta, 0 is from transmission
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
 # version=fit_z1.8
-version=dr16
+version=dr16_paper
 
 # do_dmat=0  # run dmat only if continuum fitting
 # do_export=0  # if run dmat, then run export
@@ -174,31 +174,43 @@ filename = ${inpath}/Correlations/metal_dmat.fits
 model-pk-met = pk_kaiser
 model-xi-met = xi
 z evol = bias_vs_z_std
-in tracer1 = SiII(1260) NV(1243) NV(1239) SiIII(1207) NI(1200) SiII(1193) SiII(1190)
-in tracer2 = SiII(1260) NV(1243) NV(1239) SiIII(1207) NI(1200) SiII(1193) SiII(1190)
+# in tracer1 = SiII(1260) NV(1243) NV(1239) SiIII(1207) NI(1200) SiII(1193) SiII(1190)
+# in tracer2 = SiII(1260) NV(1243) NV(1239) SiIII(1207) NI(1200) SiII(1193) SiII(1190)
+in tracer1 = CIV(eff) SiII(1260) SiIII(1207) SiII(1193) SiII(1190)
+in tracer2 = CIV(eff) SiII(1260) SiIII(1207) SiII(1193) SiII(1190)
 "
 	metal_pars="
-bias_eta_SiII(1260) = -0.00078 0.01 None 0. free
+bias_eta_SiII(1260) = -0.002205 0.01 None 0. free
 beta_SiII(1260) = 0.5 0. None None fixed
 alpha_SiII(1260) = 1.0 0. None None fixed
-bias_eta_NV(1243) = -0.00025 0.01 None 0. free
-beta_NV(1243) = 0.5 0. None None fixed
-alpha_NV(1243) = 1.0 0. None None fixed
-bias_eta_NV(1239) = -0.0021 0.01 None 0. free
-beta_NV(1239) = 0.5 0. None None fixed
-alpha_NV(1239) = 1.0 0. None None fixed
-bias_eta_SiIII(1207) = -0.0051 0.01 None 0. free
+
+bias_eta_SiIII(1207) = -0.004535 0.01 None 0. free
 beta_SiIII(1207) = 0.5 0. None None fixed
 alpha_SiIII(1207) = 1.0 0. None None fixed
-bias_eta_NI(1200) = -0.0001 0.01 None 0. free
-beta_NI(1200) = 0.5 0. None None fixed
-alpha_NI(1200) = 1.0 0. None None fixed
-bias_eta_SiII(1193) = -0.0001 0.01 None 0. free
+
+bias_eta_SiII(1193) = -0.00209 0.01 None 0. free
 beta_SiII(1193) = 0.5 0. None None fixed
 alpha_SiII(1193) = 1.0 0. None None fixed
-bias_eta_SiII(1190) = -0.0012 0.01 None 0. free
+
+bias_eta_SiII(1190) = -0.00296 0.01 None 0. free
 beta_SiII(1190) = 0.5 0. None None fixed
 alpha_SiII(1190) = 1.0 0. None None fixed
+
+# bias_eta_NV(1243) = -0.000 0.01 None 0. free
+# beta_NV(1243) = 0.5 0. None None fixed
+# alpha_NV(1243) = 1.0 0. None None fixed
+
+# bias_eta_NV(1239) = -0.000 0.01 None 0. free
+# beta_NV(1239) = 0.5 0. None None fixed
+# alpha_NV(1239) = 1.0 0. None None fixed
+
+# bias_eta_NI(1200) = -0.000 0.01 None 0. free
+# beta_NI(1200) = 0.5 0. None None fixed
+# alpha_NI(1200) = 1.0 0. None None fixed
+
+bias_eta_CIV(eff) = -0.005156549561399881 0.001 None 0. free
+beta_CIV(eff) = 0.27 0.01 None 1. fixed
+alpha_CIV(eff) = 1. 0.01 None None fixed
 "
     fi
     cat > ${inpath}/Fit/config_cf.ini <<EOF
@@ -233,6 +245,7 @@ z evol LYA = bias_vs_z_std
 growth function = growth_factor_de
 # tranfer-func-mock = data/xi_g_to_xi_F.fits.gz
 # pk-gauss-smoothing = pk_gauss_smoothing
+small scale nl = dnl_arinyo
 
 ${metals}
 
@@ -244,18 +257,27 @@ bao_amp = 1. 0 None None fixed
 
 # sigmaNL_per = 0     0 None None fixed
 # sigmaNL_par = 0 0 None None fixed
-sigmaNL_per = 3.26     0 None None fixed
-sigmaNL_par = 6.42 0 None None fixed
+sigmaNL_per = 3.24     0 None None fixed
+sigmaNL_par = 6.36984 0 None None fixed
 # growth_rate = 0.966    0 None None fixed
 growth_rate = 0.970386193694752 0. None None fixed
 
-bias_eta_LYA  = -0.14  0.017 None None free
+bias_eta_LYA  = -0.20  0.02 None None free
 beta_LYA  = 1.8     0.1 None None free
 alpha_LYA = 2.9    0   None None fixed
 
-bias_hcd = -0.055543492131170824 0.1 None 0. free
-beta_hcd = 0.5499827447420765 0.1 None None free
+bias_hcd = -0.05222070235530851 0.1 None 0. free
+beta_hcd = 0.6098209629393987 0.1 None None free
 L0_hcd = 10. 1. None None fixed
+
+dnl_arinyo_q1 = 0.8558 0.1 None None fixed
+dnl_arinyo_kv = 1.11454 0.1 None None fixed
+dnl_arinyo_av = 0.5378 0.1 None None fixed
+dnl_arinyo_bv = 1.607 0.1 None None fixed
+dnl_arinyo_kp = 19.47 0.1 None None fixed
+
+BB-LYA(LYA)xLYA(LYA)-0-broadband_sky-scale-sky = 0.009411087303413272 0.1 None None free
+BB-LYA(LYA)xLYA(LYA)-0-broadband_sky-sigma-sky = 31.41897384749371 0.1 None None free
 
 par binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 per binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
@@ -263,8 +285,13 @@ per binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 # par_sigma_smooth = 3.1 0.1 0 None free
 # per_sigma_smooth = 3.1 0.1 0 None free
 
+[broadband]
+bb1 = add pre rp,rt 0:0:1 0:0:1 broadband_sky
+
 [priors]
-beta_hcd = gaussian 0.5 0.2
+beta_hcd = gaussian 0.5 0.09
+# bias_eta_CIV(eff) = gaussian -0.005 0.0026
+
 EOF
 fi
 

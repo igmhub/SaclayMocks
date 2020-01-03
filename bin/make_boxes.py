@@ -42,7 +42,10 @@ def DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile, box_null=False):
 # later we will directly draw boxk, with appropriate symetries
 # and with var(delta_k)=NX*NY*NZ(see cahier simu FFT normalization)
   t0 = time.time()
-  box = np.float32(np.random.normal(size=[NX, NY, NZ]))
+  # box = np.float32(np.random.normal(size=[NX, NY, NZ]))
+  box = np.zeros((NX,NY,NZ),dtype=float32)
+  for iz in range(NZ):
+    box[:,:,iz] =  np.float32(np.random.normal(size=[NX, NY]))
   t1 = time.time()
   print(box.nbytes/1024/1024, " Mbytes box drawn",  t1-t0, " s")
   print(box.dtype)
@@ -63,6 +66,7 @@ def DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile, box_null=False):
       raise ValueError("/!\ boxk is null /!\ \n    Wisdom saved before exiting.")
     print("/!\ Boxk was null. Wisdom has been saved, trying again FFTW...")
     pyfftw.import_wisdom(sp.load(wisdomFile))
+    del boxk
     boxk = DrawGRF_boxk(NX, NY, NZ, ncpu, wisdomFile, True)
 
   return boxk
