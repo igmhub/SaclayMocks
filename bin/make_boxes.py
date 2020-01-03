@@ -43,7 +43,7 @@ def DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile, box_null=False):
 # and with var(delta_k)=NX*NY*NZ(see cahier simu FFT normalization)
   t0 = time.time()
   # box = np.float32(np.random.normal(size=[NX, NY, NZ]))
-  box = np.zeros((NX,NY,NZ),dtype=float32)
+  box = np.zeros((NX,NY,NZ),dtype=np.float32)
   for iz in range(NZ):
     box[:,:,iz] =  np.float32(np.random.normal(size=[NX, NY]))
   t1 = time.time()
