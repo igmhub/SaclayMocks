@@ -815,14 +815,14 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
             mock_args['bb_name'] = mock_args['bb_name'][:i]+"_"+str(imock)
         else:
             mock_args['bb_name'] = mock_args['bb_name']+"_"+str(imock)
-        if run_args['run_create']:
-            create_reservation(mock_args)
-        if run_args['run_stagein']:
-            stage_in(mock_args)
-        if run_args['run_stageout']:
-            stage_out(mock_args)
-        if run_args['run_delete']:
-            delete_reservation(mock_args)
+        # if run_args['run_create']:
+        create_reservation(mock_args)
+        # if run_args['run_stagein']:
+        stage_in(mock_args)
+        # if run_args['run_stageout']:
+        stage_out(mock_args)
+        # if run_args['run_delete']:
+        delete_reservation(mock_args)
         # Change the base directory to burst buffer directory:
         for k in mock_args.keys():
             # this dir is not included in the next replace, so we do it by hand
@@ -1198,8 +1198,8 @@ def main():
     run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
-    run_args['run_create'] = False  # Create persistent reservation
-    run_args['run_stagein'] = False  # Stage in the init files (pk, directories, ...) (from scratch to BB)
+    run_args['run_create'] = True  # Create persistent reservation
+    run_args['run_stagein'] = True  # Stage in the init files (pk, directories, ...) (from scratch to BB)
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
     run_args['run_delete'] = False  # delete the persistent reservation
 
