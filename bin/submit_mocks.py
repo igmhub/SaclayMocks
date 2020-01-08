@@ -1130,7 +1130,7 @@ def main():
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:20:00"  # default "00:30:00"
+    sbatch_args['time_chunk'] = "00:30:00"  # default "00:30:00"
     sbatch_args['queue_chunk'] = "regular"  # default "regular"
     sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
@@ -1185,7 +1185,7 @@ def main():
     # chunks:
     run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
-    run_args['randoms'] = True  # run draw_qso.py for randoms
+    run_args['randoms'] = False  # run draw_qso.py for randoms
     run_args['make_spectra'] = True  # run make_spectra.py
     run_args['merge_spectra'] = False  # run merge_spectra.py
     # merge chunks:
@@ -1198,8 +1198,8 @@ def main():
     run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
-    run_args['run_create'] = True  # Create persistent reservation
-    run_args['run_stagein'] = True  # Stage in the init files (pk, directories, ...) (from scratch to BB)
+    run_args['run_create'] = False  # Create persistent reservation
+    run_args['run_stagein'] = False  # Stage in the init files (pk, directories, ...) (from scratch to BB)
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
     run_args['run_delete'] = False  # delete the persistent reservation
 
