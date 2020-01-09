@@ -5,6 +5,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+# Plot options
+SMALL_SIZE = 18
+MEDIUM_SIZE = 20
+BIGGER_SIZE = 22
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+plt.rc('figure', figsize=(9,7))
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", type=str, nargs="*", help="list of files")
 parser.add_argument("--labels", type=str, nargs='*', help='list of labels', default=None)
@@ -88,5 +102,6 @@ for ax in [ax1, ax2]:
         ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
     if r_pow == 0:
         ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    plt.tight_layout()
 
 plt.show()
