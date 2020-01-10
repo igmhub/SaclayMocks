@@ -564,7 +564,7 @@ def run_python_script(i_node, i_chunk, codename, mock_args, sbatch_args, name=No
     if name is None:
         name = codename
     imin = i_node*sbatch_args['threads_chunk']
-    imax = (i_node+1)*sbatch_args['threads_chunk'] + 1
+    imax = (i_node+1)*sbatch_args['threads_chunk']
     if imax >= mock_args['nslice']: imax=mock_args['nslice']
     script = "#!/bin/bash -l\n"
     script += """pids=""\n"""
