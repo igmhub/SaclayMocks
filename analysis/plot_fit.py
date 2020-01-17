@@ -98,8 +98,14 @@ if "cf" in args.to_do:
             i = int(fitcf_file.find(".h5"))
             j = int(fitcf_file.rfind("/"))+1
             r,f,_ = w.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
-        except:
+        except KeyError:
             print("Can't find {}".format(fitcf_file[j:i]+"/fit"))
+            try:
+                r, f, _ =w.wedge(ff["cf_z_0_10/fit"][...],co)
+            except KeyError:
+                print("Can't find {}".format(cf_z_0_10/fit))
+                print("Exit!")
+                sys.exit(1)
     coef = data_wedge[0]**r_pow
     if args.pred:
         data = fitsio.FITS(indir+"/Correlations/e_cf_pred.fits")
@@ -175,6 +181,15 @@ if "cf" in args.to_do:
             r4,f4,_ = w4.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
         except:
             print("Can't find {}".format(fitcf_file[j:i]+"/fit"))
+            try:
+                r1, f1, _ =w1.wedge(ff["cf_z_0_10/fit"][...],co)
+                r2, f2, _ =w2.wedge(ff["cf_z_0_10/fit"][...],co)
+                r3, f3, _ =w3.wedge(ff["cf_z_0_10/fit"][...],co)
+                r4, f4, _ =w4.wedge(ff["cf_z_0_10/fit"][...],co)
+            except KeyError:
+                print("Can't find {}".format(cf_z_0_10/fit))
+                print("Exit!")
+                sys.exit(1)
 
     if args.pred:
         data_wedge1_pred = w1.wedge(da_pred,co_pred)

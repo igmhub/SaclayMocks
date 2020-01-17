@@ -23,13 +23,15 @@ plot_beta = True
 plot_bias_eta = True
 plot_beff = True
 
-# toplot = ['v4.7.22_dla_nomask', 'v4.7.22_dla', 'v4.7.27_dla', 'v4.7.22', 'v4.7.27', 'v4.7.22_raw', 'data', 'dla_mean', 'mock_mean']
-# toplot = ['mock_mean', 'mock_coadd_mean', 'dla_mean', 'dla_coadd_mean', 'v4.7.22_raw', 'data']
-# toplot = ['v4.7.22', 'v4.7.27', 'v4.7.22_dla', 'v4.7.27_dla', 'v4.7.22_raw', 'data']
-toplot = ['v4.7.22_raw', 'mock_mean', 'dla_mean', 'data']
+# toplot = ['v4.7.22_dla_nomask', 'v4.7.22_dla', 'v4.7.27_dla', 'v4.7.22', 'v4.7.27', 'v4.7.22_raw', 'data_helion', 'dla_mean', 'mock_mean']
+# toplot = ['mock_mean', 'mock_coadd_mean', 'dla_mean', 'dla_coadd_mean', 'v4.7.22_raw', 'data_helion']
+# toplot = ['v4.7.22', 'v4.7.27', 'v4.7.22_dla', 'v4.7.27_dla', 'v4.7.22_raw', 'data_helion']
+# toplot = ['v4.7.22_raw', 'mock_mean', 'dla_mean', 'data_helion']
+toplot = ['v4.7.22_raw', 'mock_mean', 'dla_mean', 'data_helion', 'redo_dr16']
 
 #labels = toplot
-labels = ['mock_raw', 'mock_0.0', 'mock_0.2', 'data']
+# labels = ['mock_raw', 'mock_0.0', 'mock_0.2', 'data_helion']
+labels = ['mock_raw', 'mock_0.0', 'mock_0.2', 'data_helion', 'redo_dr16']
 
 mean_items = {}  # mocks used to compute means
 mean_items['dla_mean'] = ['v4.7.22_dla', 'v4.7.27_dla']
@@ -68,7 +70,8 @@ p_bias_eta = {}
 p_beff = {}
 
 # Choose colors
-colors['data'] = 'black'
+colors['data_helion'] = 'black'
+colors['redo_dr16'] = 'dimgray'
 colors['v4.7.22'] = 'dodgerblue'
 colors['v4.7.22_coadd'] = 'dodgerblue'
 colors['v4.7.27'] = 'darkblue'
@@ -176,20 +179,28 @@ beta_err['v4.7.22_raw_coadd'] = 0.023
 cor['v4.7.22_raw_coadd'] = -0.96
 
 # les donnees
-data_bias_eta= np.array( [[ 2.13781251, -0.18558474,  0.00650885],
+data_helion_bias_eta= np.array( [[ 2.13781251, -0.18558474,  0.00650885],
                           [ 2.27259149, -0.20089904,  0.00566513],
                           [ 2.54744584, -0.23754895,  0.00859699],
                           [ 2.9263245,  -0.28984325,  0.01907289]] )
-data_beta = np.array([[2.13781251, 1.71518188, 0.14670333],
+data_helion_beta = np.array([[2.13781251, 1.71518188, 0.14670333],
                       [2.27259149, 1.63599596, 0.12377548],
                       [2.54744584, 1.34603853, 0.10685724],
                       [2.9263245,  1.20116875, 0.16525412]])
-redshift['data'] = data_beta[:,0]
-bias_eta['data'] = data_bias_eta[:,1]
-bias_eta_err['data'] = data_bias_eta[:,2]
-beta['data'] = data_beta[:,1]
-beta_err['data'] = data_beta[:,2]
-cor['data'] = -0.9
+redshift['data_helion'] = data_helion_beta[:,0]
+bias_eta['data_helion'] = data_helion_bias_eta[:,1]
+bias_eta_err['data_helion'] = data_helion_bias_eta[:,2]
+beta['data_helion'] = data_helion_beta[:,1]
+beta_err['data_helion'] = data_helion_beta[:,2]
+cor['data_helion'] = -0.9
+
+# Mon analyse dr16
+redshift['redo_dr16'] = np.array([2.136, 2.276, 2.551, 2.914])
+bias_eta['redo_dr16'] = np.array([-0.1795977211203897, -0.19377778657236358, -0.2236876829818197, -0.2928514012382003])
+bias_eta_err['redo_dr16'] = np.array([0.005769053847991895, 0.00526939132784233, 0.008421287322167362, 0.018740373333761263])
+beta['redo_dr16'] = np.array([2.093809306317262, 1.7112686242434043, 1.4274033068601393, 1.264422978848562])
+beta_err['redo_dr16'] = np.array([0.2104492929009926, 0.13322965498374356, 0.13841133835520955, 0.19412583530626168])
+cor['redo_dr16'] = -0.875
 
 # Le fit de la pred, faites dans chaque bin de v4.7.22_raw sur 10 < r < 180:
 zpred1 = np.array([2.10, 2.24, 2.53, 2.87])
