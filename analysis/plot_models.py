@@ -23,32 +23,40 @@ plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 plt.rc('figure', figsize=(9,7))
 
+# Parameters
 model_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Model_effect"
-cf_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Correlations"
-print("Reading correlation function in {}".format(cf_dir))
-print("Reading fits in {}".format(model_dir))
+# model_dir = "/global/cscratch1/sd/tetourne/Out/dr16/from_quickquasars/Model_analysis"
 
-toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_met', 'kaiser_nl_met_hcd', 'kaiser_nl_met_hcd_sky']
-labels = toplot
+# cf_file = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Correlations/cf_z_0_10-exp.fits"
+cf_file = "/global/cscratch1/sd/tetourne/Out/mock_0.0/cf_z_0_10-exp.fits"
+# cf_file = "/global/cscratch1/sd/tetourne/Out/dr16/from_quickquasars/Correlations/e_cf.fits"
+
+# toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_met', 'kaiser_nl_met_hcd', 'kaiser_nl_met_hcd_L025']
+# toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_met_hcd', 'kaiser_nl_met_hcd_sky']
+toplot = ['kaiser_nl_ap1_at1']
+
+# labels = toplot
+labels = ['kaiser_nl']
 # labels = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_hcd_met', 'kaiser_nl_hcd_met_sky']
+
 fit_name = 'cf_z_0_10'
+# fit_name = 'LYA(LYA)xLYA(LYA)'
+
 colors = ['royalblue', 'green', 'darkorange', 'r', 'purple']
+
+
+### Begining of code
+print("Reading correlation function {}".format(cf_file))
+print("Reading fits in {}".format(model_dir))
 
 # Read the fits from picca
 files = {}
 for item in toplot:
+    print("Reading {}".format(item+".h5"))
     files[item] = h5py.File(model_dir+"/"+item+".h5")
 
-# ### List of files :
-# fit1 = h5py.File(model_dir+"/kaiser.h5")
-# fit2 = h5py.File(model_dir+"/kaiser_nl.h5")
-# fit3 = h5py.File(model_dir+"/kaiser_nl_met.h5")
-# fit3 = h5py.File(model_dir+"/kaiser_nl_hcd.h5")
-# fit4 = h5py.File(model_dir+"/kaiser_nl_met_hcd.h5")
-# fit5 = h5py.File(model_dir+"/kaiser_nl_met_hcd_sky.h5")
-
 # Read the correlation function
-fits = fitsio.FITS(cf_dir+"/cf_z_0_10-exp.fits")
+fits = fitsio.FITS(cf_file)
 da = fits[1].read()['DA']
 co = fits[1].read()['CO']
 fits.close()
@@ -58,6 +66,7 @@ w = picca.wedgize.wedge(mumin=0.,mumax=1., rtmax=200, rpmax=200, rtmin=0, rpmin=
 data_wedge_cf = w.wedge(da,co)
 data_wedge_fit = {}
 for item in toplot:
+    print("Reading fit {}".format(item+"["+fit_name+"/fit]"))
     data_wedge_fit[item] = w.wedge(files[item][fit_name+"/fit"][...],co)
 
 # extract the correlation in wedges
