@@ -19,7 +19,8 @@ do_deltas=1  # 1 is delta from do_delta, 0 is from transmission
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
 # version=fit_z1.8
-version=dr16_paper
+# version=dr16_paper
+version=v4.7.22_masked_dla20.5_4
 
 # do_dmat=0  # run dmat only if continuum fitting
 # do_export=0  # if run dmat, then run export
@@ -32,12 +33,12 @@ fit_cf=1
 fit_xcf=0
 fit_co=0
 object=QSO  # QSO or DLA
-fit_metal=1
+fit_metal=0
 
 
-zeff=2.35
+zeff=2.85
 
-hesse=1  # set to 1 to print correlations between parameters
+hesse=0  # set to 1 to print correlations between parameters
 zbins=0  # set to 1 if you want to fit a particular redshift bin
 zmin=2.75
 zmax=3.6
@@ -244,21 +245,21 @@ z evol LYA = bias_vs_z_std
 # growth function = growth_factor_no_de
 growth function = growth_factor_de
 # tranfer-func-mock = data/xi_g_to_xi_F.fits.gz
-# pk-gauss-smoothing = pk_gauss_smoothing
-small scale nl = dnl_arinyo
+pk-gauss-smoothing = pk_gauss_smoothing
+# small scale nl = dnl_arinyo
 
 ${metals}
 
 [parameters]
 ${metal_pars}
-ap = 1. 0.1 0.5 1.5 free
-at = 1. 0.1 0.5 1.5 free
+ap = 1. 0.1 0.5 1.5 fixed
+at = 1. 0.1 0.5 1.5 fixed
 bao_amp = 1. 0 None None fixed
 
-# sigmaNL_per = 0     0 None None fixed
-# sigmaNL_par = 0 0 None None fixed
-sigmaNL_per = 3.24     0 None None fixed
-sigmaNL_par = 6.36984 0 None None fixed
+sigmaNL_per = 0     0 None None fixed
+sigmaNL_par = 0 0 None None fixed
+# sigmaNL_per = 3.24     0 None None fixed
+# sigmaNL_par = 6.36984 0 None None fixed
 # growth_rate = 0.966    0 None None fixed
 growth_rate = 0.970386193694752 0. None None fixed
 
@@ -270,23 +271,23 @@ bias_hcd = -0.05222070235530851 0.1 None 0. free
 beta_hcd = 0.6098209629393987 0.1 None None free
 L0_hcd = 10. 1. None None fixed
 
-dnl_arinyo_q1 = 0.8558 0.1 None None fixed
-dnl_arinyo_kv = 1.11454 0.1 None None fixed
-dnl_arinyo_av = 0.5378 0.1 None None fixed
-dnl_arinyo_bv = 1.607 0.1 None None fixed
-dnl_arinyo_kp = 19.47 0.1 None None fixed
+# dnl_arinyo_q1 = 0.8558 0.1 None None fixed
+# dnl_arinyo_kv = 1.11454 0.1 None None fixed
+# dnl_arinyo_av = 0.5378 0.1 None None fixed
+# dnl_arinyo_bv = 1.607 0.1 None None fixed
+# dnl_arinyo_kp = 19.47 0.1 None None fixed
 
-BB-LYA(LYA)xLYA(LYA)-0-broadband_sky-scale-sky = 0.009411087303413272 0.1 None None free
-BB-LYA(LYA)xLYA(LYA)-0-broadband_sky-sigma-sky = 31.41897384749371 0.1 None None free
+# BB-LYA(LYA)xLYA(LYA)-0-broadband_sky-scale-sky = 0.009411087303413272 0.1 None None free
+# BB-LYA(LYA)xLYA(LYA)-0-broadband_sky-sigma-sky = 31.41897384749371 0.1 None None free
 
 par binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 per binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 
-# par_sigma_smooth = 3.1 0.1 0 None free
-# per_sigma_smooth = 3.1 0.1 0 None free
+par_sigma_smooth = 3.1 0.1 0 None free
+per_sigma_smooth = 3.1 0.1 0 None free
 
-[broadband]
-bb1 = add pre rp,rt 0:0:1 0:0:1 broadband_sky
+# [broadband]
+# bb1 = add pre rp,rt 0:0:1 0:0:1 broadband_sky
 
 [priors]
 beta_hcd = gaussian 0.5 0.09

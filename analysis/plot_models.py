@@ -28,7 +28,9 @@ model_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Model_effe
 # model_dir = "/global/cscratch1/sd/tetourne/Out/dr16/from_quickquasars/Model_analysis"
 
 # cf_file = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Correlations/cf_z_0_10-exp.fits"
-cf_file = "/global/cscratch1/sd/tetourne/Out/mock_0.0/cf_z_0_10-exp.fits"
+# cf_file = "/global/cscratch1/sd/tetourne/Out/mock_0.0/cf_z_0_10-exp.fits"
+cf_file = "/global/cscratch1/sd/tetourne/Out/v4.7.22/from_quickquasars/Correlations/e_cf.fits"
+# cf_file = "/global/cscratch1/sd/tetourne/Out/v4.7.22_masked_dla20.3/from_quickquasars/Correlations/e_cf.fits"
 # cf_file = "/global/cscratch1/sd/tetourne/Out/dr16/from_quickquasars/Correlations/e_cf.fits"
 
 # toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_met', 'kaiser_nl_met_hcd', 'kaiser_nl_met_hcd_L025']

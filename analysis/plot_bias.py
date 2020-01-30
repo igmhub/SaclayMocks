@@ -27,11 +27,13 @@ plot_beff = True
 # toplot = ['mock_mean', 'mock_coadd_mean', 'dla_mean', 'dla_coadd_mean', 'v4.7.22_raw', 'data_helion']
 # toplot = ['v4.7.22', 'v4.7.27', 'v4.7.22_dla', 'v4.7.27_dla', 'v4.7.22_raw', 'data_helion']
 # toplot = ['v4.7.22_raw', 'mock_mean', 'dla_mean', 'data_helion']
-toplot = ['v4.7.22_raw', 'mock_mean', 'dla_mean', 'data_helion', 'redo_dr16']
+# toplot = ['v4.7.22_raw', 'mock_mean', 'dla_mean', 'data_helion', 'redo_dr16']
+toplot = ['v4.7.22_dla', 'v4.7.22', 'v4.7.22_raw', 'redo_dr16']
 
 #labels = toplot
 # labels = ['mock_raw', 'mock_0.0', 'mock_0.2', 'data_helion']
-labels = ['mock_raw', 'mock_0.0', 'mock_0.2', 'data_helion', 'redo_dr16']
+# labels = ['mock_raw', 'mock_0.0', 'mock_0.2', 'data_helion', 'redo_dr16']
+labels = ['mock-0.2', 'mock-0.0', 'raw mocks', 'dr16']
 
 mean_items = {}  # mocks used to compute means
 mean_items['dla_mean'] = ['v4.7.22_dla', 'v4.7.27_dla']
@@ -43,7 +45,7 @@ plot_pred1 = False
 plot_pred2 = False
 plot_shades = False
 
-correct_z_dep = True
+correct_z_dep = False
 gamma = {'bias_eta':2.2, 'beta':-1.8, 'bias':3.8, 'beff':3.2}
 
 
@@ -99,11 +101,17 @@ beta_err['v4.7.22_dla_nomask'] = np.array([0.07, 0.07, 0.07, 0.16])
 cor['v4.7.22_dla_nomask'] = -0.87
 
 # les mocks avec quickquasars + masked DLAs log(n_HI) > 20 (v4.7.22_eboss-0.2)
+# redshift['v4.7.22_dla'] = np.array([2.09, 2.21, 2.52, 2.85])
+# bias_eta['v4.7.22_dla'] = np.array([-0.174, -0.195, -0.227, -0.279])
+# bias_eta_err['v4.7.22_dla'] = np.array([0.003, 0.004, 0.006, 0.018])
+# beta['v4.7.22_dla'] = np.array([1.69, 1.58, 1.16, 1.29])
+# beta_err['v4.7.22_dla'] = np.array([0.08, 0.07, 0.07, 0.21])
+# cor['v4.7.22_dla'] = -0.87
 redshift['v4.7.22_dla'] = np.array([2.09, 2.21, 2.52, 2.85])
-bias_eta['v4.7.22_dla'] = np.array([-0.174, -0.195, -0.227, -0.279])
-bias_eta_err['v4.7.22_dla'] = np.array([0.003, 0.004, 0.006, 0.018])
-beta['v4.7.22_dla'] = np.array([1.69, 1.58, 1.16, 1.29])
-beta_err['v4.7.22_dla'] = np.array([0.08, 0.07, 0.07, 0.21])
+bias_eta['v4.7.22_dla'] = np.array([-0.17834206335604685, -0.19824135015363673, -0.23347086797901706, -0.26844055267731287])
+bias_eta_err['v4.7.22_dla'] = np.array([0.0023817769778462423, 0.002676011550310295, 0.0049626231393716065, 0.012809679373192641])
+beta['v4.7.22_dla'] = np.array([1.6972452265815168, 1.571389214992836, 1.1929697421092473, 1.0865762569014479])
+beta_err['v4.7.22_dla'] = np.array([0.06321656925591052, 0.05876429477516389, 0.042423648043276974, 0.11576246791024232])
 cor['v4.7.22_dla'] = -0.87
 
 # le coadd de v4.7.22_eboss-0.2
@@ -261,14 +269,14 @@ for item in toplot:
 
 ### Plots
 if plot_bias_eta:
-    fig, ax = plt.subplots()
+    fig1, ax1 = plt.subplots()
     for i, item in enumerate(toplot):
         label = labels[i]
         fmt = 'o'
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax.errorbar(redshift[item], bias_eta[item], yerr=bias_eta_err[item], fmt=fmt, label=label, color=colors[item])
+        ax1.errorbar(redshift[item], bias_eta[item], yerr=bias_eta_err[item], fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         plt.plot(z, f(z, p_bias_eta[item][0][0], p_bias_eta[item][0][1]), linestyle='--', color=colors[item])
@@ -277,27 +285,27 @@ if plot_bias_eta:
                          f(z, p_bias_eta[item][0][0]-p_bias_eta[item][1][0,0], p_bias_eta[item][0][1]+p_bias_eta[item][1][1,1]),
                          color=colors[item], alpha=0.2)
     if plot_pred1:
-        ax.plot(zpred1, bias_eta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
+        ax1.plot(zpred1, bias_eta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
-        ax.plot(zpred2, bias_eta_pred2, 'x', color='limegreen', label='pred 40<r<180')
-    ax.legend()
-    ax.grid()
-    ax.set_xlabel('z')
+        ax1.plot(zpred2, bias_eta_pred2, 'x', color='limegreen', label='pred 40<r<180')
+    ax1.legend()
+    ax1.grid()
+    ax1.set_xlabel('z')
     ylabel = 'bias_eta'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['bias_eta'])
-    ax.set_ylabel(ylabel)
+    ax1.set_ylabel(ylabel)
     plt.tight_layout()
 
 if plot_beta:
-    fig, ax = plt.subplots()
+    fig2, ax2 = plt.subplots()
     for i, item in enumerate(toplot):
         label = labels[i]
         fmt = 'o'
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax.errorbar(redshift[item], beta[item], yerr=beta_err[item], fmt=fmt, label=label, color=colors[item])
+        ax2.errorbar(redshift[item], beta[item], yerr=beta_err[item], fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         plt.plot(z, f(z, p_beta[item][0][0], p_beta[item][0][1]), linestyle='--', color=colors[item])
@@ -306,27 +314,27 @@ if plot_beta:
                          f(z, p_beta[item][0][0]-p_beta[item][1][0,0], p_beta[item][0][1]+p_beta[item][1][1,1]),
                          color=colors[item], alpha=0.2)
     if plot_pred1:
-        ax.plot(zpred1, beta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
+        ax2.plot(zpred1, beta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
-        ax.plot(zpred2, beta_pred2, 'x', color='limegreen', label='pred 40<r<180')
-    ax.legend()
-    ax.grid()
-    ax.set_xlabel('z')
+        ax2.plot(zpred2, beta_pred2, 'x', color='limegreen', label='pred 40<r<180')
+    ax2.legend()
+    ax2.grid()
+    ax2.set_xlabel('z')
     ylabel = 'beta'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['beta'])
-    ax.set_ylabel(ylabel)
+    ax2.set_ylabel(ylabel)
     plt.tight_layout()
 
 if plot_bias:
-    fig, ax = plt.subplots()
+    fig3, ax3 = plt.subplots()
     for i, item in enumerate(toplot):
         label = labels[i]
         fmt = 'o'
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax.errorbar(redshift[item], bias[item], yerr=bias_err[item], fmt=fmt, label=label, color=colors[item])
+        ax3.errorbar(redshift[item], bias[item], yerr=bias_err[item], fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         plt.plot(z, f(z, p_bias[item][0][0], p_bias[item][0][1]), linestyle='--', color=colors[item])
@@ -335,27 +343,27 @@ if plot_bias:
                          f(z, p_bias[item][0][0]-p_bias[item][1][0,0], p_bias[item][0][1]+p_bias[item][1][1,1]),
                          color=colors[item], alpha=0.2)
     if plot_pred1:
-        ax.plot(zpred1, bias_pred1, 'x', color='darkgreen', label='pred 10<r<180')
+        ax3.plot(zpred1, bias_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
-        ax.plot(zpred2, bias_pred2, 'x', color='limegreen', label='pred 40<r<180')
-    ax.legend()
-    ax.grid()
-    ax.set_xlabel('z')
+        ax3.plot(zpred2, bias_pred2, 'x', color='limegreen', label='pred 40<r<180')
+    ax3.legend()
+    ax3.grid()
+    ax3.set_xlabel('z')
     ylabel = 'bias'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['bias'])
-    ax.set_ylabel(ylabel)
+    ax3.set_ylabel(ylabel)
     plt.tight_layout()
 
 if plot_beff:
-    fig, ax = plt.subplots()
+    fig4, ax4 = plt.subplots()
     for i, item in enumerate(toplot):
         label = labels[i]
         fmt = 'o'
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt=fmt, label=label, color=colors[item])
+        ax4.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         plt.plot(z, f(z, p_beff[item][0][0], p_beff[item][0][1]), linestyle='--', color=colors[item])
@@ -364,20 +372,20 @@ if plot_beff:
                          f(z, p_beff[item][0][0]-p_beff[item][1][0,0], p_beff[item][0][1]+p_beff[item][1][1,1]),
                          color=colors[item], alpha=0.2)
     if plot_pred1:
-        ax.plot(zpred1, beff_pred1, 'x', color='darkgreen', label='pred 10<r<180')
+        ax4.plot(zpred1, beff_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
-        ax.plot(zpred2, beff_pred2, 'x', color='limegreen', label='pred 40<r<180')
-    ax.legend()
-    ax.grid()
-    ax.set_xlabel('z')
+        ax4.plot(zpred2, beff_pred2, 'x', color='limegreen', label='pred 40<r<180')
+    ax4.legend()
+    ax4.grid()
+    ax4.set_xlabel('z')
     ylabel='b_eff'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['beff'])
-    ax.set_ylabel(ylabel)
+    ax4.set_ylabel(ylabel)
     plt.tight_layout()
 
 if plot_beff:
-    fig, ax = plt.subplots()
+    fig5, ax5 = plt.subplots()
     for i, item in enumerate(toplot):
         beff[item] *= (1+z0) / (1+redshift[item])
         label = labels[i]
@@ -385,7 +393,7 @@ if plot_beff:
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt=fmt, label=label, color=colors[item])
+        ax5.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         plt.plot(z, f(z, p_beff[item][0][0], p_beff[item][0][1])*(1+z0)/(1+z), linestyle='--', color=colors[item])
@@ -394,16 +402,16 @@ if plot_beff:
                          f(z, p_beff[item][0][0]-p_beff[item][1][0,0], p_beff[item][0][1]+p_beff[item][1][1,1])*(1+z0)/(1+z),
                          color=colors[item], alpha=0.2)
     if plot_pred1:
-        ax.plot(zpred1, beff_pred1*(1+z0)/(1+zpred1), 'x', color='darkgreen', label='pred 10<r<180')
+        ax5.plot(zpred1, beff_pred1*(1+z0)/(1+zpred1), 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
-        ax.plot(zpred2, beff_pred2*(1+z0)/(1+zpred2), 'x', color='limegreen', label='pred 40<r<180')
-    ax.legend()
-    ax.grid()
-    ax.set_xlabel('z')
+        ax5.plot(zpred2, beff_pred2*(1+z0)/(1+zpred2), 'x', color='limegreen', label='pred 40<r<180')
+    ax5.legend()
+    ax5.grid()
+    ax5.set_xlabel('z')
     ylabel = 'b_eff * G(z) / G({})'.format(z0)
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['beff'])
-    ax.set_ylabel(ylabel)
+    ax5.set_ylabel(ylabel)
     plt.tight_layout()
 
 plt.show()

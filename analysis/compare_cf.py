@@ -51,8 +51,8 @@ r_pow = args.r_pow
 if labels is None:
     labels = np.arange(len(files))
 
-fmt = ['.', 'x', 'o', '.', 'x', 'o', '-.', ':']
-colors = ['b', 'darkorange', 'g', 'red', 'hotpink', 'saddlebrown', 'darkviolet']
+fmt = ['.', '.', '.', 'x', '+', 'o', '.', 'x', 'o', '-.', ':']
+colors = ['b', 'red', 'g', 'darkorange', 'hotpink', 'saddlebrown', 'darkviolet']
 
 mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
 w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)

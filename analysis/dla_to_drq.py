@@ -12,15 +12,15 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument("-i", type=str, default=None, required=True, help='path to input dla catalog file')
 parser.add_argument("-o", type=str, default=None, required=True, help='path to output dla catalog file')
 # parser.add_argument("--master", type=str, default=None, required=True, help='path to master file')
-parser.add_argument("--nhi-max", type=float, default=None, required=False, help='remove DLA with log(n_HI) > NHI_MAX')
+parser.add_argument("--nhi-min", type=float, default=None, required=False, help='remove DLA with log(n_HI) < NHI_MIN')
 args = parser.parse_args()
 
 ### Data
 print("Reading {}".format(args.i))
 data = fitsio.read(args.i, ext='DLACAT')
-if args.nhi_max is not None:
-    msk = data['N_HI_DLA'] < args.nhi_max
-    print("Removing {} DLAs with log(n_HI) > {} out of {} total DLAs".format(msk.sum(), args.nhi_max, data.size))
+if args.nhi_min is not None:
+    msk = data['N_HI_DLA'] > args.nhi_min
+    print("Removing {} DLAs with log(n_HI) < {} out of {} total DLAs".format((~msk).sum(), args.nhi_min, data.size))
 else:
     msk = np.bool_(np.ones(data.size))
 
