@@ -520,10 +520,11 @@ def extract_h5file(fname):
     err_pars = { el:f['best fit'].attrs[el][1] for el in free_p }
     pars.update({ el:f['best fit'].attrs[el][0] for el in fixed_p })
     err_pars.update({ el:0. for el in fixed_p })
+    cov_pars = { 'cov[{}, {}]'.format(el1, el2):f['best fit'].attrs['cov[{}, {}]'.format(el1, el2)] for el1 in free_p for el2 in free_p }
 
     f.close()
 
-    return free_p, fixed_p, pars, err_pars
+    return free_p, fixed_p, pars, err_pars, cov_pars
 
 
 def print_h5file(fname):

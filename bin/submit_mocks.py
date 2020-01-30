@@ -71,10 +71,7 @@ def create_reservation(mock_args):
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
     script += "#SBATCH -J create_saclay_{}\n".format(mock_args['imock'])
-    if len(mock_args['chunkid']) < 2:
-        script += "#SBATCH -q debug\n"
-    else:
-        script += "#SBATCH -q regular\n"
+    script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#BB create_persistent name={name} capacity={size} access_mode=striped type=scratch\n".format(name=mock_args['bb_name'], size=mock_args['bb_size'])
     # script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
@@ -1104,7 +1101,7 @@ def main():
     parser.add_argument("--time", type=str, default="True", required=False,
         help="If True, use /usr/bin/time to time the jobs (optional)")
 
-    parser.add_argument("--account", type=str, default="eboss", required=False,
+    parser.add_argument("--account", type=str, default="desi", required=False,
         help="account to be used on cori nodes (optional)")
 
     parser.add_argument("--email", type=str, default=None, required=False,
@@ -1124,7 +1121,7 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "05:00:00"  # default "01:30:00"
+    sbatch_args['time_boxes'] = "04:00:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
@@ -1139,7 +1136,7 @@ def main():
     sbatch_args['time_mergechunks'] = "00:30:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "debug"  # default "regular"
     sbatch_args['name_mergechunks'] = "mergechunks_saclay"
-    sbatch_args['threads_mergechunks'] = 8  # default 64
+    sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
 
     ### Define mock parameters:
@@ -1181,25 +1178,25 @@ def main():
     # pk:
     run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = True  # Produce GRF boxes
+    run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = True  # produce chunks
+    run_args['run_chunks'] = False  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
-    run_args['randoms'] = False  # run draw_qso.py for randoms
+    run_args['randoms'] = True  # run draw_qso.py for randoms
     run_args['make_spectra'] = True  # run make_spectra.py
     run_args['merge_spectra'] = False  # run merge_spectra.py
     # merge chunks:
-    run_args['run_mergechunks'] = False  # Gather outputs from all chunks and write in desi format
+    run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
-    run_args['merge_randoms'] = True  # Compute master_randoms.fits file
+    run_args['merge_randoms'] = False  # Compute master_randoms.fits file
     run_args['compute_dla'] = True  # Compute dla catalog of each chunks
-    run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
+    run_args['dla_randoms'] = False  # Compute dla randoms catalogs of each chunks
     run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
+    run_args['merge_rand_dla'] = False  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
-    run_args['run_create'] = False  # Create persistent reservation
-    run_args['run_stagein'] = False  # Stage in the init files (pk, directories, ...) (from scratch to BB)
+    run_args['run_create'] = True  # Create persistent reservation
+    run_args['run_stagein'] = True  # Stage in the init files (pk, directories, ...) (from scratch to BB)
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
     run_args['run_delete'] = False  # delete the persistent reservation
 

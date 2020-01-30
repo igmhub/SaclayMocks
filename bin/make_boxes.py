@@ -117,9 +117,9 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
         fits.close()
       t4 = time.time()
       print(boxfilename, "written", t4-t3,"s")
-      if t4-t3 > 1500:
-        print("I/O is very slow, exiting.")
-        sys.exit(1)
+      # if t4-t3 > 1500:
+      #   print("I/O is very slow, exiting.")
+      #   sys.exit(1)
 
     del box
     return
@@ -210,7 +210,10 @@ def main() :
     print("{} already exists ! Reading boxk.npy file to compute density and velocity boxes...".format(boxkfile))
     boxk_exist = True
     boxk = np.load(boxkfile)
-    seed = np.load(outDir+"/seed_boxk.npy")
+    try:
+      seed = np.load(outDir+"/seed_boxk.npy")
+    except:
+      print("WARNING: didn't find {}/seed_boxk.npy".format(outDir))
     print("Done.")
     sigma = boxk.std()
     if sigma > 70*NX:

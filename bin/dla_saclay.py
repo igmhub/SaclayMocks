@@ -405,6 +405,7 @@ def main():
     # cosmo_hdu = fitsio.FITS(args.fname_cosmo)[1].read_header()
     z_cell = lam / constant.lya - 1.
     dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)
+    # dNdz_arr *= 3.06  # prov: increase number of DLAs to match observed b_hcd
     # dNdz_arr *= 20000.
     # dNdz_arr *= 6.4
     # dNdz_arr *= 5.9
