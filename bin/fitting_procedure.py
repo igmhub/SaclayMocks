@@ -40,7 +40,7 @@ parser.add_argument("--convergence-criterium", type=float, default=None, require
         help="convergence criterium to stop iteration procedure when reached")
 
 parser.add_argument("--seed", type=int, default=42, required=False,
-        help="value of b")
+        help="value of seed")
 
 parser.add_argument("--compute-spectra", action='store_true', required=False,
         help="Compute spectra files using submit_mocks.py")

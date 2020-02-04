@@ -1,6 +1,7 @@
 import fitsio
 from SaclayMocks import powerspectrum, util, constant
 import numpy as np
+from functools import partial
 import scipy as sp
 import argparse
 import os
@@ -66,8 +67,11 @@ sigma_g = args.sigma
 if sigma_g is None:
     if args.p1d_file is not None:
         print("sigma_g is computed using {}".format(args.p1d_file))
-        data_p1d = fitsio.read(args.p1d_file, ext=1)
-        p1dmiss = sp.interpolate.interp1d(data_p1d['k'], data_p1d['P1DmissRSD'])
+        try:
+            data_p1d = fitsio.read(args.p1d_file, ext=1)
+            p1dmiss = sp.interpolate.interp1d(data_p1d['k'], data_p1d['P1DmissRSD'])
+        except:
+            p1dmiss = partial(util.InterpP1Dmissing(args.p1d_file), redshift=zeff)
         sigma_g = util.sigma_g(zeff, p1dmiss=p1dmiss, c=c)
     else:
         print("sigma_g is computed using standard p1dmissing")

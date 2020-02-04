@@ -10,17 +10,18 @@
 root=/global/cscratch1/sd/tetourne/Out/
 
 # Parameters :
-fit_pred=0
+fit_pred=1
 sbatch=0
-do_deltas=1  # 1 is delta from do_delta, 0 is from transmission
+do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 
 # version=debug_v4.1_2
 # version=debug_v4.4
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
-# version=fit_z1.8
+version=Fit2/z1.8
 # version=dr16_paper
-version=v4.7.22_masked_dla20.5_4
+# version=v4.7.22_dndz3_masked_dla20.3_4
+# version=v4.7.22_dla
 
 # do_dmat=0  # run dmat only if continuum fitting
 # do_export=0  # if run dmat, then run export
@@ -36,7 +37,7 @@ object=QSO  # QSO or DLA
 fit_metal=0
 
 
-zeff=2.85
+zeff=1.8
 
 hesse=0  # set to 1 to print correlations between parameters
 zbins=0  # set to 1 if you want to fit a particular redshift bin
@@ -231,15 +232,16 @@ rp-max = 200.
 rt-min = 0.
 rt-max = 200.
 
-r-min = 10.
+r-min = 40.
 r-max = 180.
 
 mu-min = -1.
 mu-max = 1.
 
 [model]
-# model-pk = pk_kaiser
-model-pk = pk_hcd_Rogers2018
+model-pk = pk_kaiser
+# model-pk = pk_hcd_Rogers2018
+# model-pk = pk_hcd_no_mask
 model-xi = xi
 z evol LYA = bias_vs_z_std
 # growth function = growth_factor_no_de
@@ -267,9 +269,9 @@ bias_eta_LYA  = -0.20  0.02 None None free
 beta_LYA  = 1.8     0.1 None None free
 alpha_LYA = 2.9    0   None None fixed
 
-bias_hcd = -0.05222070235530851 0.1 None 0. free
-beta_hcd = 0.6098209629393987 0.1 None None free
-L0_hcd = 10. 1. None None fixed
+# bias_hcd = -0.05222070235530851 0.1 None 0. free
+# beta_hcd = 0.6098209629393987 0.1 None None free
+# L0_hcd = 1. 1. None None fixed
 
 # dnl_arinyo_q1 = 0.8558 0.1 None None fixed
 # dnl_arinyo_kv = 1.11454 0.1 None None fixed
@@ -283,14 +285,17 @@ L0_hcd = 10. 1. None None fixed
 par binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 per binsize LYA(LYA)xLYA(LYA) = 4 0.4 0 None fixed
 
-par_sigma_smooth = 3.1 0.1 0 None free
-per_sigma_smooth = 3.1 0.1 0 None free
+par_sigma_smooth = 3.1 0.1 0 None fixed
+per_sigma_smooth = 3.1 0.1 0 None fixed
 
 # [broadband]
 # bb1 = add pre rp,rt 0:0:1 0:0:1 broadband_sky
 
-[priors]
-beta_hcd = gaussian 0.5 0.09
+# [hcd_model]
+# name_hcd_model = v4.7.22
+
+# [priors]
+# beta_hcd = gaussian 0.5 0.09
 # bias_eta_CIV(eff) = gaussian -0.005 0.0026
 
 EOF

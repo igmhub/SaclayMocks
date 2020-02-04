@@ -520,10 +520,21 @@ def extract_h5file(fname):
     err_pars = { el:f['best fit'].attrs[el][1] for el in free_p }
     pars.update({ el:f['best fit'].attrs[el][0] for el in fixed_p })
     err_pars.update({ el:0. for el in fixed_p })
+    pars['zeff'] = f['best fit'].attrs['zeff']
     cov_pars = { 'cov[{}, {}]'.format(el1, el2):f['best fit'].attrs['cov[{}, {}]'.format(el1, el2)] for el1 in free_p for el2 in free_p }
-
+    if 'bias_eta_LYA' in f['best fit'].attrs.keys():
+        pars['bias_LYA'] = f['best fit'].attrs['bias_eta_LYA'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_LYA'][0]
+        pars['beff_LYA'] = pars['bias_LYA'] * np.sqrt(1+2/3*f['best fit'].attrs['beta_LYA'][0]+1/5*f['best fit'].attrs['beta_LYA'][0]**2)
+        err_pars['bias_LYA'] = bias_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'])
+        err_pars['beff_LYA'] = beff_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
+        free_p += ['bias_LYA', 'beff_LYA']
+    else:
+        pars['b_LYA'] = f['best fit'].attrs['bias_LYA'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_LYA'][0]
+        pars['b_eff_LYA'] = pars['b_LYA'] * np.sqrt(1+2/3*f['best fit'].attrs['beta_LYA'][0]+1/5*f['best fit'].attrs['beta_LYA'][0]**2)
+        err_pars['b_LYA'] = bias_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'])
+        err_pars['b_eff_LYA'] = beff_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])        
+        free_p += ['b_LYA', 'b_eff_LYA']
     f.close()
-
     return free_p, fixed_p, pars, err_pars, cov_pars
 
 
@@ -531,32 +542,47 @@ def print_h5file(fname):
     '''
     This function print the h5 output file from picca fitter2
     '''
-    f = h5py.File(os.path.expandvars(fname), 'r')
-    free_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of free pars'] ]
-    fixed_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of fixed pars'] ]
-
+    pars = extract_h5file(fname)
     print("- Free params:")
-    for p in free_p:
-        print("{} = {} +/- {}".format(p, f['best fit'].attrs[p][0], f['best fit'].attrs[p][1]))
+    print("zeff = {}".format(pars[2]['zeff']))
+    for h in pars[0]:
+        print("{} = {} +/- {}".format(h, pars[2][h], pars[3][h]))
 
-    print("\n- Fixed params:")
-    for p in fixed_p:
-        print("{} = {}".format(p, f['best fit'].attrs[p][0]))
+    print("\n- Fixed params:")    
+    for h in pars[1]:
+        print("{} = {}".format(h, pars[2][h]))
 
-    print("\n- Cov:")
-    for p in f['best fit'].attrs:
-        if 'cov[' in p:
-            print("{} = {}".format(p, f['best fit'].attrs[p]))
+    print("\nCov:")
+    for h in pars[4].keys():
+        print("{} = {}".format(h, pars[4][h]))
+
+    # f = h5py.File(os.path.expandvars(fname), 'r')
+    # free_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of free pars'] ]
+    # fixed_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of fixed pars'] ]
+
+    # print("- Free params:")
+    # print("zeff = {}".format(f['best fit'].attrs['zeff']))
+    # for p in free_p:
+    #     print("{} = {} +/- {}".format(p, f['best fit'].attrs[p][0], f['best fit'].attrs[p][1]))
+
+    # print("\n- Fixed params:")
+    # for p in fixed_p:
+    #     print("{} = {}".format(p, f['best fit'].attrs[p][0]))
+
+    # print("\n- Cov:")
+    # for p in f['best fit'].attrs:
+    #     if 'cov[' in p:
+    #         print("{} = {}".format(p, f['best fit'].attrs[p]))
     
-    print("\n- Cor:")
-    for p in f['best fit'].attrs:
-        if 'cov[' in p:
-            idx = p.find(',')
-            el1 = p[4:idx]
-            el2 = p[idx+2:-1]
-            cor = f['best fit'].attrs[p] / (f['best fit'].attrs[el1][1] * f['best fit'].attrs[el2][1])
-            print("cor({},{}) = {}".format(el1, el2, cor))
-    f.close()
+    # print("\n- Cor:")
+    # for p in f['best fit'].attrs:
+    #     if 'cov[' in p:
+    #         idx = p.find(',')
+    #         el1 = p[4:idx]
+    #         el2 = p[idx+2:-1]
+    #         cor = f['best fit'].attrs[p] / (f['best fit'].attrs[el1][1] * f['best fit'].attrs[el2][1])
+    #         print("cor({},{}) = {}".format(el1, el2, cor))
+    # f.close()
     return
 
 
@@ -621,5 +647,12 @@ def kms2mpc(redshift, omega_m=None, omega_k=None, h=None):
     return factor
 
 
-def bias_err(bias_eta, bias_eta_err, beta, beta_err, cor):
-    return bias_eta / beta * np.sqrt((bias_eta_err/bias_eta)**2 + (beta_err/beta)**2 - 2*cor*bias_eta_err/bias_eta*beta_err/beta)
+def bias_err(bias_eta, bias_eta_err, beta, beta_err, cov):
+    return bias_eta / beta * np.sqrt((bias_eta_err/bias_eta)**2 + (beta_err/beta)**2 - 2*cov/bias_eta/beta)
+
+
+def beff_err(bias_eta, bias_eta_err, beta, beta_err, cov, f=0.97):
+    db_dbiaseta = f*np.sqrt(1+2/3*beta+1/5*beta**2)/beta
+    db_dbeta = (bias_eta*f/beta)*np.sqrt(1+2/3*beta+1/5*beta**2)*((1/3+1/5*beta)/(1+2/3*beta+1/5*beta**2) - 1/beta)
+    beff_err = np.sqrt((db_dbiaseta*bias_eta_err)**2 + (db_dbeta*beta_err)**2 + 2*db_dbiaseta*db_dbeta*cov)
+    return beff_err
