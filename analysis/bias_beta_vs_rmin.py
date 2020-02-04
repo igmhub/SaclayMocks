@@ -58,9 +58,10 @@ for f in files:
     # bias_err = np.sqrt((f*bias_eta_err/beta)**2 + (bias_eta*f*beta_err/beta**2)**2 - 2*cov/bias_eta/beta)
     bias_err = np.sqrt((f*bias_eta_err/beta)**2 + (bias_eta*f*beta_err/beta**2)**2 - 2*cov*bias_eta*f**2/beta**3)
     beff = bias_eta*f * np.sqrt(1+2/3*beta+1/5*beta**2) / beta
-    db_dbiaseta = f*np.sqrt(1+2/3*beta+1/5*beta**2)/beta
-    db_dbeta = (bias_eta*f/beta)*np.sqrt(1+2/3*beta+1/5*beta**2)*((1/3+1/5*beta)/(1+2/3*beta+1/5*beta**2) - 1/beta)
-    beff_err = np.sqrt((db_dbiaseta*bias_eta_err)**2 + (db_dbeta*beta_err)**2 + 2*db_dbiaseta*db_dbeta*cov)
+    # db_dbiaseta = f*np.sqrt(1+2/3*beta+1/5*beta**2)/beta
+    # db_dbeta = (bias_eta*f/beta)*np.sqrt(1+2/3*beta+1/5*beta**2)*((1/3+1/5*beta)/(1+2/3*beta+1/5*beta**2) - 1/beta)
+    # beff_err = np.sqrt((db_dbiaseta*bias_eta_err)**2 + (db_dbeta*beta_err)**2 + 2*db_dbiaseta*db_dbeta*cov)
+    beff_err = util.beff_err(bias_eta, bias_eta_err, beta, beta_err, cov, f)
     bias_eta_list.append(bias_eta)
     bias_eta_err_list.append(bias_eta_err)
     beta_list.append(beta)
