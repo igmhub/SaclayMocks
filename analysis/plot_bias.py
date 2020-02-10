@@ -24,11 +24,14 @@ plot_bias_eta = True
 plot_beff = True
 plot_b_hcd = True
 
-# toplot = ['v4.7.22_raw', 'v4.7.22-0.0', 'v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_voigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
-toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_voigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
+# toplot = ['v4.7.22_raw', 'v4.7.22-0.0', 'v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
+# toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
+toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_dndz3_nhi20.3_fixed_lya', 'redo_dr16']
+# toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
 
 # labels = toplot
-labels = ['mock_Rogers2018', 'mock_no_mask', 'DR16_Rogers2018', 'DR16_no_mask', 'dr16_fvoigt_v4.7.22']
+# labels = ['mock_Rogers2018', 'mock_no_mask', 'DR16_Rogers2018', 'DR16_no_mask', 'dr16_fvoigt_v4.7.22']
+labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', '3*dndz_nhi_20.3_fixed_lya', 'dr16']
 
 mean_items = {}  # mocks used to compute means
 mean_items['dla_mean'] = ['v4.7.22_dla', 'v4.7.27_dla']
@@ -72,13 +75,15 @@ p_beff = {}
 # Choose colors
 colors['data_helion'] = 'black'
 colors['redo_dr16'] = 'black'
-colors['dr16_fvoigt_v4.7.22'] = 'dimgray'
+colors['dr16_fvoigt_v4.7.22'] = 'darkgreen'
 colors['v4.7.22_raw'] = 'green'
 colors['v4.7.22-0.0'] = 'dodgerblue'
 colors['v4.7.22-0.2_nhi20.3'] = 'r'
-colors['v4.7.22-0.2_nhi20.5'] = 'darkorange'
-colors['v4.7.22-0.2_voigt_v4.7.22'] = 'purple'
-colors['v4.7.22-0.2_voigt_exp'] = 'magenta'
+colors['v4.7.22-0.2_nhi20.5'] = 'green'
+colors['v4.7.22-0.2_dndz3_nhi20.3'] = 'royalblue'
+colors['v4.7.22-0.2_dndz3_nhi20.3_fixed_lya'] = 'darkorange'
+colors['v4.7.22-0.2_fvoigt_v4.7.22'] = 'darkorange'
+colors['v4.7.22-0.2_fvoigt_exp'] = 'magenta'
 # colors['v4.7.27_coadd'] = 'darkblue'
 # colors['mock_mean'] = 'royalblue'
 # colors['mock_coadd_mean'] = 'royalblue'
@@ -117,8 +122,20 @@ files['v4.7.22-0.2_nhi20.5'] = ["/global/cscratch1/sd/tetourne/Out/v4.7.22_maske
                                     "/global/cscratch1/sd/tetourne/Out/v4.7.22_masked_dla20.5_3/from_quickquasars/Fit/result_cf.h5",
                                     "/global/cscratch1/sd/tetourne/Out/v4.7.22_masked_dla20.5_4/from_quickquasars/Fit/result_cf.h5"]
 
+# v4.7.22 eboss-0.2 with 3 times more DLAs and cut with log(n_HI) > 20.3 :
+files['v4.7.22-0.2_dndz3_nhi20.3'] = ["/global/cscratch1/sd/tetourne/Out/v4.7.22_dndz3_masked_dla20.3_1/from_quickquasars/Fit/result_cf.h5",
+                                "/global/cscratch1/sd/tetourne/Out/v4.7.22_dndz3_masked_dla20.3_2/from_quickquasars/Fit/result_cf.h5",
+                                "/global/cscratch1/sd/tetourne/Out/v4.7.22_dndz3_masked_dla20.3_3/from_quickquasars/Fit/result_cf.h5",
+                                "/global/cscratch1/sd/tetourne/Out/v4.7.22_dndz3_masked_dla20.3_4/from_quickquasars/Fit/result_cf.h5"]
+
+# v4.7.22 eboss-0.2 with 3 times more DLAs and cut with log(n_HI) > 20.3 and fixed LYA parameters :
+files['v4.7.22-0.2_dndz3_nhi20.3_fixed_lya'] = ["/global/cscratch1/sd/tetourne/Out/v4.7.22_dndz3_masked_dla20.3_1/from_quickquasars/Fit/result_cf_fixed_lya.h5",
+                                                "/global/cscratch1/sd/tetourne/Out/v4.7.22_dndz3_masked_dla20.3_2/from_quickquasars/Fit/result_cf_fixed_lya.h5",
+                                                "/global/cscratch1/sd/tetourne/Out/v4.7.22_dndz3_masked_dla20.3_3/from_quickquasars/Fit/result_cf_fixed_lya.h5",
+                                                "/global/cscratch1/sd/tetourne/Out/v4.7.22_dndz3_masked_dla20.3_4/from_quickquasars/Fit/result_cf_fixed_lya.h5"]
+
 # v4.7.22 eboss-0.2 : no DLA masking, treaded with Fvoigt_v4.7.22.txt
-files['v4.7.22-0.2_voigt_v4.7.22'] = ["/global/cscratch1/sd/tetourne/Out/v4.7.22_dla_1/from_quickquasars/Fit/result_cf.h5",
+files['v4.7.22-0.2_fvoigt_v4.7.22'] = ["/global/cscratch1/sd/tetourne/Out/v4.7.22_dla_1/from_quickquasars/Fit/result_cf.h5",
                                       "/global/cscratch1/sd/tetourne/Out/v4.7.22_dla_2/from_quickquasars/Fit/result_cf.h5",
                                       "/global/cscratch1/sd/tetourne/Out/v4.7.22_dla_3/from_quickquasars/Fit/result_cf.h5",
                                       "/global/cscratch1/sd/tetourne/Out/v4.7.22_dla_4/from_quickquasars/Fit/result_cf.h5"]
@@ -519,11 +536,11 @@ if plot_b_hcd:
     for i, item in enumerate(toplot):
         if b_hcd[item][0] is None: continue
         label = labels[i]
-        fmt = 'o'
-        if 'coadd' in item:
-            label = None
-            fmt = 'x'
-        ax6.errorbar(redshift[item], b_hcd[item], yerr=b_hcd_err[item], fmt=fmt, label=label, color=colors[item])
+        # fmt = 'o'
+        # if 'coadd' in item:
+        #     label = None
+        #     fmt = 'x'
+        ax6.errorbar(redshift[item], b_hcd[item], yerr=b_hcd_err[item], marker='o', label=label, color=colors[item])
     ax6.legend()
     ax6.grid()
     ax6.set_xlabel('z')

@@ -523,16 +523,28 @@ def extract_h5file(fname):
     pars['zeff'] = f['best fit'].attrs['zeff']
     cov_pars = { 'cov[{}, {}]'.format(el1, el2):f['best fit'].attrs['cov[{}, {}]'.format(el1, el2)] for el1 in free_p for el2 in free_p }
     if 'bias_eta_LYA' in f['best fit'].attrs.keys():
+        if 'cov[bias_eta_LYA, beta_LYA]' not in f['best fit'].attrs.keys():
+            cov_pars['cov[beta_LYA, bias_eta_LYA]'] = 0
         pars['bias_LYA'] = f['best fit'].attrs['bias_eta_LYA'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_LYA'][0]
         pars['beff_LYA'] = pars['bias_LYA'] * np.sqrt(1+2/3*f['best fit'].attrs['beta_LYA'][0]+1/5*f['best fit'].attrs['beta_LYA'][0]**2)
-        err_pars['bias_LYA'] = bias_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'])
-        err_pars['beff_LYA'] = beff_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
+        if 'cov[bias_eta_LYA, beta_LYA]' in f['best fit'].attrs.keys():
+            err_pars['bias_LYA'] = bias_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'])
+            err_pars['beff_LYA'] = beff_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
+        else:
+            err_pars['bias_LYA'] = 0
+            err_pars['beff_LYA'] = 0
         free_p += ['bias_LYA', 'beff_LYA']
     else:
+        if 'cov[bias_LYA, beta_LYA]' not in f['best fit'].attrs.keys():
+            cov_pars['cov[beta_LYA, bias_LYA]'] = 0
         pars['b_LYA'] = f['best fit'].attrs['bias_LYA'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_LYA'][0]
         pars['b_eff_LYA'] = pars['b_LYA'] * np.sqrt(1+2/3*f['best fit'].attrs['beta_LYA'][0]+1/5*f['best fit'].attrs['beta_LYA'][0]**2)
-        err_pars['b_LYA'] = bias_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'])
-        err_pars['b_eff_LYA'] = beff_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])        
+        if 'cov[bias_LYA, beta_LYA]' in f['best fit'].attrs.keys():
+            err_pars['b_LYA'] = bias_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'])
+            err_pars['b_eff_LYA'] = beff_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
+        else:
+            err_pars['b_LYA'] = 0
+            err_pars['b_LYA'] = 0        
         free_p += ['b_LYA', 'b_eff_LYA']
     f.close()
     return free_p, fixed_p, pars, err_pars, cov_pars
