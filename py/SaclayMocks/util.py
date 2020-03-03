@@ -521,6 +521,7 @@ def extract_h5file(fname):
     pars.update({ el:f['best fit'].attrs[el][0] for el in fixed_p })
     err_pars.update({ el:0. for el in fixed_p })
     pars['zeff'] = f['best fit'].attrs['zeff']
+    pars['chi2'] = f['best fit'].attrs['fval']
     cov_pars = { 'cov[{}, {}]'.format(el1, el2):f['best fit'].attrs['cov[{}, {}]'.format(el1, el2)] for el1 in free_p for el2 in free_p }
     if 'bias_eta_LYA' in f['best fit'].attrs.keys():
         if 'cov[bias_eta_LYA, beta_LYA]' not in f['best fit'].attrs.keys():
@@ -550,13 +551,14 @@ def extract_h5file(fname):
     return free_p, fixed_p, pars, err_pars, cov_pars
 
 
-def print_h5file(fname):
+def print_h5file(fname, cor=False):
     '''
     This function print the h5 output file from picca fitter2
     '''
     pars = extract_h5file(fname)
     print("- Free params:")
     print("zeff = {}".format(pars[2]['zeff']))
+    print("chi2 = {}".format(pars[2]['chi2']))
     for h in pars[0]:
         print("{} = {} +/- {}".format(h, pars[2][h], pars[3][h]))
 
@@ -567,6 +569,19 @@ def print_h5file(fname):
     print("\nCov:")
     for h in pars[4].keys():
         print("{} = {}".format(h, pars[4][h]))
+
+    if cor:
+        print("\nCor:")
+        for h in pars[4].keys():
+            idx1 = h.find('[')
+            idx2 = h.find(',')
+            idx3 = h.find(']')
+            cov = pars[4][h]
+            h1 = h[idx1+1:idx2]
+            h2 = h[idx2+2:idx3]
+            err1 = pars[3][h1]
+            err2 = pars[3][h2]
+            print("cor[{}, {}] = {}".format(h1, h2, cov/err1/err2))
 
     # f = h5py.File(os.path.expandvars(fname), 'r')
     # free_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of free pars'] ]
