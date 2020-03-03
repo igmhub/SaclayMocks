@@ -3,6 +3,7 @@ import picca.wedgize
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
+import h5py
 
 
 # Plot options
@@ -51,8 +52,11 @@ r_pow = args.r_pow
 if labels is None:
     labels = np.arange(len(files))
 
-fmt = ['.', '.', '.', 'x', '+', 'o', '.', 'x', 'o', '-.', ':']
-colors = ['b', 'red', 'g', 'darkorange', 'hotpink', 'saddlebrown', 'darkviolet']
+# fmt = ['.', '.', '.', 'x', '+', 'o', '.', 'x', 'o', '-.', ':']
+fmt = ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.']
+# colors = ['black', 'darkblue', 'darkgreen', 'red', 'darkorange', 'darkviolet', 'saddlebrown', 'dodgerblue', 'deeppink']
+colors = ['b', 'darkorange', 'r']
+linestyles = ['-', '--', '-.', ':']
 
 mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
 w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
@@ -64,9 +68,24 @@ w4 = picca.wedgize.wedge(mumin=mu3,mumax=mu4, rtmax=rtmax, rpmax=rpmax, rtmin=rt
 f1, ax1 = plt.subplots(figsize=(12,8))
 f2, ax2 = plt.subplots(figsize=(12,8))
 for i, f in enumerate(files):
-    data = fitsio.FITS(f)
-    da = data[1]['DA'][:]
-    co = data[1]['CO'][:]
+    if '.fits' in f:
+        h5_flag = False
+        data = fitsio.FITS(f)
+        da = data[1]['DA'][:]
+        co = data[1]['CO'][:]
+    if '.h5' in f:
+        print("Reading {} file ; using cov mat from {}".format(f, files[i-1]))
+        h5_flag = True
+        ff = h5py.File(f, 'r')
+        if "LYA(LYA)xLYA(LYA)" in ff.keys():
+            da = ff["LYA(LYA)xLYA(LYA)/fit"][...]
+        elif "cf_z_0_10" in ff.keys():
+            da = ff["cf_z_0_10/fit"][...]
+        else:
+            idx1 = int(f.rfind("/"))+1
+            idx2 = int(f.find(".h5"))
+            da = ff[f[idx2:idx2]+"/fit"][...]
+        ff.close()
 
     data_wedge = w.wedge(da,co)
     coef = data_wedge[0]**r_pow
@@ -78,7 +97,13 @@ for i, f in enumerate(files):
     coef3 = data_wedge3[0]**r_pow
     data_wedge4 = w4.wedge(da,co)
     coef4 = data_wedge4[0]**r_pow
-    if args.error_bar:
+    if h5_flag:
+        ax1.plot(data_wedge[0],coef*data_wedge[1], label=labels[i], color=colors[i], linestyle=linestyles[i])
+        ax2.plot(data_wedge1[0],coef1*data_wedge1[1], label=labels[i], color=colors[i], linestyle=linestyles[i])
+        ax2.plot(data_wedge2[0],coef2*data_wedge2[1], color=colors[i], linestyle=linestyles[i])
+        ax2.plot(data_wedge3[0],coef3*data_wedge3[1], color=colors[i], linestyle=linestyles[i])
+        ax2.plot(data_wedge4[0],coef4*data_wedge4[1], color=colors[i], linestyle=linestyles[i])
+    elif args.error_bar:
         ax1.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])), label=labels[i], color=colors[i], fmt=fmt[i])
         ax2.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])), label=labels[i], color=colors[i], fmt=fmt[i])
         ax2.errorbar(data_wedge2[0],coef2*data_wedge2[1],yerr=coef2*np.sqrt(np.diag(data_wedge2[2])), color=colors[i], fmt=fmt[i])
