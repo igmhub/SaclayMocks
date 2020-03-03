@@ -26,12 +26,20 @@ plot_b_hcd = True
 
 # toplot = ['v4.7.22_raw', 'v4.7.22-0.0', 'v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
-toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_dndz3_nhi20.3_fixed_lya', 'redo_dr16']
+# toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'redo_dr16']
+# toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_dndz3_nhi20.3_fixed_lya', 'redo_dr16']
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
+toplot = ['v4.7.22_raw', 'v4.7.22-0.0_bis', 'v4.7.22-0.2_nhi20.3', 'redo_dr16']
+# toplot = ['redo_dr16', 'dr16_fvoigt_v4.7.22', 'dr16_mask_fvoigt_v4.7.22']
+# toplot = ['v4.7.22-0.0', 'v4.7.22-0.0_bis']
 
 # labels = toplot
 # labels = ['mock_Rogers2018', 'mock_no_mask', 'DR16_Rogers2018', 'DR16_no_mask', 'dr16_fvoigt_v4.7.22']
-labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', '3*dndz_nhi_20.3_fixed_lya', 'dr16']
+# labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', 'dr16']
+# labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', '3*dndz_nhi_20.3_fixed_lya', 'dr16']
+labels = ['raw mocks', 'mock-0.0', 'mock-0.2', 'DR16']
+# labels = ['DR16_mask_Roger', 'DR16_Guy', 'DR16_mask_Guy']
+# labels = ['eboss-0.0', 'eboss-0.0_seed126429']
 
 mean_items = {}  # mocks used to compute means
 mean_items['dla_mean'] = ['v4.7.22_dla', 'v4.7.27_dla']
@@ -46,6 +54,7 @@ plot_shades = False
 correct_z_dep = False
 gamma = {'bias_eta':2.2, 'beta':-1.8, 'bias':3.8, 'beff':3.2}
 
+absolute_bias = True
 
 def func(x, a, gamma):
     return a*(1+x)**gamma
@@ -76,11 +85,13 @@ p_beff = {}
 colors['data_helion'] = 'black'
 colors['redo_dr16'] = 'black'
 colors['dr16_fvoigt_v4.7.22'] = 'darkgreen'
+colors['dr16_mask_fvoigt_v4.7.22'] = 'red'
 colors['v4.7.22_raw'] = 'green'
-colors['v4.7.22-0.0'] = 'dodgerblue'
+colors['v4.7.22-0.0'] = 'royalblue'
+colors['v4.7.22-0.0_bis'] = 'royalblue'
 colors['v4.7.22-0.2_nhi20.3'] = 'r'
-colors['v4.7.22-0.2_nhi20.5'] = 'green'
-colors['v4.7.22-0.2_dndz3_nhi20.3'] = 'royalblue'
+colors['v4.7.22-0.2_nhi20.5'] = 'darkgreen'
+colors['v4.7.22-0.2_dndz3_nhi20.3'] = 'r'
 colors['v4.7.22-0.2_dndz3_nhi20.3_fixed_lya'] = 'darkorange'
 colors['v4.7.22-0.2_fvoigt_v4.7.22'] = 'darkorange'
 colors['v4.7.22-0.2_fvoigt_exp'] = 'magenta'
@@ -109,6 +120,12 @@ files['v4.7.22-0.0'] = ["/global/cscratch1/sd/tetourne/Out/v4.7.22_1/from_quickq
                         "/global/cscratch1/sd/tetourne/Out/v4.7.22_2/from_quickquasars/Fit/result_cf.h5",
                         "/global/cscratch1/sd/tetourne/Out/v4.7.22_3/from_quickquasars/Fit/result_cf.h5",
                         "/global/cscratch1/sd/tetourne/Out/v4.7.22_4/from_quickquasars/Fit/result_cf.h5"]
+
+# v4.7.22 eboss-0.0
+files['v4.7.22-0.0_bis'] = ["/global/projecta/projectdirs/desi/mocks/lya_forest/develop/saclay/v4.7/intermediate_files/mock_22/output/eboss-0.0_seed126429/cf_z_0_2.35-exp.h5",
+                            "/global/projecta/projectdirs/desi/mocks/lya_forest/develop/saclay/v4.7/intermediate_files/mock_22/output/eboss-0.0_seed126429/cf_z_2.35_2.65-exp.h5",
+                            "/global/projecta/projectdirs/desi/mocks/lya_forest/develop/saclay/v4.7/intermediate_files/mock_22/output/eboss-0.0_seed126429/cf_z_2.65_3.05-exp.h5",
+                            "/global/projecta/projectdirs/desi/mocks/lya_forest/develop/saclay/v4.7/intermediate_files/mock_22/output/eboss-0.0_seed126429/cf_z_3.05_10-exp.h5"]
 
 # v4.7.22 eboss-0.2 : DLAs masked with log(n_HI) > 20.3
 files['v4.7.22-0.2_nhi20.3'] = ["/global/cscratch1/sd/tetourne/Out/v4.7.22_masked_dla20.3_1/from_quickquasars/Fit/result_cf.h5",
@@ -163,6 +180,12 @@ files['dr16_fvoigt_v4.7.22'] = ["/global/cscratch1/sd/tetourne/Analysis/dr16_no_
                                 "/global/cscratch1/sd/tetourne/Analysis/dr16_no_dla_masking/Fits/cf/Kaiser_sky_met_hcd/z_2.35_2.65/result_fvoigt_v4.7.22.h5",
                                 "/global/cscratch1/sd/tetourne/Analysis/dr16_no_dla_masking/Fits/cf/Kaiser_sky_met_hcd/z_2.65_3.05/result_fvoigt_v4.7.22.h5",
                                 "/global/cscratch1/sd/tetourne/Analysis/dr16_no_dla_masking/Fits/cf/Kaiser_sky_met_hcd/z_3.05_10/result_fvoigt_v4.7.22.h5"]
+
+# DR16 data with DLA masked and fitted with HCD model from Julien Edmond
+files['dr16_mask_fvoigt_v4.7.22'] = ["/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Kaiser_sky_met_hcd/z_0_2.35/result_fvoigt_v4.7.22_highcut_nhi20.3.h5",
+                                     "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Kaiser_sky_met_hcd/z_2.35_2.65/result_fvoigt_v4.7.22_highcut_nhi20.3.h5",
+                                     "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Kaiser_sky_met_hcd/z_2.65_3.05/result_fvoigt_v4.7.22_highcut_nhi20.3.h5",
+                                     "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Kaiser_sky_met_hcd/z_3.05_10/result_fvoigt_v4.7.22_highcut_nhi20.3.h5"]
 
 # DR16 data without DLA masking, treated with Fvoigt_exp.txt
 files['dr16_fvoigt_exp'] = ["/global/cscratch1/sd/tetourne/Analysis/dr16_no_dla_masking/Fits/cf/Kaiser_sky_met_hcd/z_0_2.35/result_fvoigt_exp.h5",
@@ -351,7 +374,7 @@ for item in toplot:
             b_hcd[item][i] = pars[2]['bias_hcd']
             b_hcd_err[item][i] = pars[3]['bias_hcd']
         else:
-            b_hcd[item] = np.bool_(b_hcd_item)
+            b_hcd[item] = np.bool_(b_hcd[item])
         cov[item][i] = pars[4]['cov[beta_LYA, bias_eta_LYA]']
 
     bias[item] = bias_eta[item] * 0.97 / beta[item]
@@ -371,7 +394,15 @@ for item in toplot:
         bias_err[item] /= (1+redshift[item])**gamma['bias']
         beff_err[item] /= (1+redshift[item])**gamma['beff']
 
+    # Take absolute value on bias
+    bias_eta[item] = np.abs(bias_eta[item])
+    bias[item] = np.abs(bias[item])
+    beff[item] = np.abs(beff[item])
+    b_hcd[item] = np.abs(b_hcd[item])
+
     if 'coadd' in item: continue
+
+    if np.array_equal([0,0,0,0],bias_eta_err[item]): continue
 
     print("Fits on {}:".format(item))
     p_bias[item] = sp.optimize.curve_fit(func, redshift[item], bias[item], sigma=bias_err[item])
@@ -396,11 +427,12 @@ if plot_bias_eta:
         ax1.errorbar(redshift[item], bias_eta[item], yerr=bias_eta_err[item], fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
-        plt.plot(z, func(z, p_bias_eta[item][0][0], p_bias_eta[item][0][1]), linestyle='--', color=colors[item])
-        if plot_shades:
-            plt.fill_between(z, func(z, p_bias_eta[item][0][0]+p_bias_eta[item][1][0,0], p_bias_eta[item][0][1]-p_bias_eta[item][1][1,1]),
-                         func(z, p_bias_eta[item][0][0]-p_bias_eta[item][1][0,0], p_bias_eta[item][0][1]+p_bias_eta[item][1][1,1]),
-                         color=colors[item], alpha=0.2)
+        if item in p_bias_eta.keys():
+            plt.plot(z, func(z, p_bias_eta[item][0][0], p_bias_eta[item][0][1]), linestyle='--', color=colors[item])
+            if plot_shades:
+                plt.fill_between(z, func(z, p_bias_eta[item][0][0]+p_bias_eta[item][1][0,0], p_bias_eta[item][0][1]-p_bias_eta[item][1][1,1]),
+                                 func(z, p_bias_eta[item][0][0]-p_bias_eta[item][1][0,0], p_bias_eta[item][0][1]+p_bias_eta[item][1][1,1]),
+                                 color=colors[item], alpha=0.2)
     if plot_pred1:
         ax1.plot(zpred1, bias_eta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
@@ -408,7 +440,10 @@ if plot_bias_eta:
     ax1.legend()
     ax1.grid()
     ax1.set_xlabel('z')
-    ylabel = 'bias_eta'
+    if absolute_bias:
+        ylabel = r'$|\mathrm{bias\_eta}_{LYA}|$'
+    else:
+        ylabel = r'$\mathrm{bias\_eta}_{LYA}$'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['bias_eta'])
     ax1.set_ylabel(ylabel)
@@ -425,11 +460,12 @@ if plot_beta:
         ax2.errorbar(redshift[item], beta[item], yerr=beta_err[item], fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
-        plt.plot(z, func(z, p_beta[item][0][0], p_beta[item][0][1]), linestyle='--', color=colors[item])
-        if plot_shades:
-            plt.fill_between(z, func(z, p_beta[item][0][0]+p_beta[item][1][0,0], p_beta[item][0][1]-p_beta[item][1][1,1]),
-                         func(z, p_beta[item][0][0]-p_beta[item][1][0,0], p_beta[item][0][1]+p_beta[item][1][1,1]),
-                         color=colors[item], alpha=0.2)
+        if item in p_beta.keys():
+            plt.plot(z, func(z, p_beta[item][0][0], p_beta[item][0][1]), linestyle='--', color=colors[item])
+            if plot_shades:
+                plt.fill_between(z, func(z, p_beta[item][0][0]+p_beta[item][1][0,0], p_beta[item][0][1]-p_beta[item][1][1,1]),
+                                 func(z, p_beta[item][0][0]-p_beta[item][1][0,0], p_beta[item][0][1]+p_beta[item][1][1,1]),
+                                 color=colors[item], alpha=0.2)
     if plot_pred1:
         ax2.plot(zpred1, beta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
@@ -437,7 +473,7 @@ if plot_beta:
     ax2.legend()
     ax2.grid()
     ax2.set_xlabel('z')
-    ylabel = 'beta'
+    ylabel = r'$\beta_{LYA}$'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['beta'])
     ax2.set_ylabel(ylabel)
@@ -454,11 +490,12 @@ if plot_bias:
         ax3.errorbar(redshift[item], bias[item], yerr=bias_err[item], fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
-        plt.plot(z, func(z, p_bias[item][0][0], p_bias[item][0][1]), linestyle='--', color=colors[item])
-        if plot_shades:
-            plt.fill_between(z, func(z, p_bias[item][0][0]+p_bias[item][1][0,0], p_bias[item][0][1]-p_bias[item][1][1,1]),
-                         func(z, p_bias[item][0][0]-p_bias[item][1][0,0], p_bias[item][0][1]+p_bias[item][1][1,1]),
-                         color=colors[item], alpha=0.2)
+        if item in p_bias.keys():
+            plt.plot(z, func(z, p_bias[item][0][0], p_bias[item][0][1]), linestyle='--', color=colors[item])
+            if plot_shades:
+                plt.fill_between(z, func(z, p_bias[item][0][0]+p_bias[item][1][0,0], p_bias[item][0][1]-p_bias[item][1][1,1]),
+                                 func(z, p_bias[item][0][0]-p_bias[item][1][0,0], p_bias[item][0][1]+p_bias[item][1][1,1]),
+                                 color=colors[item], alpha=0.2)
     if plot_pred1:
         ax3.plot(zpred1, bias_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
@@ -466,7 +503,10 @@ if plot_bias:
     ax3.legend()
     ax3.grid()
     ax3.set_xlabel('z')
-    ylabel = 'bias'
+    if absolute_bias:
+        ylabel = r'$|\mathrm{b}_{LYA}|$'
+    else:
+        ylabel = r'$\mathrm{b}_{LYA}$'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['bias'])
     ax3.set_ylabel(ylabel)
@@ -483,11 +523,12 @@ if plot_beff:
         ax4.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
-        plt.plot(z, func(z, p_beff[item][0][0], p_beff[item][0][1]), linestyle='--', color=colors[item])
-        if plot_shades:
-            plt.fill_between(z, func(z, p_beff[item][0][0]+p_beff[item][1][0,0], p_beff[item][0][1]-p_beff[item][1][1,1]),
-                         func(z, p_beff[item][0][0]-p_beff[item][1][0,0], p_beff[item][0][1]+p_beff[item][1][1,1]),
-                         color=colors[item], alpha=0.2)
+        if item in p_beff.keys():
+            plt.plot(z, func(z, p_beff[item][0][0], p_beff[item][0][1]), linestyle='--', color=colors[item])
+            if plot_shades:
+                plt.fill_between(z, func(z, p_beff[item][0][0]+p_beff[item][1][0,0], p_beff[item][0][1]-p_beff[item][1][1,1]),
+                                 func(z, p_beff[item][0][0]-p_beff[item][1][0,0], p_beff[item][0][1]+p_beff[item][1][1,1]),
+                                 color=colors[item], alpha=0.2)
     if plot_pred1:
         ax4.plot(zpred1, beff_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
@@ -495,7 +536,10 @@ if plot_beff:
     ax4.legend()
     ax4.grid()
     ax4.set_xlabel('z')
-    ylabel='b_eff'
+    if absolute_bias:
+        ylabel=r'$|\mathrm{beff}_{LYA}|$'
+    else:
+        ylabel=r'$\mathrm{beff}_{LYA}$'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['beff'])
     ax4.set_ylabel(ylabel)
@@ -513,11 +557,12 @@ if plot_beff:
         ax5.errorbar(redshift[item], beff[item]*(1+z0)/(1+redshift[item]), yerr=beff_err[item]*(1+z0)/(1+redshift[item]), fmt=fmt, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
-        plt.plot(z, func(z, p_beff[item][0][0], p_beff[item][0][1])*(1+z0)/(1+z), linestyle='--', color=colors[item])
-        if plot_shades:
-            plt.fill_between(z, func(z, p_beff[item][0][0]+p_beff[item][1][0,0], p_beff[item][0][1]-p_beff[item][1][1,1])*(1+z0)/(1+z),
-                         func(z, p_beff[item][0][0]-p_beff[item][1][0,0], p_beff[item][0][1]+p_beff[item][1][1,1])*(1+z0)/(1+z),
-                         color=colors[item], alpha=0.2)
+        if item in p_beff.keys():
+            plt.plot(z, func(z, p_beff[item][0][0], p_beff[item][0][1])*(1+z0)/(1+z), linestyle='--', color=colors[item])
+            if plot_shades:
+                plt.fill_between(z, func(z, p_beff[item][0][0]+p_beff[item][1][0,0], p_beff[item][0][1]-p_beff[item][1][1,1])*(1+z0)/(1+z),
+                                 func(z, p_beff[item][0][0]-p_beff[item][1][0,0], p_beff[item][0][1]+p_beff[item][1][1,1])*(1+z0)/(1+z),
+                                 color=colors[item], alpha=0.2)
     if plot_pred1:
         ax5.plot(zpred1, beff_pred1*(1+z0)/(1+zpred1), 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
@@ -525,7 +570,10 @@ if plot_beff:
     ax5.legend()
     ax5.grid()
     ax5.set_xlabel('z')
-    ylabel = 'b_eff * G(z) / G({})'.format(z0)
+    if absolute_bias:
+        ylabel = r'$|\mathrm{beff}_{LYA}|$'+' * G(z) / G({})'.format(z0)
+    else:
+        ylabel = r'$\mathrm{beff}_{LYA}$'+' * G(z) / G({})'.format(z0)
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['beff'])
     ax5.set_ylabel(ylabel)
@@ -540,11 +588,15 @@ if plot_b_hcd:
         # if 'coadd' in item:
         #     label = None
         #     fmt = 'x'
+        if np.array_equal(b_hcd_err[item], np.zeros(len(b_hcd[item]))): continue
         ax6.errorbar(redshift[item], b_hcd[item], yerr=b_hcd_err[item], marker='o', label=label, color=colors[item])
     ax6.legend()
     ax6.grid()
     ax6.set_xlabel('z')
-    ylabel='b_hcd'
+    if absolute_bias:
+        ylabel='|b_hcd|'
+    else:
+        ylabel='b_hcd'
     ax6.set_ylabel(ylabel)
     plt.tight_layout()
 
