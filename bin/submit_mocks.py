@@ -1139,7 +1139,7 @@ def main():
     sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
     sbatch_args['name_mergechunks'] = "mergechunks_saclay"
-    sbatch_args['threads_mergechunks'] = 8  # default 64
+    sbatch_args['threads_mergechunks'] = 64  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
 
     ### Define mock parameters:
@@ -1165,10 +1165,10 @@ def main():
     mock_args['small_scales'] = True  # If True, add small scales in FGPA
     mock_args['rsd'] = True  # If True, add RSD
     mock_args['dla'] = True  # If True, add DLA
-    mock_args['nmin'] = 16.7  # log(N_HI) min for DLA
+    mock_args['nmin'] = 17.2  # log(N_HI) min for DLA
     mock_args['nmax'] = 22.5  # log(N_HI) max for DLA
-    mock_args['nhi_low_cut'] = 16.7  # cut DLAs with log(n_HI) < cut
-    mock_args['nhi_high_cut'] = 17.3  # cut DLAs with log(n_HI) > cut
+    mock_args['nhi_low_cut'] = None  # cut DLAs with log(n_HI) < cut
+    mock_args['nhi_high_cut'] = None  # cut DLAs with log(n_HI) > cut
     # Run options:
     mock_args['use_time'] = util.str2bool(args.time)  # If True, use /usr/bin/time/ to time jobs
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
@@ -1181,11 +1181,11 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = False  # Produce Pk
+    run_args['run_pk'] = True  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = False  # Produce GRF boxes
+    run_args['run_boxes'] = True  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = False  # produce chunks
+    run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = True  # run draw_qso.py for randoms
     run_args['make_spectra'] = True  # run make_spectra.py
@@ -1195,9 +1195,9 @@ def main():
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = True  # Compute master_randoms.fits file
     run_args['compute_dla'] = True  # Compute dla catalog of each chunks
-    run_args['dla_randoms'] = False  # Compute dla randoms catalogs of each chunks
+    run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
     run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['merge_rand_dla'] = False  # Compute master_DLA_randoms.fits file
+    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
     run_args['run_create'] = True  # Create persistent reservation
