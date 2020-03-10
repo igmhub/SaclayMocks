@@ -722,7 +722,7 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
         if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
             out_dir = mock_args['base_dir']+"/output_nhi_{}_{}".format(mock_args['nhi_low_cut'], mock_args['nhi_high_cut'])
         else:
-            out_dir = mock_args['base_dir']+"/output_new_tuning"
+            out_dir = mock_args['base_dir']+"/output"
     try:
         os.makedirs(out_dir)
     except OSError:
