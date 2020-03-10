@@ -474,7 +474,9 @@ fi
         for cid in mock_args['chunkid']:
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --cell_size {pixel} --nmin {nmin} --nmax {nmax} --nhi-low-cut {cut1} --nhi-high-cut {cut2} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'], seed=mock_args['seed'])
+            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
+                script += " --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
             script += "&> {path}/dla-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids_dla+=" $!"\n"""
 
@@ -484,7 +486,9 @@ fi
         for cid in mock_args['chunkid']:
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --cell_size {pixel} --nmin {nmin} --nmax {nmax} --nhi-low-cut {cut1} --nhi-high-cut {cut2} {seed} -random True ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'], seed=mock_args['seed'])
+            script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} -random True ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
+                script += " --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
             script += "&> {path}/dla_rand-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids_rand+=" $!"\n"""
 
@@ -499,7 +503,9 @@ fi
         script += """echo -e "*** Merging DLA ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "merge_dla.py -indir {base} -outdir {outpath} --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'], cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
+        script += "merge_dla.py -indir {base} -outdir {outpath} ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
+        if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
+            script += " --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
         script += "&> {path}/merge_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
         script += "pid_dla=$!\n"
 
@@ -507,7 +513,9 @@ fi
         script += """echo -e "*** Merging DLA randoms ***"\n"""
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
-        script += "merge_dla.py -indir {base} -outdir {outpath} -random True --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'], cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
+        script += "merge_dla.py -indir {base} -outdir {outpath} -random True ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
+        if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
+            script += " --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
         script += "&> {path}/merge_rand_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
         script += "pid_dla_rand=$!\n"
 
@@ -714,7 +722,7 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
         if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
             out_dir = mock_args['base_dir']+"/output_nhi_{}_{}".format(mock_args['nhi_low_cut'], mock_args['nhi_high_cut'])
         else:
-            out_dir = mock_args['base_dir']+"/output"
+            out_dir = mock_args['base_dir']+"/output_new_tuning"
     try:
         os.makedirs(out_dir)
     except OSError:
@@ -1130,8 +1138,8 @@ def main():
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:30:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "regular"  # default "regular"
+    sbatch_args['time_chunk'] = "00:10:00"  # default "00:30:00"
+    sbatch_args['queue_chunk'] = "debug"  # default "regular"
     sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
@@ -1139,7 +1147,7 @@ def main():
     sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
     sbatch_args['name_mergechunks'] = "mergechunks_saclay"
-    sbatch_args['threads_mergechunks'] = 64  # default 64
+    sbatch_args['threads_mergechunks'] = 8  # default 64
     sbatch_args['nodes_mergechunks'] = 1  # default 1
 
     ### Define mock parameters:
@@ -1181,14 +1189,14 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = True  # Produce Pk
+    run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = True  # Produce GRF boxes
+    run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = True  # produce chunks
-    run_args['draw_qso'] = True  # run draw_qso.py
-    run_args['randoms'] = True  # run draw_qso.py for randoms
-    run_args['make_spectra'] = True  # run make_spectra.py
+    run_args['run_chunks'] = False  # produce chunks
+    run_args['draw_qso'] = False  # run draw_qso.py
+    run_args['randoms'] = False  # run draw_qso.py for randoms
+    run_args['make_spectra'] = False  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format

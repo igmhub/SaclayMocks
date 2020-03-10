@@ -55,8 +55,10 @@ if labels is None:
 # fmt = ['.', '.', '.', 'x', '+', 'o', '.', 'x', 'o', '-.', ':']
 fmt = ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.']
 # colors = ['black', 'darkblue', 'darkgreen', 'red', 'darkorange', 'darkviolet', 'saddlebrown', 'dodgerblue', 'deeppink']
-colors = ['b', 'darkorange', 'r']
-linestyles = ['-', '--', '-.', ':']
+# colors = ['b', 'darkorange', 'r']
+# colors = ['black', 'royalblue', 'r']
+colors = ['darkblue', 'darkblue', 'r', 'r']
+linestyles = ['-', '--', '-', '--']
 
 mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
 w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)

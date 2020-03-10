@@ -88,10 +88,12 @@ class ReadTransmission(object):
         if plot:
             zz = np.linspace(2., 3.6, 10000)
             tt = np.exp(-0.0051*(1+zz)**3.2)
+            tt2 = np.exp(-0.0028*(1+zz)**3.45)
             f, ax = plt.subplots()
             ax.set_ylim(0, 1)
             ax.plot(z, t, label='mock')
-            ax.plot(zz, tt, label='data')
+            ax.plot(zz, tt, label='data', linestyle='--')
+            ax.plot(zz, tt2, label='Calura+2012', linestyle='--')
             ax.set_xlabel('z', fontsize=20)
             ax.set_ylabel('T(z)', fontsize=20)
             ax.set_title(title, fontsize=20)
