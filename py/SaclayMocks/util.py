@@ -166,7 +166,7 @@ def P1D_datafit(k, z):
     return P
 
 
-def read_P1D(redshift, filename="$SACLAYMOCKS_BASE/etc/pk_1d_DR12_13bins_noSi.out"):
+def read_P1D(redshift, filename="$SACLAYMOCKS_BASE/etc/pk_1d_DR12_13bins_noSi.out", mpc=False):
     """
     Read Pk file from Nathalie. Si III oscillations have been removed.
     Format is z, k, pk, pkerr, 0, 0, 0
@@ -182,10 +182,17 @@ def read_P1D(redshift, filename="$SACLAYMOCKS_BASE/etc/pk_1d_DR12_13bins_noSi.ou
     k = data[:, 1][msk]
     Pk = data[:, 2][msk]
     Pkerr = data[:, 3][msk]
+    if mpc:
+        print("Output is in Mpc/h")
+        k *= kms2mpc(redshift)
+        Pk /= kms2mpc(redshift)
+        Pkerr /= kms2mpc(redshift)
+    else:
+        print("Output is in km/s")
     return k, Pk, Pkerr
 
 
-def read_P1D_fit(redshift):
+def read_P1D_fit(redshift, mpc=False):
     """
     Read Pk fits file, fitted on eBOSS data
     kPk column is k*Pk/pi
@@ -205,10 +212,16 @@ def read_P1D_fit(redshift):
     k = data['k'][msk]
     kPk = data['kPk'][msk]
     Pk = kPk / k * np.pi
+    if mpc:
+        print("Output is in Mpc/h")
+        k *= kms2mpc(redshift)
+        Pk /= kms2mpc(redshift)
+    else:
+        print("Output is in km/s")
     return k, Pk
 
 
-def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"):
+def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits", mpc=False):
     '''
     This function reads the P1D used as model to tune the P1D shape in mocks
     It returns k, pk for a given redshift.
@@ -239,6 +252,12 @@ def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"
             sys.exit(1)
         k = k[msk]
         pk = pk[msk]
+    if mpc:
+        print("Output is in Mpc/h")
+        k *= kms2mpc(redshift)
+        pk /= kms2mpc(redshift)
+    else:
+        print("Output is in km/s")
     return k, pk
 
 
