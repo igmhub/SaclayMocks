@@ -903,6 +903,7 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_merge_spectra'] += " -rsd "+str(mock_args['rsd'])
                         mock_args['args_merge_spectra'] += " -addnoise "+str(mock_args['small_scales'])
                         mock_args['args_merge_spectra'] += " -dla "+str(mock_args['dla'])
+                        mock_args['args_merge_spectra'] += " --store-g "+str(mock_args['store_g'])
                         if mock_args['p1dfile'] is not None:
                             mock_args['args_merge_spectra'] += " --fit-p1d True "  # in order to read the p1dfile format
                             mock_args['args_merge_spectra'] += " -p1dfile "+mock_args['p1dfile']                            
@@ -1165,14 +1166,15 @@ def main():
     mock_args['c'] = -1  # c paramter in FGPA; -1 is to read c(z) from etc/params.fits
     mock_args['zmin'] = 1.8  # minimal redshift to draw QSO
     mock_args['zmax'] = 3.6  # maximal redshift to draw QSO
-    mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
+    mock_args['zfix'] = "-zfix 2.2"  # "-zfix 2.6" to fix the redshift to a special value
+    mock_args['store_g'] = True  # If true, store delta_l, delta_s and eta_par fields
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
     mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
     mock_args['NQSO'] = -1  # If >0, limit the number of QSO treated in make_spectra
     mock_args['small_scales'] = True  # If True, add small scales in FGPA
     mock_args['rsd'] = True  # If True, add RSD
-    mock_args['dla'] = True  # If True, add DLA
+    mock_args['dla'] = False  # If True, add DLA
     mock_args['nmin'] = 17.2  # log(N_HI) min for DLA
     mock_args['nmax'] = 22.5  # log(N_HI) max for DLA
     mock_args['nhi_low_cut'] = None  # cut DLAs with log(n_HI) < cut
@@ -1189,23 +1191,23 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = False  # Produce Pk
+    run_args['run_pk'] = True  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = False  # Produce GRF boxes
+    run_args['run_boxes'] = True  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = False  # produce chunks
-    run_args['draw_qso'] = False  # run draw_qso.py
+    run_args['run_chunks'] = True  # produce chunks
+    run_args['draw_qso'] = True  # run draw_qso.py
     run_args['randoms'] = False  # run draw_qso.py for randoms
-    run_args['make_spectra'] = False  # run make_spectra.py
+    run_args['make_spectra'] = True  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
-    run_args['merge_randoms'] = True  # Compute master_randoms.fits file
-    run_args['compute_dla'] = True  # Compute dla catalog of each chunks
-    run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
-    run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
+    run_args['merge_randoms'] = False  # Compute master_randoms.fits file
+    run_args['compute_dla'] = False  # Compute dla catalog of each chunks
+    run_args['dla_randoms'] = False  # Compute dla randoms catalogs of each chunks
+    run_args['merge_dla'] = False  # Compute master_DLA.fits file
+    run_args['merge_rand_dla'] = False  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
     run_args['run_create'] = True  # Create persistent reservation

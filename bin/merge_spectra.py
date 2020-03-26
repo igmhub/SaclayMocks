@@ -35,7 +35,8 @@ def main():
     parser.add_argument("-addnoise", help="If True, small scales are added, default True", default='True')
     parser.add_argument("-dla", help="If True, store delta and growth skewers, default False", default='False')
     parser.add_argument("-zfix", type=float, help="Specify a redshift to evaluate parameters in FGPA, if None parameter are taken at the absorber redshift", default=None)
-    parser.add_argument("--fit-p1d", help="If True, store delta_l, delta_s and eta_par. Default False", default='False')
+    parser.add_argument("--fit-p1d", help="If True, do the fitting procedure. Default False", default='False')
+    parser.add_argument("--store-g", help="If True, store delta_l, delta_s and eta_par. Default False", default='False')
     parser.add_argument("-seed", type=int, help="specify a seed", default=None)
     parser.add_argument("--check-id", help="If True, check if the spectra ID matches the QSO ID by looking at (ra,dec), default True", default='True')
     parser.add_argument("-ncpu", type=int, help="number of cpu, default = 2", default=2)
@@ -51,6 +52,7 @@ def main():
     add_noise = util.str2bool(args.addnoise)
     dla = util.str2bool(args.dla)
     fit_p1d = util.str2bool(args.fit_p1d)
+    store_g = util.str2bool(args.store_g)
     check_id = util.str2bool(args.check_id)
     pixsize = args.pixsize
     k_ny = np.pi / pixsize
@@ -103,6 +105,7 @@ def main():
         filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits.gz")
     print("Reading P1D file {}".format(filename))
     if fit_p1d:
+        store_g = True
         p1d_data = fitsio.read(filename, ext=1)
         field = 'P1Dmiss'
         if rsd: field += 'RSD'
@@ -254,7 +257,7 @@ def main():
         if dla:
             delta_list = []
             velo_list = []
-        if fit_p1d:
+        if store_g:
             delta_list = []
             eta_list = []
             noise_list = []
@@ -320,7 +323,7 @@ def main():
                         # delta = delta_l_tmp  # prov
                     else:
                         delta = delta_l_tmp
-                        if fit_p1d:
+                        if store_g:
                             delta_s = np.zeros_like(delta_l_tmp)
                     timer += time.time() - timer_init
                 else:
@@ -328,29 +331,7 @@ def main():
 
                 # Apply FGPA:
                 if rsd:
-                    # f, ax = plt.subplots()
-                    # ax.plot(delta_l_tmp)
-                    # ax.set_title('delta_l')
-                    # plt.grid()
-                    # f, ax = plt.subplots()
-                    # ax.plot(delta_s)
-                    # ax.set_title('delta_s')
-                    # plt.grid()
-                    # f, ax = plt.subplots()
-                    # ax.plot(eta_par_tmp)
-                    # ax.set_title('eta_par')
-                    # plt.grid()
-                    # f, ax = plt.subplots()
-                    # ax.plot(growthf_tmp)
-                    # ax.set_title('growthf')
-                    # plt.grid()
                     spec = util.fgpa(delta, eta_par_tmp, growthf_tmp, aa, bb, cc)
-                    # spec = 1 + delta + cc*eta_par_tmp
-                    # f, ax = plt.subplots()
-                    # ax.plot(spec)
-                    # ax.set_title('spec {}'.format(ID))
-                    # plt.grid()
-                    # plt.show()
                 else:
                     spec = np.exp(-aa * np.exp(bb * growthf_tmp * delta))
 
@@ -374,7 +355,7 @@ def main():
                     else:
                         vpar = np.zeros_like(delta_l_tmp)
                     velo_list.append(vpar)
-                if fit_p1d:
+                if store_g:
                     delta_list.append(delta_l_tmp)
                     eta_list.append(eta_par_tmp)
                     noise_list.append(delta_s)
@@ -405,7 +386,7 @@ def main():
             outfits.write(np.float32(delta_list), extname='DELTA')
             outfits.write(np.float32(growthf), extname='GROWTHF')
             outfits.write(np.float32(velo_list), extname='VELO_PAR')
-        if fit_p1d:
+        if store_g:
             outfits.write(np.float32(delta_list), extname='DELTA_L')
             outfits.write(np.float32(eta_list), extname='ETA_PAR')
             outfits.write(np.float32(growthf), extname='GROWTHF')
