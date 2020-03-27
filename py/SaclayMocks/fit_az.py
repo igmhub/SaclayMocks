@@ -199,6 +199,9 @@ class Fitter(object):
         else:
             spec = self.comp_spectra(a)
         Fmean = ma.mean(spec)
+        n = spec[spec.mask==False].size
+        print("npix = {} ; sigma_F = {}".format(n,spec.std()))
+        print("<F> = {} +/- {}".format(Fmean, spec.std()/np.sqrt(n)))
         p1d = powerspectrum.ComputeP1D(self.mock['pixel']*self.Nreg)
         for s in spec:
             if len(s[s.mask==False]) < self.Nreg: continue
