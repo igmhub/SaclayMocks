@@ -221,12 +221,19 @@ def read_P1D_fit(redshift, mpc=False):
     return k, Pk
 
 
-def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits", mpc=False):
+def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits", mpc=False, z_corr=True):
     '''
     This function reads the P1D used as model to tune the P1D shape in mocks
     It returns k, pk for a given redshift.
-    Units are in km/s 
+    Units are in km/s by default (mpc=False)
+    The z dependency is smoothed by default (z_corr=True)
     '''
+    corrV = np.array([1.0037348 , 0.99913817, 0.99267796, 0.99769447, 1.00333914, 1.00691257, 1.00574199, 0.99331247, 0.99156929, 1.00622274])   #  harcoded correction to smooth sig_F(z)
+    i = int(round((redshift-1.8)/0.2))
+    if (corr): 
+        cor = corrV[i]**2  # P ~ sig^2
+    else : 
+        cor =1
     fits = fitsio.FITS(os.path.expandvars(filename))
     z = fits[0].read()
     k = fits[1].read()
@@ -258,7 +265,7 @@ def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"
         pk /= kms2mpc(redshift)
     else:
         print("Output is in km/s")
-    return k, pk
+    return k, pk*cor
 
 
 def computechi2(mod, data, dataerr):
