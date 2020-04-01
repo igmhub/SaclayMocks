@@ -230,7 +230,7 @@ def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"
     '''
     corrV = np.array([1.0037348 , 0.99913817, 0.99267796, 0.99769447, 1.00333914, 1.00691257, 1.00574199, 0.99331247, 0.99156929, 1.00622274])   #  harcoded correction to smooth sig_F(z)
     i = int(round((redshift-1.8)/0.2))
-    if (corr): 
+    if (z_corr): 
         cor = corrV[i]**2  # P ~ sig^2
     else : 
         cor =1

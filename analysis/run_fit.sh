@@ -18,7 +18,7 @@ do_deltas=0  # 1 is delta from do_delta, 0 is from transmission
 # version=debug_v4.4
 # version=debug_z_dep_qso50
 # version=debug_v4.6_38
-version=Fit4/z3.0
+version=Fit4/z3.6
 # version=dr16_paper
 # version=v4.7.22_dndz3_masked_dla20.3_4
 # version=v4.7.22_dla
@@ -37,7 +37,7 @@ object=QSO  # QSO or DLA
 fit_metal=0
 
 
-zeff=3.0
+zeff=3.6
 
 hesse=0  # set to 1 to print correlations between parameters
 zbins=0  # set to 1 if you want to fit a particular redshift bin
