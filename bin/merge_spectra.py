@@ -56,7 +56,6 @@ def main():
     check_id = util.str2bool(args.check_id)
     pixsize = args.pixsize
     k_ny = np.pi / pixsize
-    bb = args.bb
     if args.paramfile is None:
         filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/params.fits")
 
@@ -65,6 +64,11 @@ def main():
         print("a  parameter has been fixed to {}".format(aa))
     else:
         a_of_z = util.InterpFitsTable(filename, 'z', 'a')
+    if args.bb > 0:
+        bb = args.bb
+        print("b  parameter has been fixed to {}".format(bb))
+    else:
+        b_of_z = util.InterpFitsTable(filename, 'z', 'b')
     if args.cc > 0:
         cc = args.cc
         print("c  parameter has been fixed to {}".format(cc))
@@ -234,7 +238,6 @@ def main():
     hlist = [{'name':"z0", 'value':z0, 'comment':"redshift of box center"},
              {'name':"NX", 'value':NX},
              {'name':"dmax", 'value':dmax},
-             {'name':"b", 'value':bb},
              {'name':"ra0", 'value':ra0, 'comment':"right ascension of box center"},
              {'name':"dec0", 'value':dec0, 'comment':"declination of box center"}]
     cpt2 = 0
@@ -286,10 +289,10 @@ def main():
                     z_0 = np.ones_like(z) * 2.2466318099484273  # prov
                 if args.aa <= 0:
                     aa = a_of_z.interp(z)
-                    # aa = a_of_z.interp(z_0)  # prov
+                if args.bb <= 0:
+                    bb = b_of_z.interp(z)
                 if args.cc <= 0:
                     cc = c_of_z.interp(z)
-                    # cc = c_of_z.interp(z_0)  # prov
                 growthf_tmp = growthf_24*(1+2.4) / (1+z)
                 # growthf_tmp = growthf_24*(1+2.4) / (1+z_0)  # prov
                 if rsd:
