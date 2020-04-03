@@ -1133,19 +1133,19 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "04:00:00"  # default "01:30:00"
+    sbatch_args['time_boxes'] = "02:00:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
     sbatch_args['nodes_boxes'] = 1  # default 1
     # Parameters for chunk jobs:
-    sbatch_args['time_chunk'] = "00:30:00"  # default "00:30:00"
-    sbatch_args['queue_chunk'] = "debug"  # default "regular"
+    sbatch_args['time_chunk'] = "00:20:00"  # default "00:30:00"
+    sbatch_args['queue_chunk'] = "regular"  # default "regular"
     sbatch_args['name_chunk'] = "chunk_saclay"
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "02:30:00"  # default "01:30:00"
+    sbatch_args['time_mergechunks'] = "02:00:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
     sbatch_args['name_mergechunks'] = "mergechunks_saclay"
     sbatch_args['threads_mergechunks'] = 64  # default 64
@@ -1195,7 +1195,7 @@ def main():
     # boxes:
     run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = False  # produce chunks
+    run_args['run_chunks'] = True  # produce chunks
     run_args['draw_qso'] = False  # run draw_qso.py
     run_args['randoms'] = False  # run draw_qso.py for randoms
     run_args['make_spectra'] = False  # run make_spectra.py
@@ -1320,10 +1320,10 @@ def main():
     run_args['todo_mergechunks'] = ""
     if run_args['merge_qso']: run_args['todo_mergechunks'] += "merge_qso "
     if run_args['merge_randoms']: run_args['todo_mergechunks'] += "merge_randoms "
-    if run_args['compute_dla']: run_args['todo_mergechunks'] += "compute_dla "
-    if run_args['dla_randoms']: run_args['todo_mergechunks'] += "dla_randoms "
-    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
-    if run_args['merge_rand_dla']: run_args['todo_mergechunks'] += "merge_rand_dla "
+    if run_args['compute_dla'] and mock_args['dla']: run_args['todo_mergechunks'] += "compute_dla "
+    if run_args['dla_randoms'] and mock_args['dla']: run_args['todo_mergechunks'] += "dla_randoms "
+    if run_args['merge_dla'] and mock_args['dla']: run_args['todo_mergechunks'] += "merge_dla "
+    if run_args['merge_rand_dla'] and mock_args['dla']: run_args['todo_mergechunks'] += "merge_rand_dla "
     if run_args['transmissions']: run_args['todo_mergechunks'] += "transmissions "
 
     print("Writting scripts for {} realisations".format(nmocks))

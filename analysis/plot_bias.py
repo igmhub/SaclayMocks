@@ -29,15 +29,17 @@ plot_b_hcd = True
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'redo_dr16']
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_dndz3_nhi20.3_fixed_lya', 'redo_dr16']
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
-toplot = ['v4.7.22_raw', 'v4.7.22-0.0_bis', 'v4.7.22-0.2_nhi20.3', 'redo_dr16']
+# toplot = ['v4.7.22_raw', 'v4.7.22-0.0_bis', 'v4.7.22-0.2_nhi20.3', 'redo_dr16']
 # toplot = ['redo_dr16', 'dr16_fvoigt_v4.7.22', 'dr16_mask_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.0', 'v4.7.22-0.0_bis']
+toplot = ['redo_dr16']
 
 # labels = toplot
 # labels = ['mock_Rogers2018', 'mock_no_mask', 'DR16_Rogers2018', 'DR16_no_mask', 'dr16_fvoigt_v4.7.22']
 # labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', 'dr16']
 # labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', '3*dndz_nhi_20.3_fixed_lya', 'dr16']
-labels = ['raw mocks', 'mock-0.0', 'mock-0.2', 'DR16']
+# labels = ['raw mocks', 'mock-0.0', 'mock-0.2', 'DR16']
+labels = ['DR16']
 # labels = ['DR16_mask_Roger', 'DR16_Guy', 'DR16_mask_Guy']
 # labels = ['eboss-0.0', 'eboss-0.0_seed126429']
 
@@ -83,7 +85,7 @@ p_beff = {}
 
 # Choose colors
 colors['data_helion'] = 'black'
-colors['redo_dr16'] = 'black'
+colors['redo_dr16'] = 'royalblue'
 colors['dr16_fvoigt_v4.7.22'] = 'darkgreen'
 colors['dr16_mask_fvoigt_v4.7.22'] = 'red'
 colors['v4.7.22_raw'] = 'green'
