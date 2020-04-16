@@ -40,7 +40,7 @@ parser.add_argument("--convergence-criterium", type=float, default=None, require
         help="convergence criterium to stop iteration procedure when reached")
 
 parser.add_argument("--seed", type=int, default=42, required=False,
-        help="value of b")
+        help="value of seed")
 
 parser.add_argument("--compute-spectra", action='store_true', required=False,
         help="Compute spectra files using submit_mocks.py")
@@ -56,6 +56,7 @@ parser.add_argument("--check-plots", action='store_true', required=False,
 
 args = parser.parse_args()
 
+t_init = time()
 indir = args.in_dir
 z = args.z
 a = args.a
@@ -72,28 +73,35 @@ if args.compute_spectra:
     command += ' --mock-dir ' + indir
     command += ' --fit-p1d {} {} {} {} {}'.format(z, a, b, c, seed)
     print("Running {} ...\n".format(command))
+    t0 = time()
     subprocess.check_call(command, shell=True)
+    print("Done. {} s".format(time() - t0))
 
     # Compute P1D missing
     command = 'p1d_missing.py '
     command += '--out-file ' + indir + '/mock_0/chunk_1/p1dmiss.fits '
     command += '--beta {} '.format(c)
+    command += '--zref {} '.format(z)
     if do_plots:
         command += '--plot-p1d'
     print("\n\nRunning {} ...\n".format(command))
+    t0 = time()
     subprocess.check_call(command, shell=True)
+    print("Done. {} s".format(time() - t0))
 
     # Run submit.sh
     command = indir + '/mock_0/output/runs/submit.sh'
     print("\n\nRunning {} ...\n".format(command))
+    t0 = time()
     subprocess.check_call(command, shell=True)
+    print("Done. {} s".format(time() - t0))
 
 indir += '/mock_0/chunk_1/'
 # Fitting a(z)
 if args.fit_az:
     print("\n\nFitting a...\n")
     t0 = time()
-    fitter = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2,
+    fitter = fit_az.Fitter(indir, z, c, bb=b, Nreg=1, pixel=0.2,
         convergence_factor=convergence_factor, convergence_criterium=convergence_criterium)
     fitter.read_data()
     fitter.read_mock()
@@ -108,22 +116,25 @@ if args.fit_p1d:
     print("\nTunning the shape of 1D power spectrum...")
     if not args.fit_az:
         print("Tunning of P1D shape is done using a={}".format(a))
-        fitter = fit_az.Fitter(indir, z, a, c, bb=b, Nreg=1, pixel=0.2,
+        fitter = fit_az.Fitter(indir, z, c, bb=b, Nreg=1, pixel=0.2,
             convergence_factor=convergence_factor, convergence_criterium=convergence_criterium)
         fitter.read_mock()
     else:
         a = fitter.fit['a']
     t0 = time()
-    k = np.concatenate((np.arange(0, 3, 0.1), np.arange(3, 20, 0.5)))
+    bins = np.concatenate(([0, 1e-5, 0.03], np.arange(0.05, 0.5, 0.05), np.arange(0.5, 3, 0.1), np.arange(3, 20, 0.5)))
+    # fitter.read_data()  # prov
     fitter.read_model()
     fitter.read_p1dmiss()
-    fitter.compute_p1d(a, bins=k)
+    fitter.compute_p1d(a, bins=bins)
     fitter.smooth_p1d()
     print("nspec = {}\n".format(fitter.mock['spectra'].shape))
     if convergence_criterium:
         while not fitter.converged:
-            fitter.iterate(a=a, bins=k, plot=do_plots)
+            fitter.iterate(a=a, bins=bins, plot=do_plots)
     else:
         for n in range(args.n_iter):
-            fitter.iterate(a=a, bins=k, plot=do_plots)
+            fitter.iterate(a=a, bins=bins, plot=do_plots)
     print("\nTunning done. Took {} s".format(time() - t0))
+    print("Fitting procedure done. Took {} s".format(time() - t_init))
+    # fitter.check_p1d(a=a, title='z={} ; a={} ; b={} ; c={} - niter={}'.format(z, a, b, c, args.n_iter), save=True, bins=bins)

@@ -22,10 +22,10 @@ from memory_profiler import profile
 import pyfftw
 import os
 import argparse
+import subprocess
 from SaclayMocks import powerspectrum
 from SaclayMocks import constant
 from SaclayMocks import util
-from multiprocessing import Pool
 import gc
 
 
@@ -42,12 +42,15 @@ def DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile, box_null=False):
 # later we will directly draw boxk, with appropriate symetries
 # and with var(delta_k)=NX*NY*NZ(see cahier simu FFT normalization)
   t0 = time.time()
-  box = np.float32(np.random.normal(size=[NX, NY, NZ]))
+  # box = np.float32(np.random.normal(size=[NX, NY, NZ]))
+  box = np.zeros((NX,NY,NZ),dtype=np.float32)
+  for iz in range(NZ):
+    box[:,:,iz] =  np.float32(np.random.normal(size=[NX, NY]))
   t1 = time.time()
   print(box.nbytes/1024/1024, " Mbytes box drawn",  t1-t0, " s")
   print(box.dtype)
   boxk = np.zeros([NX,NY,NZ//2+1],dtype=np.complex64)
-  myfft = pyfftw.FFTW(box,boxk,axes=(0,1,2),threads=ncpu)
+  myfft = pyfftw.FFTW(box,boxk,axes=(0,1,2),threads=ncpu, flags=('FFTW_DESTROY_INPUT',))
   myfft.execute()
   t2 =time.time()
   print("FFT", t2-t1, " s")
@@ -62,9 +65,11 @@ def DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile, box_null=False):
     if box_null:
       raise ValueError("/!\ boxk is null /!\ \n    Wisdom saved before exiting.")
     print("/!\ Boxk was null. Wisdom has been saved, trying again FFTW...")
-    box_null = True
+    pyfftw.import_wisdom(sp.load(wisdomFile))
+    del boxk
+    boxk = DrawGRF_boxk(NX, NY, NZ, ncpu, wisdomFile, True)
 
-  return boxk, box_null
+  return boxk
 
 
 #********************************************************************
@@ -72,35 +77,20 @@ def DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile, box_null=False):
 def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
 #.............................  FFT
     global boxk   # use global variable boxk
+    t0=time.time()
     t2 = time.time()
     NX = boxk.shape[0]
     NY = boxk.shape[1]
     NZ = boxk.shape[2]
     # box = np.zeros([NX,NY,2*(NZ-1)],dtype=np.float32)
     box = pyfftw.empty_aligned((NX, NY, 2*(NZ-1)), dtype='float32')
-    # myfft = pyfftw.FFTW(boxkbix,box,axes=(0,1,2),direction='FFTW_BACKWARD',threads=ncpu, flags=('FFTW_DESTROY_INPUT',))
-    # myfft.execute()
     pyfftw.FFTW(boxk,box,axes=(0,1,2),direction='FFTW_BACKWARD',threads=ncpu, flags=('FFTW_DESTROY_INPUT',)).execute()
-    # del boxkbix
-    # gc.collect()
     del boxk
     box /= NX*NY*2*(NZ-1)
     t3 = time.time()
     print("FFT done", t3-t2, "s")
     sigma = np.std(box)
     print("sigma = {}".format(sigma))
-
-#...............................      write to fits file
-    for i in np.arange(0, nHDU):
-      fits = FITS(boxfilename+'-{}.fits'.format(i),'rw',clobber=True)
-      hdict = {'DX': Dcell, 'DY': Dcell, 'DZ':Dcell, 'NX':NX, 'NY':NY, 'NZ':(NZ-1)*2}
-      fits.write(box[i*NX//nHDU:(i+1)*NX//nHDU],header=hdict)
-      if i == 0:
-        fits[0].write_key("sigma", np.float32(sigma), comment="std of the box")
-        fits[0].write_key("seed", np.int32(seed), comment="seed used to generate randoms")
-      fits.close()
-    t4 = time.time()
-    print(boxfilename, "written", t4-t3,"s")
 
     # Next lines is a test of the FFT:
     # if the produced box is null, then try to save wisdom and redo FFT once again
@@ -113,8 +103,26 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
         raise ValueError("/!\ box is null /!\ \n    Box name: {}\nWisdom saved before exiting.".format(boxfilename))
       print("/!\ Box was null. Wisdom has been saved, trying again FFTW...")
       box_null = True
+    else:
+      #...............................      write to fits file
+      if box_null:
+        print("Box is not null this time. Continuing...")
+      for i in np.arange(0, nHDU):
+        fits = FITS(boxfilename+'-{}.fits'.format(i),'rw',clobber=True)
+        hdict = {'DX': Dcell, 'DY': Dcell, 'DZ':Dcell, 'NX':NX, 'NY':NY, 'NZ':(NZ-1)*2}
+        fits.write(box[i*NX//nHDU:(i+1)*NX//nHDU],header=hdict)
+        if i == 0:
+          fits[0].write_key("sigma", np.float32(sigma), comment="std of the box")
+          fits[0].write_key("seed", np.int32(seed), comment="seed used to generate randoms")
+        fits.close()
+      t4 = time.time()
+      print(boxfilename, "written", t4-t3,"s")
+      # if t4-t3 > 1500:
+      #   print("I/O is very slow, exiting.")
+      #   sys.exit(1)
+
     del box
-    return box_null
+    return
 
 
 #********************************************************************
@@ -174,6 +182,12 @@ def main() :
   volume = nCell * Vcell
   print("volume = ",volume)
 
+  # Reading power spectra
+  if (NY==NX and NZ==NX):
+    Pfilename = PkDir+"/P"+str(NX)+".fits"
+  else :
+    Pfilename = PkDir+"/P"+str(NX)+"-"+str(NY)+"-"+str(NZ)+".fits"
+
   #...............................    get wisdom to save time on FFT
   wisdom_path = os.path.expandvars("$SACLAYMOCKS_BASE/etc/")
   if (NY==NX and NZ==NX):
@@ -189,54 +203,93 @@ def main() :
     save_wisdom = True
 
   #............................. Draw GRF in k space
-  t0 = time.time()
-  print(NX,NY,NZ)
-  global boxk
   boxkfile = outDir + "/boxk.npy"
-  boxk, box_null = DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile)
-  if box_null:
-    print("Starting again DrawGRF_boxk...")
-    print("Loading wisdom {}".format(wisdomFile))
-    pyfftw.import_wisdom(sp.load(wisdomFile))
-    boxk, box_null = DrawGRF_boxk(NX, NY, NZ, ncpu, wisdomFile)
-
-  t1 = time.time()
-  np.save(boxkfile,boxk)
-  t2 = time.time()
-
-  print("boxk produced and saved:",t1-t0,t2-t1," s ")
+  global boxk
+  boxk_exist = False
+  if os.path.isfile(boxkfile):
+    print("{} already exists ! Reading boxk.npy file to compute density and velocity boxes...".format(boxkfile))
+    boxk_exist = True
+    boxk = np.load(boxkfile)
+    try:
+      seed = np.load(outDir+"/seed_boxk.npy")
+    except:
+      print("WARNING: didn't find {}/seed_boxk.npy".format(outDir))
+    print("Done.")
+    sigma = boxk.std()
+    if sigma > 70*NX:
+      print("Sigma of boxk is {} > 70*{}:".format(sigma,NX))
+      print("dividing boxk by P0(k) and saving...")
+      t0 = time.time()
+      boxk /= fitsio.read(Pfilename, ext='P0')
+      boxk[0,0,0] = 0j
+      np.save(boxkfile, boxk)
+      print("Done. {} s".format(time.time()-t0))
+    else:
+      print("Sigma of boxk is {} < 70*{}".format(sigma,NX))
+  else:
+    t0 = time.time()
+    print(NX,NY,NZ)
+    boxk = DrawGRF_boxk(NX,NY,NZ, ncpu, wisdomFile)
+    t1 = time.time()
+    np.save(boxkfile,boxk)
+    np.save(outDir+"/seed_boxk.npy", seed)
+    t2 = time.time()
+    print("boxk produced and saved:",t1-t0,t2-t1," s ")
 
   #............................. multiply by sqrt(P/Vcell), FFT and store
   print("Computing delta boxes...")
-  if (NY==NX and NZ==NX):
-    Pfilename = PkDir+"/P"+str(NX)+".fits"
-  else :
-    Pfilename = PkDir+"/P"+str(NX)+"-"+str(NY)+"-"+str(NZ)+".fits"
   # First lognormal
-  boxk *= fitsio.read(Pfilename, ext='Pln1')
-  box_null = FFTandStore(Dcell, nHDU, outDir+'/boxln_1', ncpu, wisdomFile)
-  # This box_null thing is in case the FFT went bad with the wisdom file
-  if box_null:
-    print("Starting again FFTandStore...")
-    print("Loading wisdom {}".format(wisdomFile))
-    pyfftw.import_wisdom(sp.load(wisdomFile))
-    boxk = np.load(boxkfile)
-    boxk *= fitsio.read(Pfilename, ext=0)
-    FFTandStore(Dcell, nHDU, outDir+'/boxln_1', ncpu, wisdomFile, box_null)
+  boxfile = outDir+'/boxln_1'
+  command = "ls -l {}* | wc -l".format(boxfile)
+  if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    print("{} files already exist ! Skiping this step.".format(boxfile))
+  else:
+    boxk *= fitsio.read(Pfilename, ext='Pln1')
+    box_null = FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile)
+    # This box_null thing is in case the FFT went bad with the wisdom file
+    if box_null:
+      print("Starting again FFTandStore...")
+      print("Loading wisdom {}".format(wisdomFile))
+      pyfftw.import_wisdom(sp.load(wisdomFile))
+      boxk = np.load(boxkfile)
+      boxk *= fitsio.read(Pfilename, ext=0)
+      FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile, box_null)
+
   # Second lognormal
-  boxk = np.load(boxkfile)
-  boxk *= fitsio.read(Pfilename, ext='Pln2')
-  box_null = FFTandStore(Dcell, nHDU, outDir+'/boxln_2', ncpu, wisdomFile)
+  boxfile = outDir+'/boxln_2'
+  command = "ls -l {}* | wc -l".format(boxfile)
+  if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    print("{} files already exist ! Skiping this step.".format(boxfile))
+  else:
+    boxk = np.load(boxkfile)
+    boxk *= fitsio.read(Pfilename, ext='Pln2')
+    FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile)
   # Third lognormal
-  boxk = np.load(boxkfile)
-  boxk *= fitsio.read(Pfilename, ext='Pln3')
-  box_null = FFTandStore(Dcell, nHDU, outDir+'/boxln_3', ncpu, wisdomFile)
+  boxfile = outDir+'/boxln_3'
+  command = "ls -l {}* | wc -l".format(boxfile)
+  if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    print("{} files already exist ! Skiping this step.".format(boxfile))
+  else:
+    boxk = np.load(boxkfile)
+    boxk *= fitsio.read(Pfilename, ext='Pln3')
+    FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile)
   # Density field
-  boxk=np.load(boxkfile)
   nHDU_bis = NX   # we want 1 HDU per ix
-  boxk *= fitsio.read(Pfilename, ext='P0')
-  np.save(boxkfile, boxk)
-  FFTandStore(Dcell, nHDU_bis, outDir+'/box', ncpu, wisdomFile)
+  boxfile = outDir+'/box'
+  command = "ls -l {}-* | wc -l".format(boxfile)
+  if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    print("{} files already exist ! Skiping this step.".format(boxfile))
+    print("Reading and multiplying boxk by P0(k), and saving...")
+    t0 = time.time()
+    boxk = np.load(boxkfile)
+    boxk *= fitsio.read(Pfilename, ext='P0')
+    np.save(boxkfile, boxk)
+    print("Done. {} s".format(time.time() - t0))
+  else:
+    boxk=np.load(boxkfile)
+    boxk *= fitsio.read(Pfilename, ext='P0')
+    np.save(boxkfile, boxk)
+    FFTandStore(Dcell, nHDU_bis, boxfile, ncpu, wisdomFile)
 
   if rsd:
     # ............................ Compute eta
@@ -260,77 +313,122 @@ def main() :
     dgrowth0 = fitsio.read(filename, ext=1)['dD/dz'][0]  # value for z=0
 
     # etak_xx
-    print("eta_xx...")
-    t0 = time.time()
-    boxk = np.load(boxkfile)
-    boxk *= kx*kx / kk
-    FFTandStore(Dcell, nHDU_bis, outDir+'/eta_xx', ncpu, wisdomFile)
-    print("Done. {} s".format(time.time() -t0))
+    boxfile = outDir+'/eta_xx'
+    command = "ls -l {}* | wc -l".format(boxfile)
+    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+      print("{} files already exist ! Skiping this step.".format(boxfile))
+    else:
+      print("eta_xx...")
+      t0 = time.time()
+      boxk = np.load(boxkfile)
+      boxk *= kx*kx / kk
+      FFTandStore(Dcell, nHDU_bis, boxfile, ncpu, wisdomFile)
+      print("Done. {} s".format(time.time() -t0))
 
     # etak_yy
-    print("eta_yy...")
-    t0 = time.time()
-    boxk = np.load(boxkfile)
-    boxk *= ky*ky / kk
-    FFTandStore(Dcell, nHDU_bis, outDir+'/eta_yy', ncpu, wisdomFile)
-    print("Done. {} s".format(time.time() -t0))
+    boxfile = outDir+'/eta_yy'
+    command = "ls -l {}* | wc -l".format(boxfile)
+    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+      print("{} files already exist ! Skiping this step.".format(boxfile))
+    else:
+      print("eta_yy...")
+      t0 = time.time()
+      boxk = np.load(boxkfile)
+      boxk *= ky*ky / kk
+      FFTandStore(Dcell, nHDU_bis, boxfile, ncpu, wisdomFile)
+      print("Done. {} s".format(time.time() -t0))
 
     # etak_zz
-    print("eta_zz...")
-    t0 = time.time()
-    boxk = np.load(boxkfile)
-    boxk *= kz*kz / kk
-    FFTandStore(Dcell, nHDU_bis, outDir+'/eta_zz', ncpu, wisdomFile)
-    print("Done. {} s".format(time.time() -t0))
+    boxfile = outDir+'/eta_zz'
+    command = "ls -l {}* | wc -l".format(boxfile)
+    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+      print("{} files already exist ! Skiping this step.".format(boxfile))
+    else:
+      print("eta_zz...")
+      t0 = time.time()
+      boxk = np.load(boxkfile)
+      boxk *= kz*kz / kk
+      FFTandStore(Dcell, nHDU_bis, boxfile, ncpu, wisdomFile)
+      print("Done. {} s".format(time.time() -t0))
 
     # etak_xy
-    print("eta_xy...")
-    t0 = time.time()
-    boxk = np.load(boxkfile)
-    boxk *= kx*ky / kk
-    FFTandStore(Dcell, nHDU_bis, outDir+'/eta_xy', ncpu, wisdomFile)
-    print("Done. {} s".format(time.time() -t0))
+    boxfile = outDir+'/eta_xy'
+    command = "ls -l {}* | wc -l".format(boxfile)
+    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+      print("{} files already exist ! Skiping this step.".format(boxfile))
+    else:
+      print("eta_xy...")
+      t0 = time.time()
+      boxk = np.load(boxkfile)
+      boxk *= kx*ky / kk
+      FFTandStore(Dcell, nHDU_bis, boxfile, ncpu, wisdomFile)
+      print("Done. {} s".format(time.time() -t0))
 
     # etak_xz
-    print("eta_xz...")
-    t0 = time.time()
-    boxk = np.load(boxkfile)
-    boxk *= kx*kz / kk
-    FFTandStore(Dcell, nHDU_bis, outDir+'/eta_xz', ncpu, wisdomFile)
-    print("Done. {} s".format(time.time() -t0))
+    boxfile = outDir+'/eta_xz'
+    command = "ls -l {}* | wc -l".format(boxfile)
+    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+      print("{} files already exist ! Skiping this step.".format(boxfile))
+    else:
+      print("eta_xz...")
+      t0 = time.time()
+      boxk = np.load(boxkfile)
+      boxk *= kx*kz / kk
+      FFTandStore(Dcell, nHDU_bis, boxfile, ncpu, wisdomFile)
+      print("Done. {} s".format(time.time() -t0))
 
     # etak_yz
-    print("eta_yz...")
-    t0 = time.time()
-    boxk = np.load(boxkfile)
-    boxk *= ky*kz / kk
-    FFTandStore(Dcell, nHDU_bis, outDir+'/eta_yz', ncpu, wisdomFile)
-    print("Done. {} s".format(time.time() -t0))
+    boxfile = outDir+'/eta_yz'
+    command = "ls -l {}* | wc -l".format(boxfile)
+    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+      print("{} files already exist ! Skiping this step.".format(boxfile))
+    else:
+      print("eta_yz...")
+      t0 = time.time()
+      boxk = np.load(boxkfile)
+      boxk *= ky*kz / kk
+      FFTandStore(Dcell, nHDU_bis, boxfile, ncpu, wisdomFile)
+      print("Done. {} s".format(time.time() -t0))
 
     print("Computing velocity boxes:")
     # vx
-    print("vx...")
-    t0 = time.time()
-    boxk = np.load(boxkfile)
-    boxk *= -1j*kx / kk * H0 * dgrowth0
-    FFTandStore(Dcell, nHDU, outDir+'/vx', ncpu, wisdomFile)
-    print("Done. {} s".format(time.time() -t0))
+    boxfile = outDir+'/vx'
+    command = "ls -l {}* | wc -l".format(boxfile)
+    if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+      print("{} files already exist ! Skiping this step.".format(boxfile))
+    else:
+      print("vx...")
+      t0 = time.time()
+      boxk = np.load(boxkfile)
+      boxk *= -1j*kx / kk * H0 * dgrowth0
+      FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile)
+      print("Done. {} s".format(time.time() -t0))
 
     # vy
-    print("vy...")
-    t0 = time.time()
-    boxk = np.load(boxkfile)
-    boxk *= -1j*ky / kk * H0 * dgrowth0
-    FFTandStore(Dcell, nHDU, outDir+'/vy', ncpu, wisdomFile)
-    print("Done. {} s".format(time.time() -t0))
+    boxfile = outDir+'/vy'
+    command = "ls -l {}* | wc -l".format(boxfile)
+    if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+      print("{} files already exist ! Skiping this step.".format(boxfile))
+    else:
+      print("vy...")
+      t0 = time.time()
+      boxk = np.load(boxkfile)
+      boxk *= -1j*ky / kk * H0 * dgrowth0
+      FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile)
+      print("Done. {} s".format(time.time() -t0))
 
     # vz
-    print("vz...")
-    t0 = time.time()
-    boxk = np.load(boxkfile)
-    boxk *= -1j*kz / kk * H0 * dgrowth0
-    FFTandStore(Dcell, nHDU, outDir+'/vz', ncpu, wisdomFile)
-    print("Done. {} s".format(time.time() -t0))
+    boxfile = outDir+'/vz'
+    command = "ls -l {}* | wc -l".format(boxfile)
+    if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+      print("{} files already exist ! Skiping this step.".format(boxfile))
+    else:
+      print("vz...")
+      t0 = time.time()
+      boxk = np.load(boxkfile)
+      boxk *= -1j*kz / kk * H0 * dgrowth0
+      FFTandStore(Dcell, nHDU, boxfile, ncpu, wisdomFile)
+      print("Done. {} s".format(time.time() -t0))
 
   print("NX=", NX,"nCPU=", ncpu)  #, "use_pool=",  use_pool
   if (save_wisdom):

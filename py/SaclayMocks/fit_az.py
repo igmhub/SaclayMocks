@@ -21,11 +21,10 @@ finally, export results of minimisation
 can also check plots with check_plot()
 """
 class Fitter(object):
-    def __init__(self, indir, z, a_ref, cc, bb=1.58, Nreg=1, pixel=0.2, cell_size=2.19, convergence_factor=1, convergence_criterium=None):
+    def __init__(self, indir, z, cc, bb=1.58, Nreg=1, pixel=0.2, cell_size=2.19, convergence_factor=1, convergence_criterium=None):
         self.data = {}
         self.mock = {}
         self.fit = {}
-        self.mock['a_ref'] = a_ref
         self.mock['indir'] = indir
         self.z = z
         self.Nreg = Nreg
@@ -47,7 +46,7 @@ class Fitter(object):
         k in km/s and pk and pkerr in (km/s)**-1 translated to Mpc/h
         """
         if filename is None:
-            filename = "$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"
+            filename = "$SACLAYMOCKS_BASE/etc/pk_1d_DR12_13bins_noSi.out"
         print("Reading data from {}".format(filename))
         k, pk, pkerr = util.read_P1D(self.z, filename=filename)
         convert_factor = util.kms2mpc(self.z)
@@ -109,13 +108,13 @@ class Fitter(object):
             self.mock['delta'] = self.mock['delta_l'] + self.mock['delta_s']
             self.mock['eta_par'] = np.float64(ma.concatenate(eta_par))
             self.mock['g_field'] = self.mock['delta'] + self.mock['cc']*self.mock['eta_par']
-            sigma_l = self.mock['delta_l'].std()
-            sigma_s = self.mock['delta_s'].std()
-            sigma = np.sqrt(sigma_l**2 + sigma_s**2)
-            self.mock['sigma_s'] = sigma_s
-            self.mock['sigma_l'] = sigma_l
-            self.mock['sigma'] = sigma
-            print("Sigma_l = {} ; sigma_s = {} --> sigma = {}".format(sigma_l, sigma_s, sigma))
+            # sigma_l = self.mock['delta_l'].std()
+            # sigma_s = self.mock['delta_s'].std()
+            # sigma = np.sqrt(sigma_l**2 + sigma_s**2)
+            # self.mock['sigma_s'] = sigma_s
+            # self.mock['sigma_l'] = sigma_l
+            # self.mock['sigma'] = sigma
+            # print("Sigma_l = {} ; sigma_s = {} --> sigma = {}".format(sigma_l, sigma_s, sigma))
         self.mock['mask_size'] = self.mock['spectra'].mask.size
         print("Done.")
 
@@ -131,17 +130,19 @@ class Fitter(object):
         pk = data[field]
         # msk = kk > 0
         # msk = kk > 0.12  # prov
-        if not hasattr(self, "data['k_model']"):
+        if 'k_model' not in self.data:
             self.read_model()
-        msk = (kk > self.data['k_model'].min()) & (kk < self.data['k_model'].max())  # avoid interpolation issue in computation of rr in iterate()
-        self.mock['kmiss'] = kk[msk]
-        self.mock['p1dmiss'] = pk[msk]
+        # msk = (kk >= self.data['k_model'].min()) & (kk <= self.data['k_model'].max())  # avoid interpolation issue in computation of rr in iterate()
+        pk_interp = sp.interpolate.InterpolatedUnivariateSpline(kk, pk)
+        self.mock['kmiss'] = kk
+        self.mock['p1dmiss'] = pk
+        self.mock['p1dmiss_interp'] = pk_interp
 
     def read_model(self, filename=None):
         if filename is None:
-            filename = "$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"
+            filename = "$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"
         print("Reading model from {}".format(filename))
-        k, p1d = util.read_P1D_model(self.z)
+        k, p1d = util.read_P1D_model(self.z, filename=filename)
         convert_factor = util.kms2mpc(self.z)
         k *= convert_factor
         p1d /= convert_factor
@@ -173,8 +174,7 @@ class Fitter(object):
         # if self.mock['cc'] > 0:
         #     field += 'RSD'
         # P1Dmissing = sp.interpolate.InterpolatedUnivariateSpline(p1d_data['k'], p1d_data[field])
-        self.read_p1dmiss()
-        P1Dmissing = sp.interpolate.InterpolatedUnivariateSpline(self.mock['kmiss'], self.mock['p1dmiss'])
+        self.read_p1dmiss(filename=filename)
         delta_s = []
         nz = len(self.mock['wav'])
         delta_s = np.random.normal(size=self.mock['spectra'].shape)
@@ -184,7 +184,7 @@ class Fitter(object):
         # print("interp applied from {} to {}".format(k.min(), k.max()))
         if self.mock['kmiss'].max() < k.max() or self.mock['kmiss'].min() > k.min():
             print("WARNING P1D is extrapolated with a spline outside interpolation range /!\ ")
-        Pmis = np.maximum(P1Dmissing(k), 0)
+        Pmis = np.maximum(self.mock['p1dmiss_interp'](k), 0)
         # # Correct the amplitude:
         # Pmis *= (self.sigma_eta_l / self.sigma_l)**2
         delta_sk *= np.sqrt(Pmis/self.mock['pixel'])
@@ -199,6 +199,9 @@ class Fitter(object):
         else:
             spec = self.comp_spectra(a)
         Fmean = ma.mean(spec)
+        n = spec[spec.mask==False].size
+        print("npix = {} ; sigma_F = {}".format(n,spec.std()))
+        print("<F> = {} +/- {}".format(Fmean, spec.std()/np.sqrt(n)))
         p1d = powerspectrum.ComputeP1D(self.mock['pixel']*self.Nreg)
         for s in spec:
             if len(s[s.mask==False]) < self.Nreg: continue
@@ -209,10 +212,9 @@ class Fitter(object):
             delta = flux / Fmean - 1
             p1d.add_spectrum(delta)
         k, pk, pkerr = p1d.P1D(bins)
-        msk = k > 0
-        self.mock['k'] = k[msk]
-        self.mock['p1d'] = pk[msk]
-        self.mock['err_p1d'] = pkerr[msk]
+        self.mock['k'] = k
+        self.mock['p1d'] = pk
+        self.mock['err_p1d'] = pkerr
 
     def smooth_p1d(self, k=None, pk=None, pkerr=None):
         if pk is None:
@@ -279,16 +281,31 @@ class Fitter(object):
     def iterate(self, a=None, bins=None, plot=False):
         '''
         Iterative procedure to tune the shape of the 1D powerspectrum
+        bins are the bins in which the P1D of the mocks is computed
         '''
-        rr = self.data['p1d_model_interp'](self.mock['kmiss']) / self.mock['p1d_interp'](self.mock['kmiss'])
-        p1dmiss = self.mock['p1dmiss'] * (1 + self.convergence_factor*(rr - 1))
+        if bins is None:
+            bins = self.data['bins']
+        rr = self.data['p1d_model_interp'](self.mock['k']) / self.mock['p1d']
+        s = len(self.mock['k'])*(self.mock['err_p1d'].mean()/self.mock['p1d'].mean())**2 * 0.5
+        rr_smooth = sp.interpolate.UnivariateSpline(self.mock['k'][3:], rr[3:], s=s)
+        # m1 = self.mock['p1d'] < 0
+        # m2 = self.mock['p1d_interp'](self.mock['kmiss']) < 0
+        # print("p1d_interp negative for k = {}".format(self.mock['kmiss'][m2]))
+        # p1dmiss = self.mock['p1dmiss'] * (1 + self.convergence_factor*(rr - 1))
+        # p1dmiss = self.mock['p1dmiss_interp'](self.mock['k']) * (1 + self.convergence_factor*(rr - 1))
+        p1dmiss = self.mock['p1dmiss_interp'](self.mock['k']) * (1 + self.convergence_factor*(rr_smooth(self.mock['k']) - 1))
+        s = len(self.mock['k'])*self.mock['err_p1d'].mean()**2 * 3
+        p1dmiss_interp = sp.interpolate.UnivariateSpline(self.mock['k'], p1dmiss, s=s)
         if plot:
-            plt.plot(self.mock['kmiss'], self.data['p1d_model_interp'](self.mock['kmiss']), label='model')
-            plt.plot(self.mock['kmiss'], self.mock['p1d_interp'](self.mock['kmiss']), label='mock smoothed')
+            if 'k' in self.data:
+                plt.plot(self.mock['k'], self.data['p1d_model_interp'](self.mock['k']), label='model')
+            # plt.plot(self.mock['k'], self.mock['p1d_interp'](self.mock['k']), '--', label='mock smoothed')
             plt.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
-            plt.plot(self.mock['kmiss'], self.mock['p1dmiss'] / 50, label='p1dmiss_{}'.format(self.niter))
-            plt.plot(self.mock['kmiss'], rr, label='ratio rr')
-            plt.plot(self.mock['kmiss'], p1dmiss / 50, label='p1dmiss_{}'.format(self.niter+1))
+            plt.plot(self.mock['k'], self.mock['p1dmiss_interp'](self.mock['k']) / 50, '.', label='p1dmiss_{}'.format(self.niter))
+            plt.plot(self.mock['k'], rr, '.', label='ratio rr')
+            plt.plot(self.mock['k'], rr_smooth(self.mock['k']), '--', label='smooth ratio')
+            plt.plot(self.mock['k'], p1dmiss / 50, '.', label='p1dmiss_{}'.format(self.niter+1))
+            plt.plot(self.mock['kmiss'], p1dmiss_interp(self.mock['kmiss']) / 50, '--', label='p1dmiss_smooth')
             plt.grid()
             plt.legend()
             plt.xlabel('k [h/Mpc/]')
@@ -303,23 +320,24 @@ class Fitter(object):
                 return
 
         self.mock['p1dmiss'] = p1dmiss
+        self.mock['p1dmiss_interp'] = p1dmiss_interp
         self.niter += 1
         self.export_p1dmiss()
         self.gen_small_scales()
         if a is None:
             a = self.fit['a']
         self.compute_p1d(a, bins=bins)
-        self.smooth_p1d()
+        # self.smooth_p1d()
         self.export_p1d()
         print("Iteration {} done.\n".format(self.niter))
 
-    def check_p1d(self, a=None, title='', debug=False):
+    def check_p1d(self, a=None, title='', bins=None, debug=False, save=False):
         if debug:
-            self.compute_p1d(1, debug=True)
+            self.compute_p1d(1, debug=True, bins=bins)
         else:
             if not a:
                 a = self.fit['a']
-            self.compute_p1d(a)
+            self.compute_p1d(a, bins=bins)
 
         # Pk vs k [h.Mpc^-1]
         f1, ax1 = plt.subplots()
@@ -329,7 +347,10 @@ class Fitter(object):
         ax1.set_title(title)
         ax1.grid()
         ax1.errorbar(self.mock['k'], self.mock['p1d'], yerr=self.mock['err_p1d'], fmt='.', label='mock')
-        ax1.errorbar(self.data['k'], self.data['Pk'], yerr=self.data['Pkerr'], fmt='+', label='data')
+        if 'k' in self.data:
+            ax1.errorbar(self.data['k'], self.data['Pk'], yerr=self.data['Pkerr'], fmt='+', label='data')
+        if 'k_model' in self.data:
+            ax1.plot(self.data['k_model'], self.data['p1d_model'], label='model')
         # convert_factor = util.kms2mpc(self.z)
         # ax1.plot(k[msk], util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax1.legend()
@@ -342,12 +363,17 @@ class Fitter(object):
         ax2.set_ylabel('k * Pk / pi')
         convert_factor = util.kms2mpc(self.z)
         ax2.errorbar(self.mock['k']/convert_factor, self.mock['k']*self.mock['p1d']/np.pi, yerr=self.mock['k']*self.mock['err_p1d']/np.pi, fmt='.', label='mock')
-        ax2.errorbar(self.data['k']/convert_factor, self.data['k']*self.data['Pk']/np.pi, yerr=self.data['k']*self.data['Pkerr']/np.pi, fmt='+', label='data')
+        if 'k' in self.data:
+            ax2.errorbar(self.data['k']/convert_factor, self.data['k']*self.data['Pk']/np.pi, yerr=self.data['k']*self.data['Pkerr']/np.pi, fmt='+', label='data')
+        if 'k_model' in self.data:
+            ax2.plot(self.data['k_model']/convert_factor, self.data['k_model']*self.data['p1d_model']/np.pi, label='model')
         # ax2.errorbar(self.data['k'][msk]/convert_factor, self.data['k'][msk]*self.data['Pk'][msk]/np.pi, yerr=self.data['k'][msk]*self.data['Pkerr'][msk]/np.pi, fmt='+', label='data')
         # ax2.plot(k[msk]/convert_factor, k[msk]*util.P1Dk(k[msk]/convert_factor, z)/convert_factor, '.', label='fit data')
         ax2.grid()
         ax2.legend()
 
+        if save:
+            plt.savefig(self.mock['indir']+'/p1d_check.pdf')
         plt.show()
 
     def check_pdf(self, a=None, bins=100, title=''):
@@ -378,7 +404,7 @@ class Fitter(object):
 
     def export_p1dmiss(self):
         outfits = fitsio.FITS(self.mock['indir']+self.p1dmiss_filename(), 'rw', clobber=True)
-        table = [self.mock['kmiss'], self.mock['p1dmiss']]
+        table = [self.mock['kmiss'], self.mock['p1dmiss_interp'](self.mock['kmiss'])]
         field = 'P1Dmiss'
         if self.mock['cc'] > 0:
             field += 'RSD'

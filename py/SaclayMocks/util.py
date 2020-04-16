@@ -166,7 +166,7 @@ def P1D_datafit(k, z):
     return P
 
 
-def read_P1D(redshift, filename="$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"):
+def read_P1D(redshift, filename="$SACLAYMOCKS_BASE/etc/pk_1d_DR12_13bins_noSi.out", mpc=False):
     """
     Read Pk file from Nathalie. Si III oscillations have been removed.
     Format is z, k, pk, pkerr, 0, 0, 0
@@ -182,10 +182,17 @@ def read_P1D(redshift, filename="$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out"):
     k = data[:, 1][msk]
     Pk = data[:, 2][msk]
     Pkerr = data[:, 3][msk]
+    if mpc:
+        print("Output is in Mpc/h")
+        k *= kms2mpc(redshift)
+        Pk /= kms2mpc(redshift)
+        Pkerr /= kms2mpc(redshift)
+    else:
+        print("Output is in km/s")
     return k, Pk, Pkerr
 
 
-def read_P1D_fit(redshift):
+def read_P1D_fit(redshift, mpc=False):
     """
     Read Pk fits file, fitted on eBOSS data
     kPk column is k*Pk/pi
@@ -205,27 +212,60 @@ def read_P1D_fit(redshift):
     k = data['k'][msk]
     kPk = data['kPk'][msk]
     Pk = kPk / k * np.pi
+    if mpc:
+        print("Output is in Mpc/h")
+        k *= kms2mpc(redshift)
+        Pk /= kms2mpc(redshift)
+    else:
+        print("Output is in km/s")
     return k, Pk
 
 
-def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits"):
+def read_P1D_model(redshift, filename="$SACLAYMOCKS_BASE/etc/P1DmodelPrats.fits", mpc=False, z_corr=True):
     '''
     This function reads the P1D used as model to tune the P1D shape in mocks
     It returns k, pk for a given redshift.
-    Units are in km/s 
+    Units are in km/s by default (mpc=False)
+    The z dependency is smoothed by default (z_corr=True)
     '''
+    corrV = np.array([1.0037348 , 0.99913817, 0.99267796, 0.99769447, 1.00333914, 1.00691257, 1.00574199, 0.99331247, 0.99156929, 1.00622274])   #  harcoded correction to smooth sig_F(z)
+    i = int(round((redshift-1.8)/0.2))
+    if (z_corr): 
+        cor = corrV[i]**2  # P ~ sig^2
+    else : 
+        cor =1
     fits = fitsio.FITS(os.path.expandvars(filename))
     z = fits[0].read()
     k = fits[1].read()
     pk = fits[2].read()
-    # select the redshift bin
-    msk = z == redshift
-    if msk.sum() == 0:
-        print("ERROR -- You entered a wrong redshift: {}. Here is the list of redshifts : {}".format(redshift, np.unique(z)))
-        sys.exit(1)
-    k = k[msk]
-    pk = pk[msk]
-    return k, pk
+    ### select the redshift bin
+    # extrapole z=2.2 to z=2.0
+    if np.abs(redshift - 2) < 1e-2:
+        msk1 = np.abs(z - 2.2) < 1e-2
+        msk2 = np.abs(z - 2.4) < 1e-2
+        k = k[msk1]
+        pk = pk[msk1]**2 / pk[msk2]
+    # extrapole z=2.2 to z=1.8
+    elif np.abs(redshift - 1.8) < 1e-2:
+        msk1 = np.abs(z - 2.2) < 1e-2
+        msk2 = np.abs(z - 2.4) < 1e-2
+        k = k[msk1]
+        pk = pk[msk1]**3 / pk[msk2]**2
+    # read P1D(z)
+    else:
+        msk = np.abs(z - redshift) < 1e-2
+        if msk.sum() == 0:
+            print("ERROR -- You entered a wrong redshift: {}. Here is the list of redshifts : {}".format(redshift, np.unique(z)))
+            sys.exit(1)
+        k = k[msk]
+        pk = pk[msk]
+    if mpc:
+        print("Output is in Mpc/h")
+        k *= kms2mpc(redshift)
+        pk /= kms2mpc(redshift)
+    else:
+        print("Output is in km/s")
+    return k, pk*cor
 
 
 def computechi2(mod, data, dataerr):
@@ -326,16 +366,48 @@ class desi_footprint():
         return np.where(self.healpix_weight[healpix] > 0.99)[0]
 
 
-def sigma_p1d(p1d, pixel=0.2, N=10000):
+def sigma_p1d(redshift=None, filename="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits.gz", p1dmiss=None, pixel=0.2, N=10000):
     '''
-    p1d is an interpolated function of P1Dmissing (spline basically)
+    Return the sigma of delta_s for a given redshift and a given P1Dmissing
+    the p1d can be directly given via p1dmiss argument (it must be a function)
     '''
     L = N*pixel
     kj = 2*np.pi / L * np.arange(1, N/2)
-    sigma_2 = 2*p1d(kj).sum() / L
-    sigma_2 += p1d(0) / L  # kj=0 term
-    sigma_2 += p1d(np.pi/pixel) / L  # kj=k_nyquist term
-    return np.sqrt(sigma_2)
+    if p1dmiss is None:
+        if redshift is None:
+            print("Please enter a valid redshift")
+            sys.exit(1)
+        redshift = np.array(redshift).reshape(-1)
+        sigma_s = np.zeros_like(redshift)
+        filename = os.path.expandvars(filename)
+        p1dmiss = InterpP1Dmissing(filename)
+        for i, z in enumerate(redshift):
+            var_s = 2*p1dmiss(z, kj).sum() / L
+            var_s += p1dmiss(z, 0) / L  # kj=0 term
+            var_s += p1dmiss(z, np.pi/pixel) / L  # kj=k_nyquist term
+            sigma_s[i] = np.sqrt(var_s)
+    else:
+        var_s = 2*p1dmiss(kj).sum() / L
+        var_s += p1dmiss(0) / L  # kj=0 term
+        var_s += p1dmiss(np.pi/pixel) / L  # kj=k_nyquist term
+        sigma_s = np.sqrt(var_s)
+
+    return sigma_s
+
+
+def sigma_g(redshift, pkfile="$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits.gz", paramfile="$SACLAYMOCKS_BASE/etc/params.fits", p1dmiss=None, c=None, pixel=0.2, N=10000):
+    '''
+    Returns the sigma of g = delta_l + delta_s + c*eta_par field
+    '''
+    if c is None:
+        c_of_z = InterpFitsTable(paramfile, 'z', 'c')
+        c = c_of_z.interp(redshift)
+    var_g = constant.sigma_l**2 + c*constant.sigma_eta**2
+    var_g += sigma_p1d(redshift, pkfile, p1dmiss, pixel, N)**2
+    var_g +=c*(constant.mean_delta_l_eta - constant.mean_delta_l*constant.mean_eta)  # covariance between delta_l and eta_par
+    sigma_g = np.sqrt(var_g)
+    sigma_g *= constant.sigma_g_tuning  # prov
+    return sigma_g
 
 
 def taubar_over_a(sigma, growth, bb=1.58):
@@ -373,10 +445,10 @@ def pol(x, p):
 class InterpP1Dmissing():
     '''Read P1D from fits file, and compute the interpolate function'''
     def __init__(self, infile):
-        data = fitsio.read(infile, ext=1)
-        z = data['z']
-        k = data['k']
-        pk = data['Pk']
+        fits = fitsio.FITS(infile)
+        z = fits['z'].read()
+        k = fits['k'].read()
+        pk = fits['pk'].read()
         self.z = z
         self.k = k
         self.pk = pk
@@ -389,7 +461,7 @@ class InterpP1Dmissing():
             raise ValueError("ERROR: Redshift {} is out of range !\nPlease enter a redshift between {} and {}".format(redshift, self.zmin, self.zmax))
         iz = np.argsort(np.abs(self.z - redshift))[0]
         z = self.z[iz]
-        self.pk_interp[str(z)] = interpolate.interp1d(self.k[iz], self.pk[iz])
+        self.pk_interp[str(z)] = interpolate.interp1d(self.k, self.pk[iz])
 
     def __call__(self, redshift, k):
         iz = np.argsort(np.abs(self.z - redshift))[0]
@@ -474,10 +546,97 @@ def extract_h5file(fname):
     err_pars = { el:f['best fit'].attrs[el][1] for el in free_p }
     pars.update({ el:f['best fit'].attrs[el][0] for el in fixed_p })
     err_pars.update({ el:0. for el in fixed_p })
-
+    pars['zeff'] = f['best fit'].attrs['zeff']
+    pars['chi2'] = f['best fit'].attrs['fval']
+    cov_pars = { 'cov[{}, {}]'.format(el1, el2):f['best fit'].attrs['cov[{}, {}]'.format(el1, el2)] for el1 in free_p for el2 in free_p }
+    if 'bias_eta_LYA' in f['best fit'].attrs.keys():
+        if 'cov[bias_eta_LYA, beta_LYA]' not in f['best fit'].attrs.keys():
+            cov_pars['cov[beta_LYA, bias_eta_LYA]'] = 0
+        pars['bias_LYA'] = f['best fit'].attrs['bias_eta_LYA'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_LYA'][0]
+        pars['beff_LYA'] = pars['bias_LYA'] * np.sqrt(1+2/3*f['best fit'].attrs['beta_LYA'][0]+1/5*f['best fit'].attrs['beta_LYA'][0]**2)
+        if 'cov[bias_eta_LYA, beta_LYA]' in f['best fit'].attrs.keys():
+            err_pars['bias_LYA'] = bias_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'])
+            err_pars['beff_LYA'] = beff_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
+        else:
+            err_pars['bias_LYA'] = 0
+            err_pars['beff_LYA'] = 0
+        free_p += ['bias_LYA', 'beff_LYA']
+    else:
+        if 'cov[bias_LYA, beta_LYA]' not in f['best fit'].attrs.keys():
+            cov_pars['cov[beta_LYA, bias_LYA]'] = 0
+        pars['b_LYA'] = f['best fit'].attrs['bias_LYA'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_LYA'][0]
+        pars['b_eff_LYA'] = pars['b_LYA'] * np.sqrt(1+2/3*f['best fit'].attrs['beta_LYA'][0]+1/5*f['best fit'].attrs['beta_LYA'][0]**2)
+        if 'cov[bias_LYA, beta_LYA]' in f['best fit'].attrs.keys():
+            err_pars['b_LYA'] = bias_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'])
+            err_pars['b_eff_LYA'] = beff_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
+        else:
+            err_pars['b_LYA'] = 0
+            err_pars['b_LYA'] = 0        
+        free_p += ['b_LYA', 'b_eff_LYA']
     f.close()
+    return free_p, fixed_p, pars, err_pars, cov_pars
 
-    return free_p, fixed_p, pars, err_pars
+
+def print_h5file(fname, cor=False):
+    '''
+    This function print the h5 output file from picca fitter2
+    '''
+    pars = extract_h5file(fname)
+    print("- Free params:")
+    print("zeff = {}".format(pars[2]['zeff']))
+    print("chi2 = {}".format(pars[2]['chi2']))
+    for h in pars[0]:
+        print("{} = {} +/- {}".format(h, pars[2][h], pars[3][h]))
+
+    print("\n- Fixed params:")    
+    for h in pars[1]:
+        print("{} = {}".format(h, pars[2][h]))
+
+    print("\nCov:")
+    for h in pars[4].keys():
+        print("{} = {}".format(h, pars[4][h]))
+
+    if cor:
+        print("\nCor:")
+        for h in pars[4].keys():
+            idx1 = h.find('[')
+            idx2 = h.find(',')
+            idx3 = h.find(']')
+            cov = pars[4][h]
+            h1 = h[idx1+1:idx2]
+            h2 = h[idx2+2:idx3]
+            err1 = pars[3][h1]
+            err2 = pars[3][h2]
+            print("cor[{}, {}] = {}".format(h1, h2, cov/err1/err2))
+
+    # f = h5py.File(os.path.expandvars(fname), 'r')
+    # free_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of free pars'] ]
+    # fixed_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of fixed pars'] ]
+
+    # print("- Free params:")
+    # print("zeff = {}".format(f['best fit'].attrs['zeff']))
+    # for p in free_p:
+    #     print("{} = {} +/- {}".format(p, f['best fit'].attrs[p][0], f['best fit'].attrs[p][1]))
+
+    # print("\n- Fixed params:")
+    # for p in fixed_p:
+    #     print("{} = {}".format(p, f['best fit'].attrs[p][0]))
+
+    # print("\n- Cov:")
+    # for p in f['best fit'].attrs:
+    #     if 'cov[' in p:
+    #         print("{} = {}".format(p, f['best fit'].attrs[p]))
+    
+    # print("\n- Cor:")
+    # for p in f['best fit'].attrs:
+    #     if 'cov[' in p:
+    #         idx = p.find(',')
+    #         el1 = p[4:idx]
+    #         el2 = p[idx+2:-1]
+    #         cor = f['best fit'].attrs[p] / (f['best fit'].attrs[el1][1] * f['best fit'].attrs[el2][1])
+    #         print("cor({},{}) = {}".format(el1, el2, cor))
+    # f.close()
+    return
 
 
 class cosmo:
@@ -539,3 +698,14 @@ def kms2mpc(redshift, omega_m=None, omega_k=None, h=None):
     hubble_z = cosmo_fid.hubble(redshift)
     factor = hubble_z / (1+redshift) / h
     return factor
+
+
+def bias_err(bias_eta, bias_eta_err, beta, beta_err, cov):
+    return bias_eta / beta * np.sqrt((bias_eta_err/bias_eta)**2 + (beta_err/beta)**2 - 2*cov/bias_eta/beta)
+
+
+def beff_err(bias_eta, bias_eta_err, beta, beta_err, cov, f=0.97):
+    db_dbiaseta = f*np.sqrt(1+2/3*beta+1/5*beta**2)/beta
+    db_dbeta = (bias_eta*f/beta)*np.sqrt(1+2/3*beta+1/5*beta**2)*((1/3+1/5*beta)/(1+2/3*beta+1/5*beta**2) - 1/beta)
+    beff_err = np.sqrt((db_dbiaseta*bias_eta_err)**2 + (db_dbeta*beta_err)**2 + 2*db_dbiaseta*db_dbeta*cov)
+    return beff_err

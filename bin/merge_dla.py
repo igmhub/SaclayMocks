@@ -17,17 +17,24 @@ def main():
     parser.add_argument("-nside", type=int, help="nside for healpix. Default 16", default=16)
     parser.add_argument("-nest", help="If True, healpix scheme is nest. Default True", default='True')
     parser.add_argument("-random",type = str, default='False', help="If True, generate randoms")
+    parser.add_argument('--nhi-low-cut', type = float, default=None,
+                        help='cut HCDs with log(n_HI) < nhi-low_cut')
+    parser.add_argument('--nhi-high-cut', type = float, default=None,
+                        help='cut HCDs with log(n_HI) > nhi-high_cut')
 
     args = parser.parse_args()
     nside = args.nside
     nest_option = util.str2bool(args.nest)
     random_cond = util.str2bool(args.random)
     if not random_cond:
-        print("Merging DLA files ...")
-        files = glob.glob(args.indir+"/*/dla.fits")
+        filenames = args.indir+"/*/dla"
     else:
-        print("Merging DLA randoms files ...")
-        files = glob.glob(args.indir+"/*/dla_randoms.fits")
+        filenames = args.indir+"/*/dla_randoms"
+    if args.nhi_low_cut is not None and args.nhi_high_cut is not None:
+        filenames += "_nhi_{}_{}".format(args.nhi_low_cut, args.nhi_high_cut)
+    filenames += ".fits"
+    print("Merging DLA files: {}".format(filenames))
+    files = glob.glob(filenames)
 
     # Read files
     print("Reading files...")

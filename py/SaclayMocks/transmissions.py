@@ -30,7 +30,7 @@ class ReadTransmission(object):
                 wav = fitsio.read(f, ext='WAVELENGTH')
                 first = False
             data = fitsio.read(f, ext='METADATA')
-            spec = fitsio.read(f, ext=3)
+            spec = fitsio.read(f, ext='TRANSMISSION')
             msk = wav/(1+data['Z']).reshape(-1,1)
             msk = ((msk <= constant.lylimit) | (msk >= constant.lya))
             metadata.append(data)
@@ -87,13 +87,16 @@ class ReadTransmission(object):
         t = ma.mean(self.transmission, axis=0)
         if plot:
             zz = np.linspace(2., 3.6, 10000)
-            tt = np.exp(-0.0051*(1+zz)**3.2)
+            # tt = np.exp(-0.0051*(1+zz)**3.2)
+            # tt2 = np.exp(-0.0028*(1+zz)**3.45)
+            tt2 = np.exp(-0.00211*(1+zz)**3.7)
             f, ax = plt.subplots()
             ax.set_ylim(0, 1)
             ax.plot(z, t, label='mock')
-            ax.plot(zz, tt, label='data')
+            # ax.plot(zz, tt, label='data', linestyle='--')
+            ax.plot(zz, tt2, label='data', linestyle='--')
             ax.set_xlabel('z', fontsize=20)
-            ax.set_ylabel('T(z)', fontsize=20)
+            ax.set_ylabel('<F>(z)', fontsize=20)
             ax.set_title(title, fontsize=20)
             ax.grid()
             ax.legend()
@@ -110,7 +113,7 @@ class ReadTransmission(object):
         f, ax = plt.subplots()
         ax.set_xlabel('F')
         ax.set_title(title+" - Nreg = {}".format(Nreg))
-        ax.hist(spec[spec.mask==False], bins=bins)
+        ax.hist(spec[spec.mask==False], bins=bins, density=True)
         plt.show()
 
     def p1d(self, redshift, Nreg=1, bins=300, title='', filename=None, pixel=0.2):

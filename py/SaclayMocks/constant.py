@@ -38,5 +38,17 @@ deg2rad = sp.pi/180.
 rad2deg = 180/sp.pi
 
 # Hardcoded params:
-sigma_g = 1.19
 rho_sum = 16452460
+
+# Variance of the different fields
+# measurement was done the 25/10/2019 on (97541,6524) absorption pixels
+mean_delta_l = 0.031
+mean_eta = 0.004
+mean_delta_l_eta = 0.47
+sigma_l = 1.189
+sigma_eta = 0.53
+# sigma_g_tuning = 1.01  # 1% extra factor on sigma_g
+sigma_g_tuning = 1.
+
+# Colors for plotting:
+colors = ['blue', 'red', 'darkgreen', 'orange', 'dodgerblue', 'hotpink', 'lime', 'saddlebrown', 'darkviolet', 'olive']

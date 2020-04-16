@@ -265,7 +265,7 @@ def get_NHI(z, NHI_min=17.2, NHI_max=22.5, NHI_nsamp=100):
 
 
 # @profile
-def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8, rand=False):
+def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8, rand=False, nhi_low_cut=None, nhi_high_cut=None):
     qso = hdulist['METADATA'].read() # Read the QSO table
     lam = hdulist['LAMBDA'].read() # Read the vector with the wavelenghts corresponding to each cell
     deltas = hdulist['DELTA'].read()  # (nspec, npix)
@@ -288,7 +288,7 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     # y = interp1d(z_cell,D_cell)
     # bias = dla_bias/(D_cell)*y(2.25)  # (npix)
     # sigma_g = fitsio.FITS(fname_sigma)[0].read_header()['SIGMA']
-    sigma_g = constant.sigma_g
+    sigma_g = constant.sigma_l
     # Gaussian field threshold:
     nu_arr = nu_of_bD(dla_bias*sigma_g*D_cell)  # (npix)
     #Figure out cells that could host a DLA, based on Gaussian fluctuation
@@ -339,6 +339,18 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     #Make the data into a table HDU
     # dla_table = astropy.table.Table([MOCKIDs,dla_z,dla_rsd_dz,dla_NHI,ZQSO, z_norsd, ra, dec],names=('MOCKID','Z_DLA','DZ_DLA','N_HI_DLA','Z_QSO', 'Z_QSO_NO_RSD', 'RA', 'DEC'))
     # return dla_table, ndlas
+
+    if nhi_low_cut is not None and nhi_high_cut is not None:
+        msk = (dla_NHI > nhi_low_cut) & (dla_NHI < nhi_high_cut)
+        MOCKIDs = MOCKIDs[msk]
+        dla_z = dla_z[msk]
+        dla_rsd_dz = dla_rsd_dz[msk]
+        dla_NHI = np.ones(len(dla_z))*np.mean([nhi_low_cut, nhi_high_cut])
+        ZQSO = ZQSO[msk]
+        z_norsd = z_norsd[msk]
+        ra = ra[msk]
+        dec = dec[msk]
+
     return [MOCKIDs, dla_z, dla_rsd_dz, dla_NHI, ZQSO, z_norsd, ra, dec], ndlas
 
 ######
@@ -358,6 +370,10 @@ def main():
                         help='Minimum value of log(NHI) to consider')
     parser.add_argument('--nmax', type = float, default=22.5,
                         help='Maximum value of log(NHI) to consider')
+    parser.add_argument('--nhi-low-cut', type = float, default=None,
+                        help='cut HCDs with log(n_HI) < nhi-low_cut')
+    parser.add_argument('--nhi-high-cut', type = float, default=None,
+                        help='cut HCDs with log(n_HI) > nhi-high_cut')
     parser.add_argument('--dla_bias', type = float, default=2.,
                         help='DLA bias at z=2.25')
     parser.add_argument('--cell_size', type = float, default=2.19,
@@ -386,9 +402,12 @@ def main():
     print("Files will be read from {}".format(args.input_path))
     if os.path.isdir(args.output_path):
         if not random_cond:
-            filename = args.output_path + "/dla.fits"
+            filename = args.output_path + "/dla"
         else:
-            filename = args.output_path + "/dla_randoms.fits"
+            filename = args.output_path + "/dla_randoms"
+        if args.nhi_low_cut is not None and args.nhi_high_cut is not None:
+            filename += "_nhi_{}_{}".format(args.nhi_low_cut, args.nhi_high_cut)
+        filename += ".fits"
     else:
         filename = args.output_path
     try:
@@ -405,6 +424,8 @@ def main():
     # cosmo_hdu = fitsio.FITS(args.fname_cosmo)[1].read_header()
     z_cell = lam / constant.lya - 1.
     dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)
+    # dNdz_arr *= 3.06  # prov: increase number of DLAs to match observed b_hcd
+    # dNdz_arr *= 3.
     # dNdz_arr *= 20000.
     # dNdz_arr *= 6.4
     # dNdz_arr *= 5.9
@@ -428,7 +449,7 @@ def main():
     for i, fname in enumerate(flist):
         try:
             hdulist = fitsio.FITS(fname)
-            table, n = add_DLA_table_to_object_Saclay(hdulist, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax, rand=random_cond)
+            table, n = add_DLA_table_to_object_Saclay(hdulist, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax, rand=random_cond, nhi_low_cut=args.nhi_low_cut, nhi_high_cut=args.nhi_high_cut)
             hdulist.close()
         except IOError:
             print("WARNING: can't read {}".format(fname))
