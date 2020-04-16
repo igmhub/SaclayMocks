@@ -5,8 +5,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", type=str)
 parser.add_argument("-o", type=str)
-parser.add_argument("--downsampling-z-cut", default=2.1)
-parser.add_argument("--downsampling-nb", default=700000)
+parser.add_argument("--downsampling-z-cut", default=None)
+parser.add_argument("--downsampling-nb", default=None)
 args = parser.parse_args()
 
 path_in = args.i

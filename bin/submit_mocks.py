@@ -1171,19 +1171,19 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = True  # Produce Pk
+    run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = True  # Produce GRF boxes
+    run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
     run_args['run_chunks'] = True  # produce chunks
-    run_args['draw_qso'] = True  # run draw_qso.py
-    run_args['randoms'] = True  # run draw_qso.py for randoms
-    run_args['make_spectra'] = True  # run make_spectra.py
+    run_args['draw_qso'] = False  # run draw_qso.py
+    run_args['randoms'] = False  # run draw_qso.py for randoms
+    run_args['make_spectra'] = False  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
-    run_args['merge_randoms'] = False  # Compute master_randoms.fits file
+    run_args['merge_randoms'] = True  # Compute master_randoms.fits file
     run_args['compute_dla'] = True  # Compute dla catalog of each chunks
     run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
     run_args['merge_dla'] = True  # Compute master_DLA.fits file
@@ -1228,8 +1228,8 @@ def main():
         print("P1D fitting procedure")
         print("zfix, a, b, c, seed = {}".format(args.fit_p1d))
         mock_args['fit_p1d'] = True
-        mock_args['nx'] = 128
-        mock_args['ny'] = 128
+        mock_args['nx'] = 256
+        mock_args['ny'] = 256
         mock_args['nz'] = 1536
         mock_args['zfix'] = "-zfix {}".format(args.fit_p1d[0])
         mock_args['a'] = args.fit_p1d[1]
@@ -1238,7 +1238,13 @@ def main():
         mock_args['seed'] = '-seed {}'.format(args.fit_p1d[4])
         mock_args['desifootprint'] = False
         mock_args['dla'] = False
-        ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(128)
+        mock_args['use_time'] = False
+        ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(mock_args['nx'])
+        ra0 = ra0[[0]]
+        dra = dra[[0]]
+        dec0 = dec0[[0]]
+        ddec = ddec[[0]]
+        chunkid = chunkid[[0]]
         mock_args['sbatch'] = False
         run_args['run_pk'] = True
         run_args['run_boxes'] = True

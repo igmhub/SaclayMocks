@@ -59,7 +59,7 @@ parser.add_argument("--voxel-size", type=float, default=2.19, required=False,
 parser.add_argument("--k-max", type=float, default=20., required=False,
     help="kmax to compute the missing 1D power spectrum")
 
-parser.add_argument("--dk", type=float, default=0.001, required=False,
+parser.add_argument("--dk", type=float, default=0.01, required=False,
     help="dk to compute the missing 1D power spectrum")
 
 parser.add_argument("--plot-p1d", action='store_true', required=False,
@@ -149,18 +149,18 @@ if RSD:
     P1DWcutcambRSD = powerspectrum.P_1D_RSD(k_par,k_perp,PRSD).P1D(kp)
 
 #.................................      missing P^1D(k)
-P1Dmissing = np.maximum(interpolate.InterpolatedUnivariateSpline(kp,P1Dcamb - P1DWcutcamb),0)
+P1Dmissing = interpolate.InterpolatedUnivariateSpline(kp,P1Dcamb - P1DWcutcamb)
 
 if RSD:
-    P1DmissingRSD = np.maximum(interpolate.InterpolatedUnivariateSpline(kp,P1DcambRSD - P1DWcutcambRSD),0)
+    P1DmissingRSD = interpolate.InterpolatedUnivariateSpline(kp,P1DcambRSD - P1DWcutcambRSD)
 
 # Write to fits file
 print("P1D computed. Writting file...")
 outfits = fitsio.FITS(outfile, 'rw', clobber=True)
-table = [kp, P1Dmissing(kp)]
+table = [kp, np.maximum(P1Dmissing(kp), 0)]
 names = ['k', 'P1Dmiss']
 if RSD:
-    table.append(P1DmissingRSD(kp))
+    table.append(np.maximum(P1DmissingRSD(kp), 0))
     names.append('P1DmissRSD')
 outfits.write(table, names=names, extname='P1D')
 outfits[-1].write_key('beta', beta)
@@ -186,8 +186,8 @@ if do_plots:
     ax.plot(kp, P1DcambRSD, color="green", label='PcambRSD')
     ax.plot(kp, P1DWcutcamb, color="blue", label='Pcamb_Wcut')
     ax.plot(kp, P1DWcutcambRSD, color="green", label='PcambRSD_Wcut')
-    ax.plot(kp, P1Dmissing(kp), color="red", label='Pmissing')
-    ax.plot(kp, P1DmissingRSD(kp), color="red", label='PmissingRSD')
+    ax.plot(kp, np.maximum(P1Dmissing(kp), 0), color="red", label='Pmissing')
+    ax.plot(kp, np.maximum(P1DmissingRSD(kp), 0), color="red", label='PmissingRSD')
     ax.plot(kk[i], Pk[i], color="orange", label='Pmiss_old')
     ax.set_xlabel('k [h/Mpc]')
     ax.grid()
