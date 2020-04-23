@@ -1,4 +1,4 @@
-import os
+import os, sys
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
@@ -101,11 +101,17 @@ if "cf" in args.to_do:
         except KeyError:
             print("Can't find {}".format(fitcf_file[j:i]+"/fit"))
             try:
-                r, f, _ =w.wedge(ff["cf_z_0_10/fit"][...],co)
+                i = int(cf_file.find(".fits"))
+                j = int(cf_file.rfind("/"))+1
+                r,f,_ = w.wedge(ff[cf_file[j:i]+"/fit"][...],co)
             except KeyError:
-                print("Can't find {}".format(cf_z_0_10/fit))
-                print("Exit!")
-                sys.exit(1)
+                print("Can't find {}".format(cf_file[j:i]+"/fit"))
+                try:
+                    r, f, _ =w.wedge(ff["cf_z_0_10/fit"][...],co)
+                except KeyError:
+                    print("Can't find {}".format("cf_z_0_10/fit"))
+                    print("Exit!")
+                    sys.exit(1)
     coef = data_wedge[0]**r_pow
     if args.pred:
         data = fitsio.FITS(indir+"/Correlations/e_cf_pred.fits")
@@ -182,14 +188,23 @@ if "cf" in args.to_do:
         except:
             print("Can't find {}".format(fitcf_file[j:i]+"/fit"))
             try:
-                r1, f1, _ =w1.wedge(ff["cf_z_0_10/fit"][...],co)
-                r2, f2, _ =w2.wedge(ff["cf_z_0_10/fit"][...],co)
-                r3, f3, _ =w3.wedge(ff["cf_z_0_10/fit"][...],co)
-                r4, f4, _ =w4.wedge(ff["cf_z_0_10/fit"][...],co)
-            except KeyError:
-                print("Can't find {}".format(cf_z_0_10/fit))
-                print("Exit!")
-                sys.exit(1)
+                i = int(cf_file.find(".fits"))
+                j = int(cf_file.rfind("/"))+1
+                r1,f1,_ = w1.wedge(ff[cf_file[j:i]+"/fit"][...],co)
+                r2,f2,_ = w2.wedge(ff[cf_file[j:i]+"/fit"][...],co)
+                r3,f3,_ = w3.wedge(ff[cf_file[j:i]+"/fit"][...],co)
+                r4,f4,_ = w4.wedge(ff[cf_file[j:i]+"/fit"][...],co)
+            except:
+                print("Can't find {}".format(cf_file[j:i]+"/fit"))
+                try:
+                    r1, f1, _ =w1.wedge(ff["cf_z_0_10/fit"][...],co)
+                    r2, f2, _ =w2.wedge(ff["cf_z_0_10/fit"][...],co)
+                    r3, f3, _ =w3.wedge(ff["cf_z_0_10/fit"][...],co)
+                    r4, f4, _ =w4.wedge(ff["cf_z_0_10/fit"][...],co)
+                except KeyError:
+                    print("Can't find {}".format("cf_z_0_10/fit"))
+                    print("Exit!")
+                    sys.exit(1)
 
     if args.pred:
         data_wedge1_pred = w1.wedge(da_pred,co_pred)
@@ -268,6 +283,13 @@ if "xcf" in args.to_do:
             r,f,_ = w.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
         except:
             print("Can't find {}".format(fitxcf_file[j:i]+"/fit"))
+            try:
+                i = int(xcf_file.find(".fits"))
+                j = int(xcf_file.rfind("/"))+1
+                r,f,_ = w.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+            except:
+                print("Can't find {}".format(xcf_file[j:i]+"/fit"))
+                sys.exit(1)
 
     coef = data_wedge[0]**r_pow
 
@@ -315,6 +337,15 @@ if "xcf" in args.to_do:
             r4,f4,_ = w4.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
         except:
             print("Can't find {}".format(fitxcf_file[j:i]+"/fit"))
+            try:
+                i = int(xcf_file.find(".fits"))
+                j = int(xcf_file.rfind("/"))+1
+                r1,f1,_ = w1.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                r2,f2,_ = w2.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                r3,f3,_ = w3.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                r4,f4,_ = w4.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+            except:
+                print("Can't find {}".format(xcf_file[j:i]+"/fit"))
 
     fig, ax = plt.subplots(figsize=(12,8))
     ax.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])),fmt='+', label=r"${}<\mu<{}$".format(mu0, mu1), color='b')

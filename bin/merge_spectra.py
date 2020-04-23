@@ -5,7 +5,6 @@ import numpy as np
 import scipy as sp
 import argparse
 import time
-from memory_profiler import profile
 from SaclayMocks import util, constant
 import pyfftw
 import pyfftw.interfaces.numpy_fft as fft

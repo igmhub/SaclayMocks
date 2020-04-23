@@ -12,7 +12,7 @@ import glob
 import argparse
 from SaclayMocks import constant, util
 # import cosmolopy.distance as dist
-from memory_profiler import profile
+# from memory_profiler import profile
 
 
 try:
