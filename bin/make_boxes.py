@@ -241,7 +241,7 @@ def main() :
   # First lognormal
   boxfile = outDir+'/boxln_1'
   command = "ls -l {}* | wc -l".format(boxfile)
-  if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+  if nHDU == int(subprocess.run(command, shell=True, stdout=PIPE, stderr=PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
     print("{} files already exist ! Skiping this step.".format(boxfile))
   else:
     boxk *= fitsio.read(Pfilename, ext='Pln1')
