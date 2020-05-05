@@ -13,17 +13,12 @@ import argparse
 from SaclayMocks import constant, util
 # import cosmolopy.distance as dist
 # from memory_profiler import profile
+from pyigm.fN.fnmodel import FNModel
 
 
-try:
-    from pyigm.fN.fnmodel import FNModel
-    fN_default = FNModel.default_model()
-    fN_default.zmnx = (0.,4)
-    fN_cosmo = fN_default.cosmo
-    use_pyigm = True
-    print("Using pyigm")
-except:
-    use_pyigm = False
+fN_default = FNModel.default_model()
+fN_default.zmnx = (0.,4)
+fN_cosmo = fN_default.cosmo
 
 
 def dz_of_z_func(cell_size=2.19, zmin=1.3, zmax=4., nbin=500):
@@ -72,26 +67,6 @@ def nu_of_bD(b):
     y = interp1d(b_nu,nu)
     return y(b)
 
-# # Not used
-# def get_bias_z(fname,dla_bias):
-#     """ Given a path, read the z array there and return a bias inversely
-#     proportional to the growth"""
-#     colore_cosmo = fits.open(fname)[4].data
-#     z = colore_cosmo['Z']
-#     D = colore_cosmo['D']
-#     y = interp1d(z,D)
-#     bias = dla_bias/D*y(2.25)
-#     return z, bias, D
-
-# # Not used
-# def get_sigma_g(fname, mode='SG'):
-#     if mode=='SG':
-#         # Biased as well
-#         return fits.open(fname)[4].header['SIGMA_G']
-#     if mode=='SKW':
-#         # Approximation 2: Take the skewers (biased when QSOs are present)
-#         skewers = fits.open(fname)[2].data
-#         return np.std(skewers,axis=0)
 
 def flag_DLA(zq,z_cells,deltas,nu_arr,sigma_g,zlow,dz_of_z, rand=False):
     """ Flag the pixels in a skewer where DLAs are possible"""
@@ -111,63 +86,17 @@ def flag_DLA(zq,z_cells,deltas,nu_arr,sigma_g,zlow,dz_of_z, rand=False):
 #number per unit redshift from minimum lg(N) in file (17.2) to argument
 # Reading file from https://arxiv.org/pdf/astro-ph/0407378.pdf
 
-def dnHD_dz_cumlgN(z,logN):
-    tab = astropy.table.Table.read(os.path.abspath('LyaCoLoRe/example_data/zheng_cumulative.overz'),format='ascii')
-    y = interp2d(tab['col1'],tab['col2'],tab['col3'],fill_value=None)
-    return y(z,logN)
-
 
 def dNdz(z, Nmin=20.0, Nmax=22.5):
     """ Get the column density distribution as a function of z,
     for a given range in N"""
-    if use_pyigm:
-        print("Use pyigm to compute dNdz.")
-        # get incidence rate per path length dX (in comoving coordinates)
-        dNdX = fN_default.calculate_lox(z,Nmin,Nmax)
-        # convert dX to dz
-        dXdz = fN_cosmo.abs_distance_integrand(z)
-        dndz = dNdX * dXdz
-        return dndz
-    else:
-        return dnHD_dz_cumlgN(z,Nmax)-dnHD_dz_cumlgN(z,Nmin)
-
-
-# def dNdz(z, Nmin=20.0, Nmax=22.5, nsamp=100):
-#     """ Get the column density distribution as a function of z,
-#     for a given range in N"""
-#     # get incidence rate per path length dX (in comoving coordinates)
-#     nn = np.linspace(Nmin,Nmax,nsamp)
-#     aux = fN_default.evaluate(nn, z)
-#     dNdz = np.sum(np.exp(aux)*(nn[1]-nn[0]))
-#     return dNdz
-
-
-def get_N(z, Nmin=20.0, Nmax=22.5, nsamp=100):
-    """ Get random column densities for a given z
-    """
-
-    # number of DLAs we want to generate
-    Nz = len(z)
-    nn = np.linspace(Nmin,Nmax,nsamp)
-    probs = np.zeros([Nz,nsamp])
-    if use_pyigm:
-        auxfN = fN_default.evaluate(nn,z)
-        #auxfN = (np.cumsum(10**auxfN, axis=0)/np.sum(10**auxfN, axis=0)).T
-        probs = (np.exp(auxfN)/np.sum(np.exp(auxfN), axis=0)).T
-        #plt.plot(nn,auxfN.T)
-    else:
-        probs_low = dnHD_dz_cumlgN(z,nn[:-1]).T
-        probs_high = dnHD_dz_cumlgN(z,nn[1:]).T
-        probs[:,1:] = probs_high-probs_low
-    NHI = np.zeros(Nz)
-    for i in range(Nz):
-        #if use_pyigm:
-        #    nfunc = interp1d(auxfN[i],nn,fill_value='extrapolate')
-        #    NHI[i] = nfunc(np.random.uniform())
-        #else:
-        #    NHI[i] = np.random.choice(nn,size=1,p=probs[i]/np.sum(probs[i]))+(nn[1]-nn[0])*np.random.random(size=1)
-        NHI[i] = np.random.choice(nn,size=1,p=probs[i]/np.sum(probs[i]))+(nn[1]-nn[0])*np.random.random(size=1)
-    return NHI
+    print("Use pyigm to compute dNdz.")
+    # get incidence rate per path length dX (in comoving coordinates)
+    dNdX = fN_default.calculate_lox(z,Nmin,Nmax)
+    # convert dX to dz
+    dXdz = fN_cosmo.abs_distance_integrand(z)
+    dndz = dNdX * dXdz
+    return dndz
 
 
 def get_NHI(z, NHI_min=17.2, NHI_max=22.5, NHI_nsamp=100):
@@ -195,31 +124,19 @@ def get_NHI(z, NHI_min=17.2, NHI_max=22.5, NHI_nsamp=100):
 
     probs = np.zeros([Nz,NHI_nsamp])
 
-    if use_pyigm:
+    #Evaluate f at the points of the NHI grid and each redshift.
+    f = 10**fN_default.evaluate(log_NHI,z)
 
-        #Evaluate f at the points of the NHI grid and each redshift.
-        f = 10**fN_default.evaluate(log_NHI,z)
-
-        times += [time.time()-t]
-        t = time.time()
-        
-        #Calculate the probaility of each NHI bin.
-        aux = f*np.outer(NHI_widths,np.ones(z.shape))
-        
-        times += [time.time()-t]
-        t = time.time()
+    times += [time.time()-t]
+    t = time.time()
     
-        probs = (aux/np.sum(aux,axis=0)).T
+    #Calculate the probaility of each NHI bin.
+    aux = f*np.outer(NHI_widths,np.ones(z.shape))
+    
+    times += [time.time()-t]
+    t = time.time()
 
-        times += [time.time()-t]
-        t = time.time()
-
-    else:
-
-        # TODO: test this
-        probs_low = dnHD_dz_cumlgN(z,nn[:-1]).T
-        probs_high = dnHD_dz_cumlgN(z,nn[1:]).T
-        probs[:,1:] = probs_high-probs_low
+    probs = (aux/np.sum(aux,axis=0)).T
 
     times += [time.time()-t]
     t = time.time()
@@ -327,7 +244,6 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     dla_rsd_dz = np.zeros(ndlas)
     dla_count = 0
     dla_z, dla_skw_id, dla_rsd_dz, dla_count = doloop(dlas_in_cell, velocity, zedges, dla_z, dla_skw_id, dla_rsd_dz, dla_count)
-    # dla_NHI = get_N(dla_z,Nmin=Nmin,Nmax=Nmax)
     dla_NHI = get_NHI(dla_z,NHI_min=Nmin,NHI_max=Nmax)
 
     #global id for the skewers

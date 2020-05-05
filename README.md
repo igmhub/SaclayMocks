@@ -25,7 +25,6 @@ Here is a list of needed packages:
 - pyfftw
 - numba
 - iminuit
-- memory_profiler
 - linetools
 - pyigm
 
