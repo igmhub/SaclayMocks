@@ -1243,7 +1243,7 @@ def main():
         mock_args['seed'] = "-seed "+str(args.seed)
     if args.box_size < 2560:
         mock_args['desifootprint'] = False
-    ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size,stripe_footprint=arg.stripe82)
+    ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size,stripe_footprint=args.stripe82)
     if args.chunk_id is not None:
         m = np.array(args.chunk_id) - 1
         ra0 = ra0[m]
