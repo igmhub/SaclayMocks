@@ -241,7 +241,7 @@ def main() :
   # First lognormal
   boxfile = outDir+'/boxln_1'
   command = "ls -l {}* | wc -l".format(boxfile)
-  if nHDU == int(subprocess.run(command, shell=True, stdout=PIPE, stderr=PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+  if nHDU == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
     print("{} files already exist ! Skiping this step.".format(boxfile))
   else:
     boxk *= fitsio.read(Pfilename, ext='Pln1')
@@ -258,7 +258,7 @@ def main() :
   # Second lognormal
   boxfile = outDir+'/boxln_2'
   command = "ls -l {}* | wc -l".format(boxfile)
-  if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+  if nHDU == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
     print("{} files already exist ! Skiping this step.".format(boxfile))
   else:
     boxk = np.load(boxkfile)
@@ -267,7 +267,7 @@ def main() :
   # Third lognormal
   boxfile = outDir+'/boxln_3'
   command = "ls -l {}* | wc -l".format(boxfile)
-  if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+  if nHDU == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
     print("{} files already exist ! Skiping this step.".format(boxfile))
   else:
     boxk = np.load(boxkfile)
@@ -277,7 +277,7 @@ def main() :
   nHDU_bis = NX   # we want 1 HDU per ix
   boxfile = outDir+'/box'
   command = "ls -l {}-* | wc -l".format(boxfile)
-  if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+  if nHDU_bis == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
     print("{} files already exist ! Skiping this step.".format(boxfile))
     print("Reading and multiplying boxk by P0(k), and saving...")
     t0 = time.time()
@@ -315,7 +315,7 @@ def main() :
     # etak_xx
     boxfile = outDir+'/eta_xx'
     command = "ls -l {}* | wc -l".format(boxfile)
-    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    if nHDU_bis == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
       print("{} files already exist ! Skiping this step.".format(boxfile))
     else:
       print("eta_xx...")
@@ -328,7 +328,7 @@ def main() :
     # etak_yy
     boxfile = outDir+'/eta_yy'
     command = "ls -l {}* | wc -l".format(boxfile)
-    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    if nHDU_bis == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
       print("{} files already exist ! Skiping this step.".format(boxfile))
     else:
       print("eta_yy...")
@@ -341,7 +341,7 @@ def main() :
     # etak_zz
     boxfile = outDir+'/eta_zz'
     command = "ls -l {}* | wc -l".format(boxfile)
-    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    if nHDU_bis == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
       print("{} files already exist ! Skiping this step.".format(boxfile))
     else:
       print("eta_zz...")
@@ -354,7 +354,7 @@ def main() :
     # etak_xy
     boxfile = outDir+'/eta_xy'
     command = "ls -l {}* | wc -l".format(boxfile)
-    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    if nHDU_bis == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
       print("{} files already exist ! Skiping this step.".format(boxfile))
     else:
       print("eta_xy...")
@@ -367,7 +367,7 @@ def main() :
     # etak_xz
     boxfile = outDir+'/eta_xz'
     command = "ls -l {}* | wc -l".format(boxfile)
-    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    if nHDU_bis == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
       print("{} files already exist ! Skiping this step.".format(boxfile))
     else:
       print("eta_xz...")
@@ -380,7 +380,7 @@ def main() :
     # etak_yz
     boxfile = outDir+'/eta_yz'
     command = "ls -l {}* | wc -l".format(boxfile)
-    if nHDU_bis == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    if nHDU_bis == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
       print("{} files already exist ! Skiping this step.".format(boxfile))
     else:
       print("eta_yz...")
@@ -394,7 +394,7 @@ def main() :
     # vx
     boxfile = outDir+'/vx'
     command = "ls -l {}* | wc -l".format(boxfile)
-    if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    if nHDU == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
       print("{} files already exist ! Skiping this step.".format(boxfile))
     else:
       print("vx...")
@@ -407,7 +407,7 @@ def main() :
     # vy
     boxfile = outDir+'/vy'
     command = "ls -l {}* | wc -l".format(boxfile)
-    if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    if nHDU == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
       print("{} files already exist ! Skiping this step.".format(boxfile))
     else:
       print("vy...")
@@ -420,7 +420,7 @@ def main() :
     # vz
     boxfile = outDir+'/vz'
     command = "ls -l {}* | wc -l".format(boxfile)
-    if nHDU == int(subprocess.run(command, shell=True, capture_output=True).stdout.decode('UTF-8')[:-1]) and boxk_exist:
+    if nHDU == int(subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.decode('UTF-8')[:-1]) and boxk_exist:
       print("{} files already exist ! Skiping this step.".format(boxfile))
     else:
       print("vz...")

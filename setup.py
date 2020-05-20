@@ -19,7 +19,7 @@ setup(name="SaclayMocks",
     package_dir = {'': 'py'},
     package_data = {'SaclayMocks': ['etc/']},
     install_requires=['numpy','scipy','iminuit','healpy','fitsio',
-                      'numba','future','setuptools', 'pyfftw', 'pyigm'],
+                      'numba','future','setuptools', 'pyfftw'],
     test_suite='SaclayMocks.test.test_cor',
     scripts = scripts
     )
