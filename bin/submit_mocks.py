@@ -608,12 +608,13 @@ def do_dir_tree(outdir, nside):
     print("Directory tree created.")
 
 
-def chunk_parameters(cells):
+def chunk_parameters(cells,stripe_footprint=False):
     '''
     Returns the parameters (ra, dec, ...) of the different chunks according
     to the box size.
     The nominal size is 2560 with 7 chunks. Other size are for debugging.
     '''
+
     if cells == 2560:
         ra0=['125.5', '189.982649735', '254.46529947', '140', '245.305821271', '-24', '40.4826497351']
         dra=['32.2413248675', '32.2413248675', '32.2413248675', '52.6529106357', '52.6529106357', '32.2413248675', '32.2413248675']
@@ -661,6 +662,14 @@ def chunk_parameters(cells):
         ddec=['1.6']
         chunkid=['1']
         nslice = 2
+
+    if stripe_footprint :
+        ra0=['-25','25']
+        dra=['25','25']
+        dec0=['0','0']
+        ddec=['2','2']
+        chunkid=['1', '2']
+        nslice = 512
 
     return np.array(ra0), np.array(dra), np.array(dec0), np.array(ddec), np.array(chunkid), np.array(nslice)
 
@@ -1119,6 +1128,9 @@ def main():
     parser.add_argument("--email", type=str, default=None, required=False,
         help="Your email address (optional)")
 
+    parser.add_argument("--stripe82", action='store_true', required=False,
+        help="Create the box limits adapted to the Stripe 82 footprint")
+
     args = parser.parse_args()
 
     ### Define sbatch parameters :
@@ -1231,7 +1243,7 @@ def main():
         mock_args['seed'] = "-seed "+str(args.seed)
     if args.box_size < 2560:
         mock_args['desifootprint'] = False
-    ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size)
+    ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size,stripe_footprint=args.stripe82)
     if args.chunk_id is not None:
         m = np.array(args.chunk_id) - 1
         ra0 = ra0[m]

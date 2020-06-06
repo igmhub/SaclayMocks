@@ -28,6 +28,14 @@ Here is a list of needed packages:
 - linetools
 - pyigm
 
+
+The pyigm package can not be directly installed by setup.py. Please install the git version of pyigm, by typing, in a separate folder:
+
+git clone https://github.com/pyigm/pyigm.git
+cd pyigm/
+python setup.py install --user
+
+
 ## Running
 The code runs as follow:
 First it reads and interpolate the powerspectrum from camb (stored in `etc/`) to create a 3D power-spectrum.

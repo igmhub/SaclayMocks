@@ -1,3 +1,6 @@
 **/*.pyc
 *~
 etc/pkmiss_interp.fits
+py/SaclayMocks.egg-info/
+build/
+dist/

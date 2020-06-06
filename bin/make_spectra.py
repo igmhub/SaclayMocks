@@ -480,6 +480,9 @@ def main():
             eta_xy = np.array([],dtype=np.float32)
             eta_xz = np.array([],dtype=np.float32)
             eta_yz = np.array([],dtype=np.float32)
+            velo_x = np.array([],dtype=np.float32)
+            velo_y = np.array([],dtype=np.float32)
+            velo_z = np.array([],dtype=np.float32)
         if (dla==False):
             velo_x = np.array([],dtype=np.float32)
             velo_y = np.array([],dtype=np.float32)
