@@ -305,7 +305,7 @@ def main():
                     mmm = np.where((wav_rf<constant.lya) & (wav_rf>constant.lylimit))[0]
                     if len(mmm) > 0:
                         nz = 256
-                        while (nz < len(wav_tmp)+10) : nz *= 2  # +10 is to avoid correlations from edge to edge of the forest
+                        while (nz < len(wav_tmp)+50) : nz *= 2  # +50 pixels (10 Mpc/h) is to avoid correlations from edge to edge of the forest
                         delta_s = np.random.normal(size=nz)   # latter, produce directly in k space
                         delta_sk = fft.rfftn(delta_s, threads=ncpu)
                         k = np.fft.rfftfreq(nz) * 2 * k_ny
