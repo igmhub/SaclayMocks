@@ -27,19 +27,19 @@ plot_b_hcd = True
 # toplot = ['v4.7.22_raw', 'v4.7.22-0.0', 'v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'redo_dr16']
-# toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_dndz3_nhi20.3_fixed_lya', 'redo_dr16']
+# Toplot = ['V4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_dndz3_nhi20.3_fixed_lya', 'redo_dr16']
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
 # toplot = ['v4.7.22_raw', 'v4.7.22-0.0_bis', 'v4.7.22-0.2_nhi20.3', 'redo_dr16']
 # toplot = ['redo_dr16', 'dr16_fvoigt_v4.7.22', 'dr16_mask_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.0', 'v4.7.22-0.0_bis']
-toplot = ['redo_dr16']
+toplot = ['redo_dr16', 'v4.7_11_20-0.0', 'v4.7_11_20-0.2', 'pred_tuning']
 
 # labels = toplot
 # labels = ['mock_Rogers2018', 'mock_no_mask', 'DR16_Rogers2018', 'DR16_no_mask', 'dr16_fvoigt_v4.7.22']
 # labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', 'dr16']
 # labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', '3*dndz_nhi_20.3_fixed_lya', 'dr16']
 # labels = ['raw mocks', 'mock-0.0', 'mock-0.2', 'DR16']
-labels = ['DR16']
+labels = ['DR16', 'stack-0.0', 'stack-0.2', 'pred']
 # labels = ['DR16_mask_Roger', 'DR16_Guy', 'DR16_mask_Guy']
 # labels = ['eboss-0.0', 'eboss-0.0_seed126429']
 
@@ -85,9 +85,12 @@ p_beff = {}
 
 # Choose colors
 colors['data_helion'] = 'black'
-colors['redo_dr16'] = 'royalblue'
+colors['redo_dr16'] = 'black'
 colors['dr16_fvoigt_v4.7.22'] = 'darkgreen'
 colors['dr16_mask_fvoigt_v4.7.22'] = 'red'
+colors['v4.7_11_20-0.0'] = 'royalblue'
+colors['v4.7_11_20-0.2'] = 'r'
+colors['pred_tuning'] = 'green'
 colors['v4.7.22_raw'] = 'green'
 colors['v4.7.22-0.0'] = 'royalblue'
 colors['v4.7.22-0.0_bis'] = 'royalblue'
@@ -111,6 +114,24 @@ colors['v4.7.22-0.2_fvoigt_exp'] = 'magenta'
 # colors['v4.7.22_raw_coadd'] = 'green'
 
 ### Inputs .h5 files :
+# coadd of v4.7 11 to 20 realisations eboss-0.0
+files['v4.7_11_20-0.0'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.0/cf_z_0_2.35-exp.h5",
+                           "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.0/cf_z_2.35_2.65-exp.h5",
+                           "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.0/cf_z_2.65_3.05-exp.h5",
+                           "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.0/cf_z_3.05_10-exp.h5"]
+
+# coadd of v4.7 11 to 20 realisations eboss-0.2
+files['v4.7_11_20-0.2'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.2/cf_z_0_2.35-exp.h5",
+                           "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.2/cf_z_2.35_2.65-exp.h5",
+                           "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.2/cf_z_2.65_3.05-exp.h5",
+                           "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.2/cf_z_3.05_10-exp.h5"]
+
+# Prediction used for the tuning procedure
+files['pred_tuning'] = ["/global/cscratch1/sd/tetourne/Out/Fit4/z1.8/from_transmissions/Fit/result_cf_pred.h5",
+                        "/global/cscratch1/sd/tetourne/Out/Fit4/z2.2/from_transmissions/Fit/result_cf_pred.h5",
+                        "/global/cscratch1/sd/tetourne/Out/Fit4/z2.6/from_transmissions/Fit/result_cf_pred.h5",
+                        "/global/cscratch1/sd/tetourne/Out/Fit4/z3.0/from_transmissions/Fit/result_cf_pred.h5",
+                        "/global/cscratch1/sd/tetourne/Out/Fit4/z3.6/from_transmissions/Fit/result_cf_pred.h5"]
 # v4.7.22 raw mocks
 files['v4.7.22_raw'] = ["/global/cscratch1/sd/tetourne/Out/v4.7.22_1/from_transmissions/Fit/result_cf.h5",
                         "/global/cscratch1/sd/tetourne/Out/v4.7.22_2/from_transmissions/Fit/result_cf.h5",

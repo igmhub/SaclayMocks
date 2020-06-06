@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 import fitsio
 from SaclayMocks import constant
 import h5py
+import picca.wedgize
 
 
 PI = np.pi
@@ -709,3 +710,48 @@ def beff_err(bias_eta, bias_eta_err, beta, beta_err, cov, f=0.97):
     db_dbeta = (bias_eta*f/beta)*np.sqrt(1+2/3*beta+1/5*beta**2)*((1/3+1/5*beta)/(1+2/3*beta+1/5*beta**2) - 1/beta)
     beff_err = np.sqrt((db_dbiaseta*bias_eta_err)**2 + (db_dbeta*beta_err)**2 + 2*db_dbiaseta*db_dbeta*cov)
     return beff_err
+
+
+def plot_wedge(da_list, co_list, label_list=None, title=None, mumin=0, mumax=1, rtmin=0, rtmax=200, rpmin=0, rpmax=200, nrt=50, nrp=50, absoluteMu=True, rpow=2):
+    """
+    da_list is a list of 1D array that contains correlation funtions
+    co_list is a list of 2D array that contains covariance matrices
+    """
+    if label_list == None:
+        label_list = np.arange(len(da_list)) + 1
+
+    fig, ax = plt.subplots(figsize=(12,8))
+    w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=absoluteMu)
+    for da, co, lab in zip(da_list, co_list, label_list):
+        data_wedge = w.wedge(da,co)
+        coef = data_wedge[0]**rpow
+        # ax.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])),fmt='+', label=lab)
+        ax.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])), label=lab)
+
+    ax.grid()
+    ax.legend()
+    ax.set_title("CF - {}".format(title), fontsize=20)
+    ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    if rpow == 2:
+        ax.set_ylabel(r"$r^{2}\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    if rpow == 1:
+        ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    if rpow == 0:
+        ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    plt.show()
+    return
+
+
+def add_wedge(da, co, label=None, color=None, errorbar=True, mumin=0, mumax=1, rtmin=0, rtmax=200, rpmin=0, rpmax=200, nrt=50, nrp=50, absoluteMu=True, rpow=2):
+    """
+    da is a 1D array that contains correlation funtions
+    co is a 2D array that contains covariance matrices
+    """
+    w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=absoluteMu)
+    data_wedge = w.wedge(da,co)
+    coef = data_wedge[0]**rpow
+    if errorbar:
+        plt.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])),fmt='+', label=label, color=color)
+    else:
+        plt.plot(data_wedge[0],coef*data_wedge[1], label=label, color=color)
+    return

@@ -56,9 +56,11 @@ if labels is None:
 fmt = ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.']
 # colors = ['black', 'darkblue', 'darkgreen', 'red', 'darkorange', 'darkviolet', 'saddlebrown', 'dodgerblue', 'deeppink']
 # colors = ['b', 'darkorange', 'r']
+colors = ['tab:blue', 'tab:orange', 'tab:green']
 # colors = ['black', 'royalblue', 'r']
-colors = ['darkblue', 'darkblue', 'r', 'r']
-linestyles = ['-', '--', '-', '--']
+# colors = ['darkblue', 'darkblue', 'r', 'r']
+# colors = ['royalblue', 'royalblue', 'r', 'r', 'green', 'green']
+linestyles = ['-', '--', '-', '--', '-', '--']
 
 mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
 w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
@@ -67,8 +69,10 @@ w2 = picca.wedgize.wedge(mumin=mu1,mumax=mu2, rtmax=rtmax, rpmax=rpmax, rtmin=rt
 w3 = picca.wedgize.wedge(mumin=mu2,mumax=mu3, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
 w4 = picca.wedgize.wedge(mumin=mu3,mumax=mu4, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
 
-f1, ax1 = plt.subplots(figsize=(12,8))
-f2, ax2 = plt.subplots(figsize=(12,8))
+# f1, ax1 = plt.subplots(figsize=(12,8))
+# f2, ax2 = plt.subplots(figsize=(12,8))
+f1, ax1 = plt.subplots()
+f2, ax2 = plt.subplots()
 for i, f in enumerate(files):
     if '.fits' in f:
         h5_flag = False
@@ -86,7 +90,7 @@ for i, f in enumerate(files):
         else:
             idx1 = int(f.rfind("/"))+1
             idx2 = int(f.find(".h5"))
-            da = ff[f[idx2:idx2]+"/fit"][...]
+            da = ff[f[idx1:idx2]+"/fit"][...]
         ff.close()
 
     data_wedge = w.wedge(da,co)

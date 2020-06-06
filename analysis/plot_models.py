@@ -24,28 +24,33 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 plt.rc('figure', figsize=(9,7))
 
 # Parameters
-model_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Model_effect"
+model_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Model_effect/true_model/"
+# model_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Model_effect/no_distorsion/"
 # model_dir = "/global/cscratch1/sd/tetourne/Out/dr16/from_quickquasars/Model_analysis"
 
-# cf_file = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Correlations/cf_z_0_10-exp.fits"
+cf_file = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Correlations/cf_z_0_10-exp.fits"
 # cf_file = "/global/cscratch1/sd/tetourne/Out/mock_0.0/cf_z_0_10-exp.fits"
-cf_file = "/global/cscratch1/sd/tetourne/Out/v4.7.22/from_quickquasars/Correlations/e_cf.fits"
+# cf_file = "/global/cscratch1/sd/tetourne/Out/v4.7.22/from_quickquasars/Correlations/e_cf.fits"
 # cf_file = "/global/cscratch1/sd/tetourne/Out/v4.7.22_masked_dla20.3/from_quickquasars/Correlations/e_cf.fits"
 # cf_file = "/global/cscratch1/sd/tetourne/Out/dr16/from_quickquasars/Correlations/e_cf.fits"
 
 # toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_met', 'kaiser_nl_met_hcd', 'kaiser_nl_met_hcd_L025']
 # toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_met_hcd', 'kaiser_nl_met_hcd_sky']
-toplot = ['kaiser_nl_ap1_at1']
+# toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_hcd_met', 'kaiser_nl_hcd_met_sky']
+# toplot = ['kaiser_nl_ap1_at1']
+toplot = ['kaiser', 'kaiser_no_broadening', 'kaiser_nl']
 
 # labels = toplot
-labels = ['kaiser_nl']
+# labels = ['kaiser_nl']
 # labels = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_hcd_met', 'kaiser_nl_hcd_met_sky']
+labels = ['kaiser', 'kaiser_no_broadening', 'kaiser_nl']
 
 fit_name = 'cf_z_0_10'
 # fit_name = 'LYA(LYA)xLYA(LYA)'
 
 colors = ['royalblue', 'green', 'darkorange', 'r', 'purple']
 
+title = 'with distorsion'
 
 ### Begining of code
 print("Reading correlation function {}".format(cf_file))
@@ -99,7 +104,7 @@ for i, item in enumerate(toplot):
 ax.legend()
 ax.set_xlabel('r [Mpc/h]')
 ax.grid()
-ax.set_title(r'$0 < \mu < 1$')
+ax.set_title(r'$0 < \mu < 1$ - '+title)
 plt.tight_layout()
 
 
@@ -111,7 +116,7 @@ for i, item in enumerate(toplot):
 ax1.legend()
 ax1.set_xlabel('r [Mpc/h]')
 ax1.grid()
-ax1.set_title(r'$0 < \mu < 0.5$')
+ax1.set_title(r'$0 < \mu < 0.5$ - '+title)
 plt.tight_layout()
 
 fig2, ax2 = plt.subplots()
@@ -121,7 +126,7 @@ for i, item in enumerate(toplot):
 ax2.legend()
 ax2.set_xlabel('r [Mpc/h]')
 ax2.grid()
-ax2.set_title(r'$0.5 < \mu < 0.8$')
+ax2.set_title(r'$0.5 < \mu < 0.8$ - '+title)
 plt.tight_layout()
 
 fig3, ax3 = plt.subplots()
@@ -131,7 +136,7 @@ for i, item in enumerate(toplot):
 ax3.legend()
 ax3.set_xlabel('r [Mpc/h]')
 ax3.grid()
-ax3.set_title(r'$0.8 < \mu < 0.95$')
+ax3.set_title(r'$0.8 < \mu < 0.95$ - '+title)
 plt.tight_layout()
 
 fig4, ax4 = plt.subplots()
@@ -141,7 +146,7 @@ for i, item in enumerate(toplot):
 ax4.legend()
 ax4.set_xlabel('r [Mpc/h]')
 ax4.grid()
-ax4.set_title(r'$0.95 < \mu < 1$')
+ax4.set_title(r'$0.95 < \mu < 1$ - '+title)
 plt.tight_layout()
 
 plt.show()
