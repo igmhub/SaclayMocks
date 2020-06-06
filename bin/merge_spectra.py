@@ -306,6 +306,7 @@ def main():
                     if len(mmm) > 0:
                         nz = 256
                         while (nz < len(wav_tmp)) : nz *= 2
+                        nz *= 2  # make sure that the size of delta_s is larger than the size of the forest, to avoid spurious correlations
                         delta_s = np.random.normal(size=nz)   # latter, produce directly in k space
                         delta_sk = fft.rfftn(delta_s, threads=ncpu)
                         k = np.fft.rfftfreq(nz) * 2 * k_ny
