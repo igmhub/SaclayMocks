@@ -721,9 +721,9 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
     ### Define output directories
     if 'special_out' in mock_args.keys():
         if 'out_version' in mock_args.keys():
-            out_dir = mock_args['special_out']+'/'+mock_args['out_version']+'.'+str(imock)
+            out_dir = mock_args['special_out']+'/'+mock_args['out_version']+'.'+imock
         else:
-            out_dir = mock_args['special_out']+'/'+str(imock)
+            out_dir = mock_args['special_out']+'/'+imock
         if mock_args['burst_buffer']:
             mock_args['out_dir_no_bb'] = out_dir  # path where the output is copied out of burst buffer
             out_dir = mock_args['base_dir']+"/output"
@@ -829,9 +829,9 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
     if mock_args['burst_buffer']:
         i = mock_args['bb_name'].rfind('_')
         if i > 0:
-            mock_args['bb_name'] = mock_args['bb_name'][:i]+"_"+str(imock)
+            mock_args['bb_name'] = mock_args['bb_name'][:i]+"_"+imock
         else:
-            mock_args['bb_name'] = mock_args['bb_name']+"_"+str(imock)
+            mock_args['bb_name'] = mock_args['bb_name']+"_"+imock
         # if run_args['run_create']:
         create_reservation(mock_args)
         # if run_args['run_stagein']:
@@ -1096,7 +1096,7 @@ def main():
     parser.add_argument("--realisation-number", type=int, default=1, required=False,
         help="The number of realisation to be produced (optional)")
 
-    parser.add_argument("--realisation-id", type=int, nargs="*", default=None, required=False,
+    parser.add_argument("--realisation-id", nargs="*", default=None, required=False,
         help="Specify particular realisations to be produced (optional)")
 
     parser.add_argument("--stage-out", type=str, nargs="*", default='all', required=False,
