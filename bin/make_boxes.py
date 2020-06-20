@@ -122,7 +122,7 @@ def FFTandStore(Dcell, nHDU, boxfilename, ncpu, wisdomFile, box_null=False):
       #   sys.exit(1)
 
     del box
-    return
+    return box_null
 
 
 #********************************************************************

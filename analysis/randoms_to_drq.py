@@ -10,8 +10,8 @@ parser.add_argument("--drq", type=str, default=None, required=True, help='path t
 parser.add_argument("--randoms", type=str, default=None, required=True, help='path to randoms file')
 parser.add_argument("--out-dir", type=str, default=None, required=True, help='output directory')
 parser.add_argument("--nb-data", type=int, default=400000, required=False, help='number of objects')
-parser.add_argument("--z-min", type=float, default=None, required=False, help='minimum redshift')
-parser.add_argument("--z-max", type=float, default=None, required=False, help='maximum redshift')
+parser.add_argument("--z-min", type=str, default=None, required=False, help='minimum redshift')
+parser.add_argument("--z-max", type=str, default=None, required=False, help='maximum redshift')
 parser.add_argument("--nside", type=int, default=16, required=False, help='nside parameter for healpix pixels')
 args = parser.parse_args()
 
@@ -31,6 +31,7 @@ pix = healpy.ang2pix(nside,th,phi)
 print(' There are {} objects in the data catalog'.format(ra.size) )
 print(' Across {} different healpix pixels of nside={}'.format(sp.unique(pix).size,nside) )
 print(' with redshift in {} < z < {}'.format(z.min(), z.max()))
+print(" using cut {} < z < {}".format(sp.float32(args.z_min), sp.float32(args.z_max)))
 print('\n')
 h.close()
 
@@ -45,6 +46,7 @@ pix = healpy.ang2pix(nside,th,phi)
 print(' There are {} objects in the random catalog'.format(ra.size) )
 print(' Across {} different healpix pixels of nside={}'.format(sp.unique(pix).size,nside) )
 print(' with redshift in {} < z < {}'.format(z.min(), z.max()))
+print(" using cut {} < z < {}".format(sp.float32(args.z_min), sp.float32(args.z_max)))
 print('\n')
 h.close()
 
@@ -58,10 +60,10 @@ data = {}
 for k in ['RA','DEC','Z','THING_ID','PLATE','MJD','FIBERID']:
     data[k] = h[1][k][:]
 h.close()
-w = data['Z']>args.z_min
+w = data['Z']>sp.float32(args.z_min)
 for k in data.keys():
     data[k] = data[k][w]
-w = data['Z']<args.z_max
+w = data['Z']<sp.float32(args.z_max)
 for k in data.keys():
     data[k] = data[k][w]
 phi = data['RA']*sp.pi/180.
@@ -77,10 +79,10 @@ for k in ['RA','DEC','Z']:
 for k in ['THING_ID','PLATE','MJD','FIBERID']:
     rand[k] = h[1]['MOCKID'][:]
 h.close()
-w = rand['Z']>args.z_min
+w = rand['Z']>sp.float32(args.z_min)
 for k in rand.keys():
     rand[k] = rand[k][w]
-w = rand['Z']<args.z_max
+w = rand['Z']<sp.float32(args.z_max)
 for k in rand.keys():
     rand[k] = rand[k][w]
 phi = rand['RA']*sp.pi/180.
@@ -103,12 +105,14 @@ if nbData > data['RA'].size:
 else:
     w = sp.random.choice(sp.arange(data['RA'].size), size=nbData, replace=False)    
 # assert nbData<=data['RA'].size
-out = fitsio.FITS(args.out_dir+'/'+obj+'_D_'+str(nbData)+'.fits','rw',clobber=True)
+outname = "{}/{}_D_{}_z_{}_{}.fits".format(
+    args.out_dir, obj, nbData, args.z_min, args.z_max)
+out = fitsio.FITS(outname,'rw',clobber=True)
 cols = [ v[w] for k,v in data.items() if k not in ['PIX'] ]
 names = [ k for k in data.keys() if k not in ['PIX'] ]
 out.write(cols,names=names)
 out.close()
-print(args.out_dir+'/'+obj+'_D_'+str(nbData)+'.fits written')
+print("Catalog {} written.".format(outname))
 
 ### Save randoms
 if nbRandoms > rand['RA'].size:
@@ -117,9 +121,11 @@ if nbRandoms > rand['RA'].size:
 else:
     w = sp.random.choice(sp.arange(rand['RA'].size), size=nbRandoms, replace=False)
 # assert nbRandoms<=rand['RA'].size
-out = fitsio.FITS(args.out_dir+'/'+obj+'_R_'+str(nbRandoms)+'.fits','rw',clobber=True)
+outname = "{}/{}_R_{}_z_{}_{}.fits".format(
+    args.out_dir, obj, nbRandoms, args.z_min, args.z_max)
+out = fitsio.FITS(outname,'rw',clobber=True)
 cols = [ v[w] for k,v in rand.items() if k not in ['PIX'] ]
 names = [ k for k in rand.keys() if k not in ['PIX'] ]
 out.write(cols,names=names)
 out.close()
-print(args.out_dir+'/'+obj+'_R_'+str(nbRandoms)+'.fits written')
+print("Catalog {} written.".format(outname))

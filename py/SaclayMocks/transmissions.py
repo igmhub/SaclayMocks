@@ -116,22 +116,23 @@ class ReadTransmission(object):
         ax.hist(spec[spec.mask==False], bins=bins, density=True)
         plt.show()
 
-    def p1d(self, redshift, Nreg=1, bins=300, title='', filename=None, pixel=0.2):
-        # P1D of data
-        if filename is None:
-            filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out")
-        print("Reading P1D data from: {}".format(filename))
-        data = np.loadtxt(filename)
-        z = data[:, 0]
-        msk = np.where(z == redshift)[0]
-        if len(msk) == 0:
-            # z from 2.2 to 4.4
-            raise ValueError("ERROR -- You entered a wrong redshift. Here is the list of redshift : {}".format(np.unique(z)))
+    def p1d(self, add_data=False, redshift=None, Nreg=1, bins=300, title='', filename=None, pixel=0.2, plot=False):
+        if add_data:
+            # P1D of data
+            if filename is None:
+                filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pk_fft35bins_noSi.out")
+            print("Reading P1D data from: {}".format(filename))
+            data = np.loadtxt(filename)
+            z = data[:, 0]
+            msk = np.where(z == redshift)[0]
+            if len(msk) == 0:
+                # z from 2.2 to 4.4
+                raise ValueError("ERROR -- You entered a wrong redshift. Here is the list of redshift : {}".format(np.unique(z)))
 
-        convert_factor = util.kms2mpc(redshift)
-        k_data = data[:, 1][msk] * convert_factor
-        pk_data = data[:, 2][msk] / convert_factor
-        pkerr_data = data[:, 3][msk] / convert_factor
+            convert_factor = util.kms2mpc(redshift)
+            k_data = data[:, 1][msk] * convert_factor
+            pk_data = data[:, 2][msk] / convert_factor
+            pkerr_data = data[:, 3][msk] / convert_factor
 
         # P1D of mock
         print("Computing P1D of mocks")
@@ -146,16 +147,21 @@ class ReadTransmission(object):
             delta = flux / Fmean - 1
             P1D.add_spectrum(delta)
         k, pk, pkerr = P1D.P1D(bins//Nreg)
-        print("Done. Plotting...")
-        f1, ax1 = plt.subplots()
-        ax1.set_xlabel('k [h/Mpc]')
-        ax1.set_ylabel('Pk')
-        ax1.set_title(title+" - Nreg = {}".format(Nreg))
-        ax1.grid()
-        ax1.errorbar(k, pk, yerr=pkerr, fmt='.', label='mock')
-        ax1.errorbar(k_data,pk_data, yerr=pkerr_data, fmt='+', label='data')
-        ax1.legend()
-        plt.show()
+        print("Done")
+        if plot:
+            print(". Plotting...")
+            f1, ax1 = plt.subplots()
+            ax1.set_xlabel('k [h/Mpc]')
+            ax1.set_ylabel('Pk')
+            ax1.set_title(title+" - Nreg = {}".format(Nreg))
+            ax1.grid()
+            ax1.errorbar(k, pk, yerr=pkerr, fmt='.', label='mock')
+            if add_data:
+                ax1.errorbar(k_data,pk_data, yerr=pkerr_data, fmt='+', label='data')
+            ax1.legend()
+            plt.show()
+        else:
+            return k, pk, pkerr
 
     def footprint(self, bins=200, title=''):
         # if not hasattr(self, 'ra'):

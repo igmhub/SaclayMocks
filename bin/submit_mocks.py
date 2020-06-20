@@ -1157,7 +1157,7 @@ def main():
     sbatch_args['threads_chunk'] = 32  # default 32
     sbatch_args['nodes_chunk'] = 16  # nodes * threads should be = nslice, default 16
     # Parameters for mergechunks job:
-    sbatch_args['time_mergechunks'] = "02:00:00"  # default "01:30:00"
+    sbatch_args['time_mergechunks'] = "01:30:00"  # default "01:30:00"
     sbatch_args['queue_mergechunks'] = "regular"  # default "regular"
     sbatch_args['name_mergechunks'] = "mergechunks_saclay"
     sbatch_args['threads_mergechunks'] = 64  # default 64

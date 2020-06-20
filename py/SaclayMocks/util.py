@@ -12,7 +12,12 @@ from matplotlib import pyplot as plt
 import fitsio
 from SaclayMocks import constant
 import h5py
-import picca.wedgize
+try:
+    import picca.wedgize
+    use_picca = True
+except:
+    print("/!\ Unable to import picca.wedgize !")
+    use_picca = False
 
 
 PI = np.pi
@@ -717,6 +722,9 @@ def plot_wedge(da_list, co_list, label_list=None, title=None, mumin=0, mumax=1, 
     da_list is a list of 1D array that contains correlation funtions
     co_list is a list of 2D array that contains covariance matrices
     """
+    if not use_picca:
+        print("Unable to use this function. Install picca first.")
+        sys.exit(1)
     if label_list == None:
         label_list = np.arange(len(da_list)) + 1
 
@@ -742,16 +750,58 @@ def plot_wedge(da_list, co_list, label_list=None, title=None, mumin=0, mumax=1, 
     return
 
 
-def add_wedge(da, co, label=None, color=None, errorbar=True, mumin=0, mumax=1, rtmin=0, rtmax=200, rpmin=0, rpmax=200, nrt=50, nrp=50, absoluteMu=True, rpow=2):
+def add_wedge(da, co, errorbar=True, mumin=0, mumax=1, rtmin=0, rtmax=200, rpmin=0, rpmax=200, nrt=50, nrp=50, absoluteMu=True, rpow=2, **kwargs):
     """
     da is a 1D array that contains correlation funtions
     co is a 2D array that contains covariance matrices
     """
+    if not use_picca:
+        print("Unable to use this function. Install picca first.")
+        sys.exit(1)
     w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=absoluteMu)
     data_wedge = w.wedge(da,co)
     coef = data_wedge[0]**rpow
     if errorbar:
-        plt.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])),fmt='+', label=label, color=color)
+        plt.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])), **kwargs)
     else:
-        plt.plot(data_wedge[0],coef*data_wedge[1], label=label, color=color)
+        plt.plot(data_wedge[0],coef*data_wedge[1], **kwargs)
+    return
+
+def plot_cf1d(filenames, labels=None):
+    ymin = 1.e6
+    ymax = -1.e6
+    if labels==None:
+        labels = 1 + np.arange(len(filenames))
+    f, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
+    for f, label in zip(filenames, labels):
+        h = fitsio.FITS(f)
+        y = h[1].read()['c1d'] #- in the future replace '1' by '1DCOR'
+        y_err = np.sqrt(h[1].read()['v1d'])
+        binsize = h[1].read_header()['DLL']
+        bins = sp.arange(y.size)
+        x = sp.power(10,bins*binsize)
+        w = h[1]['nc1d'][:]>0.
+        x = x[w]
+        y = y[w]
+        y_err = y_err[w]
+        # ax1.errorbar(x, y, yerr=y_err, fmt='+', label=label)
+        ax1.plot(x, y, marker='o', label=label)
+        ymin = min(ymin,y.min())
+        ymax = max(ymax,y[y!=1.].max())
+        # ax2.errorbar(x, y, yerr=y_err, fmt='+', label=label)
+        ax2.plot(x, y, marker='o', label=label)
+        h.close()
+    ax1.set_xlabel(r'$\lambda_{1}/\lambda_{2}$')
+    ax1.set_ylabel(r'$\xi^{ff,1D}_{normed}$')
+    ax1.legend()
+    ax1.grid()
+    ax2.set_xlim([0.999,1.1])
+    ax2.set_ylim([-0.035,0.025])
+    ax2.set_xlabel(r'$\lambda_{1}/\lambda_{2}$')
+    ax2.set_ylabel(r'$\xi^{ff,1D}_{normed}$')
+    ax2.legend()
+    ax2.grid()
+    plt.subplots_adjust(hspace=0.4)
+    plt.tight_layout()
+    plt.show()
     return

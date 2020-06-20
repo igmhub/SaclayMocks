@@ -2,6 +2,7 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 from SaclayMocks import util
+from iminuit import Minuit
 
 
 SMALL_SIZE = 16
@@ -22,7 +23,19 @@ plot_bias = True
 plot_beta = True
 plot_bias_eta = True
 plot_beff = True
+plot_beff_z_corrected = False
 plot_b_hcd = True
+use_minuit = True
+
+plot_pred1 = False
+plot_pred2 = False
+plot_shades = False
+
+correct_z_dep = False
+gamma = {'bias_eta':2.2, 'beta':-1.8, 'bias':3.8, 'beff':3.2}
+
+absolute_bias = True
+use_legends = False
 
 # toplot = ['v4.7.22_raw', 'v4.7.22-0.0', 'v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
@@ -32,7 +45,8 @@ plot_b_hcd = True
 # toplot = ['v4.7.22_raw', 'v4.7.22-0.0_bis', 'v4.7.22-0.2_nhi20.3', 'redo_dr16']
 # toplot = ['redo_dr16', 'dr16_fvoigt_v4.7.22', 'dr16_mask_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.0', 'v4.7.22-0.0_bis']
-toplot = ['redo_dr16', 'v4.7_11_20-0.0', 'v4.7_11_20-0.2', 'pred_tuning']
+# toplot = ['redo_dr16', 'v4.7_11_20-0.0', 'v4.7_11_20-0.2', 'pred_tuning']
+toplot = ['redo_dr16']
 
 # labels = toplot
 # labels = ['mock_Rogers2018', 'mock_no_mask', 'DR16_Rogers2018', 'DR16_no_mask', 'dr16_fvoigt_v4.7.22']
@@ -49,17 +63,19 @@ mean_items['dla_coadd_mean'] = ['v4.7.22_dla_coadd', 'v4.7.27_dla_coadd']
 mean_items['mock_mean'] = ['v4.7.22', 'v4.7.27']
 mean_items['mock_coadd_mean'] = ['v4.7.22_coadd', 'v4.7.27_coadd']
 
-plot_pred1 = False
-plot_pred2 = False
-plot_shades = False
-
-correct_z_dep = False
-gamma = {'bias_eta':2.2, 'beta':-1.8, 'bias':3.8, 'beff':3.2}
-
-absolute_bias = True
 
 def func(x, a, gamma):
     return a*(1+x)**gamma
+
+class Fitter(object):
+    def __init__(self, x, y, y_err):
+        self.x = x
+        self.y = y
+        self.y_err = y_err
+    def chi2(self, a, gamma):
+        chi2 = ((self.y - func(self.x, a, gamma)) / self.y_err)**2
+        chi2 = chi2.sum()
+        return chi2
 
 z0 = 2.4
 
@@ -85,7 +101,7 @@ p_beff = {}
 
 # Choose colors
 colors['data_helion'] = 'black'
-colors['redo_dr16'] = 'black'
+colors['redo_dr16'] = 'orangered'
 colors['dr16_fvoigt_v4.7.22'] = 'darkgreen'
 colors['dr16_mask_fvoigt_v4.7.22'] = 'red'
 colors['v4.7_11_20-0.0'] = 'royalblue'
@@ -427,6 +443,7 @@ for item in toplot:
 
     if np.array_equal([0,0,0,0],bias_eta_err[item]): continue
 
+    # Fitting redshift dependency
     print("Fits on {}:".format(item))
     p_bias[item] = sp.optimize.curve_fit(func, redshift[item], bias[item], sigma=bias_err[item])
     print("bias(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_bias[item][0][0], p_bias[item][1][0,0], p_bias[item][0][1], p_bias[item][1][1,1]))
@@ -436,6 +453,59 @@ for item in toplot:
     print("bias_eta(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_bias_eta[item][0][0], p_bias_eta[item][1][0,0], p_bias_eta[item][0][1], p_bias_eta[item][1][1,1]))
     p_beff[item] = sp.optimize.curve_fit(func, redshift[item], beff[item], sigma=beff_err[item])
     print("beff(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_beff[item][0][0], p_beff[item][1][0,0], p_beff[item][0][1], p_beff[item][1][1,1]))
+
+    # Fitting with iminuit
+    if use_minuit:
+        f1 = Fitter(redshift[item], bias[item], bias_err[item])
+        m1 = Minuit(f1.chi2)
+        m1.migrad()
+        # print(m1.values)
+        m1.hesse()
+        # print(m1.errors)
+        f2 = Fitter(redshift[item], beta[item], beta_err[item])
+        m2 = Minuit(f2.chi2)
+        m2.migrad()
+        # print(m2.values)
+        m2.hesse()
+        # print(m2.errors)
+        f3 = Fitter(redshift[item], bias_eta[item], bias_eta_err[item])
+        m3 = Minuit(f3.chi2)
+        m3.migrad()
+        # print(m3.values)
+        m3.hesse()
+        # print(m3.errors)
+        f4 = Fitter(redshift[item], beff[item], beff_err[item])
+        m4 = Minuit(f4.chi2)
+        m4.migrad()
+        # print(m4.values)
+        m4.hesse()
+        # print(m4.errors)
+        print("bias(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_bias[item][0][0], p_bias[item][1][0,0], p_bias[item][0][1], p_bias[item][1][1,1]))
+        print("beta(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_beta[item][0][0], p_beta[item][1][0,0], p_beta[item][0][1], p_beta[item][1][1,1]))
+        print("bias_eta(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_bias_eta[item][0][0], p_bias_eta[item][1][0,0], p_bias_eta[item][0][1], p_bias_eta[item][1][1,1]))
+        print("beff(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_beff[item][0][0], p_beff[item][1][0,0], p_beff[item][0][1], p_beff[item][1][1,1]))
+        
+        print("bias(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(m1.values[0], m1.errors[0], m1.values[1], m1.errors[1]))
+        print("beta(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(m2.values[0], m2.errors[0], m2.values[1], m2.errors[1]))
+        print("bias_eta(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(m3.values[0], m3.errors[0], m3.values[1], m3.errors[1]))
+        print("beff(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(m4.values[0], m4.errors[0], m4.values[1], m4.errors[1]))
+
+        p_bias[item][0][0] = m1.values[0]
+        p_bias[item][1][0,0] = m1.errors[0]
+        p_bias[item][0][1] = m1.values[1]
+        p_bias[item][1][1,1] = m1.errors[1]
+        p_beta[item][0][0] = m2.values[0]
+        p_beta[item][1][0,0] = m2.errors[0]
+        p_beta[item][0][1] = m2.values[1]
+        p_beta[item][1][1,1] = m2.errors[1]
+        p_bias_eta[item][0][0] = m3.values[0]
+        p_bias_eta[item][1][0,0] = m3.errors[0]
+        p_bias_eta[item][0][1] = m3.values[1]
+        p_bias_eta[item][1][1,1] = m3.errors[1]
+        p_beff[item][0][0] = m4.values[0]
+        p_beff[item][1][0,0] = m4.errors[0]
+        p_beff[item][0][1] = m4.values[1]
+        p_beff[item][1][1,1] = m4.errors[1]
 
 
 ### Plots
@@ -460,13 +530,16 @@ if plot_bias_eta:
         ax1.plot(zpred1, bias_eta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
         ax1.plot(zpred2, bias_eta_pred2, 'x', color='limegreen', label='pred 40<r<180')
-    ax1.legend()
+    if use_legends:
+        ax1.legend()
     ax1.grid()
     ax1.set_xlabel('z')
     if absolute_bias:
-        ylabel = r'$|\mathrm{bias\_eta}_{LYA}|$'
+        # ylabel = r'$|\mathrm{bias\_eta}_{LYA}|$'
+        ylabel = r'$|b_{\eta, \mathrm{Ly}\alpha}|$'
     else:
-        ylabel = r'$\mathrm{bias\_eta}_{LYA}$'
+        # ylabel = r'$\mathrm{bias\_eta}_{LYA}$'
+        ylabel = r'$b_{\eta, \mathrm{Ly}\alpha}$'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['bias_eta'])
     ax1.set_ylabel(ylabel)
@@ -493,10 +566,11 @@ if plot_beta:
         ax2.plot(zpred1, beta_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
         ax2.plot(zpred2, beta_pred2, 'x', color='limegreen', label='pred 40<r<180')
-    ax2.legend()
+    if use_legends:
+        ax2.legend()
     ax2.grid()
     ax2.set_xlabel('z')
-    ylabel = r'$\beta_{LYA}$'
+    ylabel = r'$\beta_{\mathrm{Ly}\alpha}$'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['beta'])
     ax2.set_ylabel(ylabel)
@@ -523,13 +597,14 @@ if plot_bias:
         ax3.plot(zpred1, bias_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
         ax3.plot(zpred2, bias_pred2, 'x', color='limegreen', label='pred 40<r<180')
-    ax3.legend()
+    if use_legends:
+        ax3.legend()
     ax3.grid()
     ax3.set_xlabel('z')
     if absolute_bias:
-        ylabel = r'$|\mathrm{b}_{LYA}|$'
+        ylabel = r'$|b_{\mathrm{Ly}\alpha}|$'
     else:
-        ylabel = r'$\mathrm{b}_{LYA}$'
+        ylabel = r'$b_{\mathrm{Ly}\alpha}$'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['bias'])
     ax3.set_ylabel(ylabel)
@@ -556,19 +631,20 @@ if plot_beff:
         ax4.plot(zpred1, beff_pred1, 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
         ax4.plot(zpred2, beff_pred2, 'x', color='limegreen', label='pred 40<r<180')
-    ax4.legend()
+    if use_legends:
+        ax4.legend()
     ax4.grid()
     ax4.set_xlabel('z')
     if absolute_bias:
-        ylabel=r'$|\mathrm{beff}_{LYA}|$'
+        ylabel=r'$|b_{\mathrm{eff},\mathrm{Ly}\alpha}|$'
     else:
-        ylabel=r'$\mathrm{beff}_{LYA}$'
+        ylabel=r'$b_{\mathrm{eff},\mathrm{Ly}\alpha}$'
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['beff'])
     ax4.set_ylabel(ylabel)
     plt.tight_layout()
 
-if plot_beff:
+if plot_beff_z_corrected:
     fig5, ax5 = plt.subplots()
     for i, item in enumerate(toplot):
         # beff[item] *= (1+z0) / (1+redshift[item])
@@ -590,13 +666,14 @@ if plot_beff:
         ax5.plot(zpred1, beff_pred1*(1+z0)/(1+zpred1), 'x', color='darkgreen', label='pred 10<r<180')
     if plot_pred2:
         ax5.plot(zpred2, beff_pred2*(1+z0)/(1+zpred2), 'x', color='limegreen', label='pred 40<r<180')
-    ax5.legend()
+    if use_legends:
+        ax5.legend()
     ax5.grid()
     ax5.set_xlabel('z')
     if absolute_bias:
-        ylabel = r'$|\mathrm{beff}_{LYA}|$'+' * G(z) / G({})'.format(z0)
+        ylabel = r'$|\mathrm{beff}_{\mathrm{Ly}\alpha}|$'+' * G(z) / G({})'.format(z0)
     else:
-        ylabel = r'$\mathrm{beff}_{LYA}$'+' * G(z) / G({})'.format(z0)
+        ylabel = r'$\mathrm{beff}_{\mathrm{Ly}\alpha}$'+' * G(z) / G({})'.format(z0)
     if correct_z_dep:
         ylabel += ' / (1+z)^{}'.format(gamma['beff'])
     ax5.set_ylabel(ylabel)
@@ -613,13 +690,14 @@ if plot_b_hcd:
         #     fmt = 'x'
         if np.array_equal(b_hcd_err[item], np.zeros(len(b_hcd[item]))): continue
         ax6.errorbar(redshift[item], b_hcd[item], yerr=b_hcd_err[item], marker='o', label=label, color=colors[item])
-    ax6.legend()
+    if use_legends:
+        ax6.legend()
     ax6.grid()
     ax6.set_xlabel('z')
     if absolute_bias:
-        ylabel='|b_hcd|'
+        ylabel=r'$|b_{\mathrm{HCD}}|$'
     else:
-        ylabel='b_hcd'
+        ylabel=r'$b_{\mathrm{HCD}}$'
     ax6.set_ylabel(ylabel)
     plt.tight_layout()
 
