@@ -120,7 +120,7 @@ if "cf" in args.to_do:
         data.close()
         data_wedge_pred = w.wedge(da_pred, co_pred)
 
-    fig, ax = plt.subplots(figsize=(12,8))
+    fig, ax = plt.subplots()
     ax.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])),fmt='+', label='mock')
     ax.plot(r, f*r**r_pow, label='fit')
     if args.pred:
@@ -136,6 +136,7 @@ if "cf" in args.to_do:
         ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
     if r_pow == 0:
         ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    plt.tight_layout()
 
     # Plot wedges
     mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
@@ -212,7 +213,7 @@ if "cf" in args.to_do:
         data_wedge3_pred = w3.wedge(da_pred,co_pred)
         data_wedge4_pred = w4.wedge(da_pred,co_pred)
     
-    fig, ax = plt.subplots(figsize=(12,8))
+    fig, ax = plt.subplots()
     ax.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])),fmt='+', label=r"${}<\mu<{}$".format(mu0, mu1), color='b')
     ax.errorbar(data_wedge2[0],coef2*data_wedge2[1],yerr=coef2*np.sqrt(np.diag(data_wedge2[2])),fmt='+', label=r"${}<\mu<{}$".format(mu1, mu2), color='g')
     ax.errorbar(data_wedge3[0],coef3*data_wedge3[1],yerr=coef3*np.sqrt(np.diag(data_wedge3[2])),fmt='+', label=r"${}<\mu<{}$".format(mu2, mu3), color='orange')
@@ -241,6 +242,7 @@ if "cf" in args.to_do:
         ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
 
     ax.legend()
+    plt.tight_layout()
 
 # Treat XCF
 if "xcf" in args.to_do:
@@ -293,7 +295,7 @@ if "xcf" in args.to_do:
 
     coef = data_wedge[0]**r_pow
 
-    fig, ax = plt.subplots(figsize=(12,8))
+    fig, ax = plt.subplots()
     ax.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])),fmt='+', label='mock')
     ax.plot(r, f*r**r_pow, label='fit')
     ax.grid()
@@ -347,7 +349,7 @@ if "xcf" in args.to_do:
             except:
                 print("Can't find {}".format(xcf_file[j:i]+"/fit"))
 
-    fig, ax = plt.subplots(figsize=(12,8))
+    fig, ax = plt.subplots()
     ax.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])),fmt='+', label=r"${}<\mu<{}$".format(mu0, mu1), color='b')
     ax.plot(r1, f1*r1**r_pow, color='b')
     ax.errorbar(data_wedge2[0],coef2*data_wedge2[1],yerr=coef2*np.sqrt(np.diag(data_wedge2[2])),fmt='+', label=r"${}<\mu<{}$".format(mu1, mu2), color='g')
@@ -368,6 +370,7 @@ if "xcf" in args.to_do:
         ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
 
     ax.legend()
+    plt.tight_layout()
 
 # Treat CO
 if "co" in args.to_do:
@@ -460,7 +463,8 @@ if "co" in args.to_do:
             xi8_10 += xi_Ham.xi(beta,r,mu)
         xi8_10 /= 10
 
-    fig, ax = plt.subplots(figsize=(12,8))
+    # fig, ax = plt.subplots(figsize=(12,8))
+    fig, ax = plt.subplots()
     ax.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])),fmt='+', label='mock')
     ax.plot(r_fit, cf_fit*r_fit**r_pow, label='fit')
     # if args.pred:
@@ -470,14 +474,16 @@ if "co" in args.to_do:
         ax.plot(r, xi0 * r**r_pow, label='pred', linestyle=':')
     ax.grid()
     ax.legend()
-    ax.set_title("CF - {}".format(title), fontsize=20)
+    # ax.set_title("CF - {}".format(title), fontsize=20)
+    ax.set_title(title)
     ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
     if r_pow == 2:
-        ax.set_ylabel(r"$r^{2}\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r^{2}\xi(r)$",fontsize=20)
     if r_pow == 1:
-        ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r\xi(r)$",fontsize=20)
     if r_pow == 0:
-        ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$\xi(r)$",fontsize=20)
+    plt.tight_layout()
 
     # Plot wedges
     mu0, mu1, mu2, mu3 = 0, 0.2, 0.5, 1
@@ -510,7 +516,8 @@ if "co" in args.to_do:
     #     data_wedge2_pred = w2.wedge(da_pred,co_pred)
     #     data_wedge3_pred = w3.wedge(da_pred,co_pred)
     
-    fig, ax = plt.subplots(figsize=(12,8))
+    # fig, ax = plt.subplots(figsize=(12,8))
+    fig, ax = plt.subplots()
     ax.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])),fmt='+', label=r"${}<\mu<{}$".format(mu0, mu1), color='b')
     ax.errorbar(data_wedge2[0],coef2*data_wedge2[1],yerr=coef2*np.sqrt(np.diag(data_wedge2[2])),fmt='+', label=r"${}<\mu<{}$".format(mu1, mu2), color='g')
     ax.errorbar(data_wedge3[0],coef3*data_wedge3[1],yerr=coef3*np.sqrt(np.diag(data_wedge3[2])),fmt='+', label=r"${}<\mu<{}$".format(mu2, mu3), color='r')
@@ -528,7 +535,8 @@ if "co" in args.to_do:
         ax.plot(r, xi5_8 * r**r_pow, color='g', linestyle=':')
         ax.plot(r, xi8_10 * r**r_pow, color='r', linestyle=':')
     ax.grid()
-    ax.set_title("CF - {}".format(title), fontsize=20)
+    # ax.set_title("CF - {}".format(title), fontsize=20)
+    ax.set_title(title)
     ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
     if r_pow == 2:
         ax.set_ylabel(r"$r^{2}\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
@@ -538,5 +546,6 @@ if "co" in args.to_do:
         ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
 
     ax.legend()
+    plt.tight_layout()
 
 plt.show()

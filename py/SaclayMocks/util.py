@@ -541,8 +541,8 @@ def qso_lognormal_coef(filename='$SACLAYMOCKS_BASE/etc/qso_lognormal_coef.txt'):
 
 def extract_h5file(fname):
     '''
-    This function is taken from picca
-    https://github.com/igmhub/picca/blob/master/py/picca/fitter2/effective-bins.py
+    This function creates a dictionnary that contains all the parameters
+    stored in the h5file produced by picca
     '''
     f = h5py.File(os.path.expandvars(fname),'r')
 
@@ -560,25 +560,31 @@ def extract_h5file(fname):
             cov_pars['cov[beta_LYA, bias_eta_LYA]'] = 0
         pars['bias_LYA'] = f['best fit'].attrs['bias_eta_LYA'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_LYA'][0]
         pars['beff_LYA'] = pars['bias_LYA'] * np.sqrt(1+2/3*f['best fit'].attrs['beta_LYA'][0]+1/5*f['best fit'].attrs['beta_LYA'][0]**2)
-        if 'cov[bias_eta_LYA, beta_LYA]' in f['best fit'].attrs.keys():
-            err_pars['bias_LYA'] = bias_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'])
-            err_pars['beff_LYA'] = beff_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_eta_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
-        else:
-            err_pars['bias_LYA'] = 0
-            err_pars['beff_LYA'] = 0
+        # if 'cov[bias_eta_LYA, beta_LYA]' in f['best fit'].attrs.keys():
+        err_pars['bias_LYA'] = bias_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], cov_pars['cov[beta_LYA, bias_eta_LYA]'])
+        err_pars['beff_LYA'] = beff_err(f['best fit'].attrs['bias_eta_LYA'][0], f['best fit'].attrs['bias_eta_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], cov_pars['cov[beta_LYA, bias_eta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
+        # else:
+        #     err_pars['bias_LYA'] = 0
+        #     err_pars['beff_LYA'] = 0
         free_p += ['bias_LYA', 'beff_LYA']
-    else:
+    if 'bias_LYA' in f['best fit'].attrs.keys():
         if 'cov[bias_LYA, beta_LYA]' not in f['best fit'].attrs.keys():
             cov_pars['cov[beta_LYA, bias_LYA]'] = 0
         pars['b_LYA'] = f['best fit'].attrs['bias_LYA'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_LYA'][0]
         pars['b_eff_LYA'] = pars['b_LYA'] * np.sqrt(1+2/3*f['best fit'].attrs['beta_LYA'][0]+1/5*f['best fit'].attrs['beta_LYA'][0]**2)
-        if 'cov[bias_LYA, beta_LYA]' in f['best fit'].attrs.keys():
-            err_pars['b_LYA'] = bias_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'])
-            err_pars['b_eff_LYA'] = beff_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], f['best fit'].attrs['cov[bias_LYA, beta_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
-        else:
-            err_pars['b_LYA'] = 0
-            err_pars['b_LYA'] = 0        
+        # if 'cov[bias_LYA, beta_LYA]' in f['best fit'].attrs.keys():
+        err_pars['b_LYA'] = bias_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], cov_pars['cov[beta_LYA, bias_LYA]'])
+        err_pars['b_eff_LYA'] = beff_err(f['best fit'].attrs['bias_LYA'][0], f['best fit'].attrs['bias_LYA'][1], f['best fit'].attrs['beta_LYA'][0], f['best fit'].attrs['beta_LYA'][1], cov_pars['cov[beta_LYA, bias_LYA]'], f=f['best fit'].attrs['growth_rate'][0])
+        # else:
+        #     err_pars['b_LYA'] = 0
+        #     err_pars['b_LYA'] = 0        
         free_p += ['b_LYA', 'b_eff_LYA']
+    if 'bias_eta_QSO' in f['best fit'].attrs.keys():
+        if 'cov[growth_rate, beta_QSO]' not in f['best fit'].attrs.keys():
+            cov_pars['cov[beta_QSO, growth_rate]'] = 0
+        pars['bias_QSO'] = f['best fit'].attrs['bias_eta_QSO'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_QSO'][0]
+        err_pars['bias_QSO'] = bias_err(f['best fit'].attrs['growth_rate'][0], f['best fit'].attrs['growth_rate'][1], f['best fit'].attrs['beta_QSO'][0], f['best fit'].attrs['beta_QSO'][1], cov_pars['cov[beta_QSO, growth_rate]'])
+        free_p += ['bias_QSO']
     f.close()
     return free_p, fixed_p, pars, err_pars, cov_pars
 
@@ -615,35 +621,155 @@ def print_h5file(fname, cor=False):
             err2 = pars[3][h2]
             print("cor[{}, {}] = {}".format(h1, h2, cov/err1/err2))
 
-    # f = h5py.File(os.path.expandvars(fname), 'r')
-    # free_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of free pars'] ]
-    # fixed_p = [ el.decode('UTF-8') for el in f['best fit'].attrs['list of fixed pars'] ]
-
-    # print("- Free params:")
-    # print("zeff = {}".format(f['best fit'].attrs['zeff']))
-    # for p in free_p:
-    #     print("{} = {} +/- {}".format(p, f['best fit'].attrs[p][0], f['best fit'].attrs[p][1]))
-
-    # print("\n- Fixed params:")
-    # for p in fixed_p:
-    #     print("{} = {}".format(p, f['best fit'].attrs[p][0]))
-
-    # print("\n- Cov:")
-    # for p in f['best fit'].attrs:
-    #     if 'cov[' in p:
-    #         print("{} = {}".format(p, f['best fit'].attrs[p]))
-    
-    # print("\n- Cor:")
-    # for p in f['best fit'].attrs:
-    #     if 'cov[' in p:
-    #         idx = p.find(',')
-    #         el1 = p[4:idx]
-    #         el2 = p[idx+2:-1]
-    #         cor = f['best fit'].attrs[p] / (f['best fit'].attrs[el1][1] * f['best fit'].attrs[el2][1])
-    #         print("cor({},{}) = {}".format(el1, el2, cor))
-    # f.close()
     return
 
+
+def h5file_to_latex(file_list, ap_digits=3, at_digits=3, b_eta_lya_digits=4, beta_lya_digits=3, b_lya_digits=4, beff_lya_digits=4, beta_qso_digits=3, b_qso_digits=3, f_digits=2, b_si1190_digits=2, b_si1193_digits=2, b_si1207_digits=2, b_si1260_digits=2, b_cv_digits=2, b_hcd_digits=4, beta_hcd_digits=3, a_sky_digits=3, sigma_sky_digits=1, chi2_digits=0, zeff_digits=3, drp_digits=4, header=True):
+    '''
+    This function print results of picca fitter2 stored in h5 files
+    in the latex table format
+    '''
+    pars = extract_h5file(file_list[0])
+    if header:
+        print("\\toprule")
+        print("Param\\`etre  & $\\num{0} < z < \\num{2.35}$ & $\\num{2.35} < z < \\num{2.65}$ & $\\num{2.65} < z < \\num{3.05}$ & $\\num{3.05} < z < \\num{10}$ \\\\")
+        print("\\midrule")
+    if 'ap' in pars[0]:
+        row = "$\\apar{} $"
+        row += loop_on_h5file(file_list, 'ap', ap_digits)
+        row += " \\\\"
+        print(row)
+    if 'at' in pars[0]:
+        row = "$\\aperp{} $"
+        row += loop_on_h5file(file_list, 'at', at_digits)
+        row += " \\\\"
+        print(row)
+    if 'bias_eta_LYA' in pars[0]:
+        row = "$b_{\\eta, \\mathrm{Ly}\\alpha} $"
+        row += loop_on_h5file(file_list, 'bias_eta_LYA', b_eta_lya_digits)
+        row += " \\\\"
+        print(row)
+    if 'beta_LYA' in pars[0]:
+        row = "$\\beta_{\\mathrm{Ly}\\alpha} $"
+        row += loop_on_h5file(file_list, 'beta_LYA', beta_lya_digits)
+        row += " \\\\"
+        print(row)
+    if 'beta_QSO' in pars[0]:
+        row = "$\\beta_{\\mathrm{QSO}} $"
+        row += loop_on_h5file(file_list, 'beta_QSO', beta_qso_digits)
+        row += " \\\\"
+        print(row)
+    if 'growth_rate' in pars[0]:
+        row = "$f$"
+        row += loop_on_h5file(file_list, 'growth_rate', f_digits)
+        row += " \\\\"
+        print(row)
+    if 'bias_eta_SiII(1190)' in pars[0]:
+        row = "$10^3 b_{\\eta, SiII(1190)} $"
+        row += loop_on_h5file(file_list, 'bias_eta_SiII(1190)', b_si1190_digits)
+        row += " \\\\"
+        print(row)
+    if 'bias_eta_SiII(1193)' in pars[0]:
+        row = "$10^3 b_{\\eta, SiII(1193)} $"
+        row += loop_on_h5file(file_list, 'bias_eta_SiII(1193)', b_si1193_digits)
+        row += " \\\\"
+        print(row)
+    if 'bias_eta_SiII(1260)' in pars[0]:
+        row = "$10^3 b_{\\eta, SiII(1260)} $"
+        row += loop_on_h5file(file_list, 'bias_eta_SiII(1260)', b_si1260_digits)
+        row += " \\\\"
+        print(row)
+    if 'bias_eta_SiIII(1207)' in pars[0]:
+        row = "$10^3 b_{\\eta, SiIII(1207)} $"
+        row += loop_on_h5file(file_list, 'bias_eta_SiIII(1207)', b_si1207_digits)
+        row += " \\\\"
+        print(row)
+    if 'bias_eta_CIV(eff)' in pars[0]:
+        row = "$10^3 b_{\\eta, CIV(\\mathrm{eff})} $"
+        row += loop_on_h5file(file_list, 'bias_eta_CIV(eff)', b_cv_digits)
+        row += " \\\\"
+        print(row)
+    if 'bias_hcd' in pars[0]:
+        row = "$b_{\\textsc{HCD}} $"
+        row += loop_on_h5file(file_list, 'bias_hcd', b_hcd_digits)
+        row += " \\\\"
+        print(row)
+    if 'beta_hcd' in pars[0]:
+        row = "$\\beta_{\\textsc{HCD}} $"
+        row += loop_on_h5file(file_list, 'beta_hcd', beta_hcd_digits)
+        row += " \\\\"
+        print(row)
+    if 'BB-cf_z_0_10-0-broadband_sky-scale-sky' in pars[0]:
+        row = "$10^2 A_{sky} $"
+        row += loop_on_h5file(file_list, 'BB-cf_z_0_10-0-broadband_sky-scale-sky', a_sky_digits)
+        row += " \\\\"
+        print(row)
+    if 'BB-cf_z_0_10-0-broadband_sky-sigma-sky' in pars[0]:
+        row = "$\\sigma_{sky} $"
+        row += loop_on_h5file(file_list, 'BB-cf_z_0_10-0-broadband_sky-sigma-sky', sigma_sky_digits)
+        row += " \\\\"
+        print(row)
+    if 'drp_QSO' in pars[0]:
+        row = "$\\Delta_{\\rpar{}, \\textsc{QSO}}$"
+        row += loop_on_h5file(file_list, 'drp_QSO', drp_digits)
+        row += " \\\\"
+        print(row)
+    print("\\midrule")
+    row = "$\\chi^2$"
+    row += loop_on_h5file(file_list, 'chi2', chi2_digits)
+    row += " \\\\"
+    print(row)
+    row = "$z_{\\mathrm{eff}}$"
+    row += loop_on_h5file(file_list, 'zeff', zeff_digits)
+    row += " \\\\"
+    print(row)
+    print("\\midrule")
+    if 'bias_LYA' in pars[0]:
+        row = "$b_{\\mathrm{Ly}\\alpha} $"
+        row += loop_on_h5file(file_list, 'bias_LYA', b_lya_digits)
+        row += " \\\\"
+        print(row)
+    if 'beff_LYA' in pars[0]:
+        row = "$b_{\\mathrm{eff}, \\mathrm{Ly}\\alpha} $"
+        row += loop_on_h5file(file_list, 'beff_LYA', beff_lya_digits)
+        row += " \\\\"
+        print(row)
+    if 'bias_QSO' in pars[0]:
+        row = "$b_{\\mathrm{QSO}} $"
+        row += loop_on_h5file(file_list, 'bias_QSO', b_qso_digits)
+        row += " \\\\"
+        print(row)
+    print("\\bottomrule")
+    # if '' in pars[0]:
+    #     row = ""
+    #     row += loop_on_h5file(file_list, '', _digits)
+    #     row += " \\\\"
+    #     print(row)
+    return
+
+def loop_on_h5file(file_list, param, digits=5):
+    res = ""
+    for f in file_list:
+        pars = extract_h5file(f)
+        val = pars[2][param]
+        if param == 'zeff':
+            res += " & $ {} $".format(np.round(val,digits))
+            continue
+        if param == 'chi2':
+            res += " & $ {} $".format(np.int32(np.round(val,digits)))
+            continue
+        err = pars[3][param]
+        if 'Si' in param or 'CIV' in param:
+            val *= 1e3
+            err *= 1e3
+        if param == 'BB-cf_z_0_10-0-broadband_sky-scale-sky':
+            val *= 1e2
+            err *= 1e2
+        val = np.round(val, digits)
+        err = np.round(err,digits)
+        res += " & $ {} \\pm {}$".format(val, err)
+
+    return res
 
 class cosmo:
     '''
@@ -805,3 +931,8 @@ def plot_cf1d(filenames, labels=None):
     plt.tight_layout()
     plt.show()
     return
+
+def growthRateStructure(z, omega_M_0=constant.omega_M_0):
+    omega_m = omega_M_0*(1.+z)**3 / ( omega_M_0*(1.+z)**3+(1.-omega_M_0))
+    f = sp.power(omega_m,0.55)
+    return f

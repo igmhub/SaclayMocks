@@ -16,8 +16,12 @@ k_bins = np.linspace(0, 2, 40)
 z_bins = [2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4]
 dz = 0.1
 pixel_size = 0.2
-# wav_cut = constant.lya
-wav_cut = 1200
+# wav_max = constant.lya
+wav_max = 1200
+wav_min = constant.lylimit
+# wav_min = 1040
+print("dz is {}".format(dz))
+print("considering pixels in {} < lambda < {}".format(wav_min, wav_max))
 
 print("Reading transmission files ...")
 t0 = time.time()
@@ -25,7 +29,7 @@ trans = transmissions.ReadTransmission(args.in_dir, nfiles=args.n_files, read_dl
 print("Done. {} s.".format(time.time() - t0))
 z_trans = trans.wavelength / constant.lya - 1
 wav_rf = trans.wavelength / (trans.metadata['Z'].reshape(-1,1) + 1)  # (nspec, npix)
-msk_wav = ((wav_rf < wav_cut) & (wav_rf > constant.lylimit))
+msk_wav = ((wav_rf < wav_max) & (wav_rf > wav_min))
 
 names = ['k', 'p1d', 'p1derr']
 len_forest = []
@@ -44,7 +48,7 @@ for zi in z_bins:
     cc = 0
     for i in range(len(trans.transmission)):
         w_rf = trans.wavelength / (trans.metadata['Z'][i] + 1)
-        msk = (w_rf < wav_cut) & (w_rf > constant.lylimit) & msk_1d
+        msk = (w_rf < wav_max) & (w_rf > wav_min) & msk_1d
         tt = trans.transmission[i][msk]
         if len(tt[tt.mask==False]) < 1: continue
         else:
@@ -55,7 +59,7 @@ for zi in z_bins:
         cc += 1
     k, pk, pkerr = p1d.P1D(k_bins)
     table = [k, pk, pkerr]
-    outname = args.out_dir+"/p1d_z_{}_{}.fits".format(np.round(zi-dz,1), np.round(zi+dz,1))
+    outname = args.out_dir+"/p1d_z_{}_{}.fits".format(np.round(zi-dz,3), np.round(zi+dz,3))
     outfits = fitsio.FITS(outname, 'rw', clobber=True)
     outfits.write(table, names=names, extname='P1D')
     outfits[1].write_key('zmin', zi-dz)

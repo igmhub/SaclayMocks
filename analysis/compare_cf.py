@@ -109,7 +109,7 @@ for i, f in enumerate(files):
         ax2.plot(data_wedge2[0],coef2*data_wedge2[1], color=colors[i], linestyle=linestyles[i])
         ax2.plot(data_wedge3[0],coef3*data_wedge3[1], color=colors[i], linestyle=linestyles[i])
         ax2.plot(data_wedge4[0],coef4*data_wedge4[1], color=colors[i], linestyle=linestyles[i])
-    elif args.error_bar:
+    elif args.error_bar and 'pred' not in labels[i]:
         ax1.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])), label=labels[i], color=colors[i], fmt=fmt[i])
         ax2.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])), label=labels[i], color=colors[i], fmt=fmt[i])
         ax2.errorbar(data_wedge2[0],coef2*data_wedge2[1],yerr=coef2*np.sqrt(np.diag(data_wedge2[2])), color=colors[i], fmt=fmt[i])
