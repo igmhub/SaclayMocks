@@ -585,6 +585,12 @@ def extract_h5file(fname):
         pars['bias_QSO'] = f['best fit'].attrs['bias_eta_QSO'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_QSO'][0]
         err_pars['bias_QSO'] = bias_err(f['best fit'].attrs['growth_rate'][0], f['best fit'].attrs['growth_rate'][1], f['best fit'].attrs['beta_QSO'][0], f['best fit'].attrs['beta_QSO'][1], cov_pars['cov[beta_QSO, growth_rate]'])
         free_p += ['bias_QSO']
+    if 'bias_eta_HCD' in f['best fit'].attrs.keys():
+        if 'cov[growth_rate, beta_HCD]' not in f['best fit'].attrs.keys():
+            cov_pars['cov[beta_HCD, growth_rate]'] = 0
+        pars['bias_HCD'] = f['best fit'].attrs['bias_eta_HCD'][0] * f['best fit'].attrs['growth_rate'][0] / f['best fit'].attrs['beta_HCD'][0]
+        err_pars['bias_HCD'] = bias_err(f['best fit'].attrs['growth_rate'][0], f['best fit'].attrs['growth_rate'][1], f['best fit'].attrs['beta_HCD'][0], f['best fit'].attrs['beta_HCD'][1], cov_pars['cov[beta_HCD, growth_rate]'])
+        free_p += ['bias_HCD']
     f.close()
     return free_p, fixed_p, pars, err_pars, cov_pars
 
@@ -624,7 +630,7 @@ def print_h5file(fname, cor=False):
     return
 
 
-def h5file_to_latex(file_list, ap_digits=3, at_digits=3, b_eta_lya_digits=4, beta_lya_digits=3, b_lya_digits=4, beff_lya_digits=4, beta_qso_digits=3, b_qso_digits=3, f_digits=2, b_si1190_digits=2, b_si1193_digits=2, b_si1207_digits=2, b_si1260_digits=2, b_cv_digits=2, b_hcd_digits=4, beta_hcd_digits=3, a_sky_digits=3, sigma_sky_digits=1, chi2_digits=0, zeff_digits=3, drp_digits=4, header=True):
+def h5file_to_latex(file_list, ap_digits=3, at_digits=3, b_eta_lya_digits=4, beta_lya_digits=3, b_lya_digits=4, beff_lya_digits=4, beta_qso_digits=3, b_qso_digits=3, beta_HCD_digits=3, b_HCD_digits=3, f_digits=2, b_si1190_digits=2, b_si1193_digits=2, b_si1207_digits=2, b_si1260_digits=2, b_cv_digits=2, b_hcd_digits=4, beta_hcd_digits=3, a_sky_digits=3, sigma_sky_digits=1, chi2_digits=0, zeff_digits=3, drp_digits=4, header=True):
     '''
     This function print results of picca fitter2 stored in h5 files
     in the latex table format
@@ -657,6 +663,11 @@ def h5file_to_latex(file_list, ap_digits=3, at_digits=3, b_eta_lya_digits=4, bet
     if 'beta_QSO' in pars[0]:
         row = "$\\beta_{\\mathrm{QSO}} $"
         row += loop_on_h5file(file_list, 'beta_QSO', beta_qso_digits)
+        row += " \\\\"
+        print(row)
+    if 'beta_HCD' in pars[0]:
+        row = "$\\beta_{\\mathrm{HCD}} $"
+        row += loop_on_h5file(file_list, 'beta_HCD', beta_HCD_digits)
         row += " \\\\"
         print(row)
     if 'growth_rate' in pars[0]:
@@ -739,6 +750,11 @@ def h5file_to_latex(file_list, ap_digits=3, at_digits=3, b_eta_lya_digits=4, bet
         row += loop_on_h5file(file_list, 'bias_QSO', b_qso_digits)
         row += " \\\\"
         print(row)
+    if 'bias_HCD' in pars[0]:
+        row = "$b_{\\mathrm{HCD}} $"
+        row += loop_on_h5file(file_list, 'bias_HCD', b_HCD_digits)
+        row += " \\\\"
+        print(row)
     print("\\bottomrule")
     # if '' in pars[0]:
     #     row = ""
@@ -758,7 +774,7 @@ def loop_on_h5file(file_list, param, digits=5):
         if param == 'chi2':
             res += " & $ {} $".format(np.int32(np.round(val,digits)))
             continue
-        err = pars[3][param]
+        err = np.abs(pars[3][param])
         if 'Si' in param or 'CIV' in param:
             val *= 1e3
             err *= 1e3
@@ -893,7 +909,7 @@ def add_wedge(da, co, errorbar=True, mumin=0, mumax=1, rtmin=0, rtmax=200, rpmin
         plt.plot(data_wedge[0],coef*data_wedge[1], **kwargs)
     return
 
-def plot_cf1d(filenames, labels=None):
+def plot_cf1d(filenames, labels=None, legend=True):
     ymin = 1.e6
     ymax = -1.e6
     if labels==None:
@@ -925,7 +941,8 @@ def plot_cf1d(filenames, labels=None):
     ax2.set_ylim([-0.035,0.025])
     ax2.set_xlabel(r'$\lambda_{1}/\lambda_{2}$')
     ax2.set_ylabel(r'$\xi^{ff,1D}_{normed}$')
-    ax2.legend()
+    if legend:
+        ax2.legend()
     ax2.grid()
     plt.subplots_adjust(hspace=0.4)
     plt.tight_layout()
