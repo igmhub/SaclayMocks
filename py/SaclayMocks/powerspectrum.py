@@ -318,8 +318,16 @@ class xi_prediction() :
         k = np.linspace(0,10,10000)
         Pcamb = P_0()
         P = Pcamb.P(k)
+        # Gaussian smoothing
         W = np.exp(-k*k*self.DX*self.DX/2)
         P *= W*W
+        # voxcel size in mocks
+        G1 = np.sinc(-k*self.DX/(2*np.pi))  # np.sinc(x) is sinc(pi*x)
+        P *= G1*G1
+        # bining of CF
+        binsize = 4
+        G2 = np.sinc(-k*binsize/(2*np.pi))
+        P *= G2*G2
         #...........................       xi_g(r)
         r,xi = xi_from_pk(k,P)
         rmax=300
