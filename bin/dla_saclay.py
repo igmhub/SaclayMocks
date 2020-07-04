@@ -185,7 +185,7 @@ def get_NHI(z, NHI_min=17.2, NHI_max=22.5, NHI_nsamp=100):
 def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8, rand=False, nhi_low_cut=None, nhi_high_cut=None):
     qso = hdulist['METADATA'].read() # Read the QSO table
     lam = hdulist['LAMBDA'].read() # Read the vector with the wavelenghts corresponding to each cell
-    deltas = hdulist['DELTA'].read()  # (nspec, npix)
+    deltas = hdulist['DELTA_L'].read()  # (nspec, npix)
     velocity = hdulist['VELO_PAR'].read()  # (nspec, npix)
     #Linear growth rate of each cell in the skewer
     D_cell = hdulist['GROWTHF'].read()  # (npix)
@@ -336,7 +336,7 @@ def main():
     flist = glob.glob(args.input_path+"/*")
     print('Will read', len(flist),' files')
     hdulist = fitsio.FITS(flist[0])
-    lam = hdulist[2].read()
+    lam = hdulist['LAMBDA'].read()
     # cosmo_hdu = fitsio.FITS(args.fname_cosmo)[1].read_header()
     z_cell = lam / constant.lya - 1.
     dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)

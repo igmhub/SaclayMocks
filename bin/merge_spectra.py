@@ -261,6 +261,7 @@ def main():
             velo_list = []
         if store_g:
             delta_list = []
+            velo_list = []
             eta_list = []
             noise_list = []
         for ID in np.unique(IDs[cut]):
@@ -358,7 +359,13 @@ def main():
                         vpar = np.zeros_like(delta_l_tmp)
                     velo_list.append(vpar)
                 if store_g:
-                    delta_list.append(delta_l_tmp)
+                    if not dla:
+                        delta_list.append(delta_l_tmp)
+                        if rsd:
+                            vpar = np.concatenate(velo_par[cut][msk])[arg_wav_sorted]
+                        else:
+                            vpar = np.zeros_like(delta_l_tmp)
+                        velo_list.append(vpar)
                     eta_list.append(eta_par_tmp)
                     noise_list.append(delta_s)
 
@@ -385,13 +392,15 @@ def main():
         outfits.write(np.float32(wav), extname='LAMBDA')
         outfits.write(np.float32(spectra_list), extname='FLUX')
         if dla:
-            outfits.write(np.float32(delta_list), extname='DELTA')
+            outfits.write(np.float32(delta_list), extname='DELTA_L')
             outfits.write(np.float32(growthf), extname='GROWTHF')
             outfits.write(np.float32(velo_list), extname='VELO_PAR')
         if store_g:
-            outfits.write(np.float32(delta_list), extname='DELTA_L')
+            if not dla:
+                outfits.write(np.float32(delta_list), extname='DELTA_L')
+                outfits.write(np.float32(growthf), extname='GROWTHF')
+                outfits.write(np.float32(velo_list), extname='VELO_PAR')
             outfits.write(np.float32(eta_list), extname='ETA_PAR')
-            outfits.write(np.float32(growthf), extname='GROWTHF')
             outfits.write(np.float32(z), extname='Z')
             outfits.write(np.float32(noise_list), extname='DELTA_S')
         outfits.close()
