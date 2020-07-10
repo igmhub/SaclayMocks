@@ -30,17 +30,17 @@ for ff, zi, cc in zip(filenames, z_bins, constant.colors):
     # except: print("No data for this bin")
     # # Model
     k_mod, pk_mod = util.read_P1D_model(zi, mpc=True)
-    # ax.plot(k_mod, pk_mod, color=cc, label='z = {}'.format(np.round(zi,1)))
+    ax.plot(k_mod, pk_mod, color=cc, label='z = {}'.format(np.round(zi,1)))
     # # Mocks
     fits = fitsio.FITS(ff)
     k_mock = fits[1].read()['k']
     pk_mock = fits[1].read()['p1d']
     pkerr_mock = fits[1].read()['p1derr']
     fits.close()
-    x, ya, yb = util.array_interp(k_mod, pk_mod, k_mock, pk_mock)
+    # x, ya, yb = util.array_interp(k_mod, pk_mod, k_mock, pk_mock)
     # ax.plot(x, (yb - ya)/ya, color=cc, label='z = {}'.format(np.round(zi,1)))
-    ax.plot(x, (yb)/ya, color=cc, label='z = {}'.format(np.round(zi,1)))
-    # ax.errorbar(k_mock, pk_mock, yerr=pkerr_mock, fmt='+', color=cc)
+    # ax.plot(x, (yb)/ya, color=cc, label='z = {}'.format(np.round(zi,1)))
+    ax.errorbar(k_mock, pk_mock, yerr=pkerr_mock, fmt='o', color=cc)
     # ax.errorbar(k_mock, pk_mock, yerr=pkerr_mock, label='z = {}'.format(np.round(zi,1)))
 
 # plt.xlabel(r'$k [h^{-1}\mathrm{Mpc}]$')
@@ -48,6 +48,6 @@ for ff, zi, cc in zip(filenames, z_bins, constant.colors):
 ax.set_xlabel(r'$k [h^{-1}\mathrm{Mpc}]$')
 ax.set_ylabel(r'$P^{\mathrm{1D}} [h \mathrm{Mpc}^{-1}]$')
 ax.grid()
-# ax.legend()
+ax.legend()
 plt.tight_layout()
 plt.show()

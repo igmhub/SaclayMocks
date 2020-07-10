@@ -24,8 +24,8 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 plt.rc('figure', figsize=(9,7))
 
 # Parameters
-model_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Model_effect/true_model/"
-# model_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Model_effect/no_distorsion/"
+# model_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Model_effect/true_model/"
+model_dir = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Fits/cf/Model_effect/no_distorsion/"
 # model_dir = "/global/cscratch1/sd/tetourne/Out/dr16/from_quickquasars/Model_analysis"
 
 cf_file = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Correlations/cf_z_0_10-exp.fits"
@@ -36,21 +36,22 @@ cf_file = "/global/cscratch1/sd/tetourne/Analysis/redo_dr16/Correlations/cf_z_0_
 
 # toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_met', 'kaiser_nl_met_hcd', 'kaiser_nl_met_hcd_L025']
 # toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_met_hcd', 'kaiser_nl_met_hcd_sky']
-# toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_hcd_met', 'kaiser_nl_hcd_met_sky']
+toplot = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_hcd_met', 'kaiser_nl_hcd_met_sky']
 # toplot = ['kaiser_nl_ap1_at1']
-toplot = ['kaiser', 'kaiser_no_broadening', 'kaiser_nl']
+# toplot = ['kaiser', 'kaiser_no_broadening', 'kaiser_nl']
 
 # labels = toplot
 # labels = ['kaiser_nl']
-# labels = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_hcd_met', 'kaiser_nl_hcd_met_sky']
-labels = ['kaiser', 'kaiser_no_broadening', 'kaiser_nl']
+labels = ['kaiser', 'kaiser_nl', 'kaiser_nl_hcd', 'kaiser_nl_hcd_met', 'kaiser_nl_hcd_met_sky']
+# labels = ['kaiser', 'kaiser_no_broadening', 'kaiser_nl']
 
 fit_name = 'cf_z_0_10'
 # fit_name = 'LYA(LYA)xLYA(LYA)'
 
 colors = ['royalblue', 'green', 'darkorange', 'r', 'purple']
 
-title = 'with distorsion'
+# title = 'with distorsion'
+title = 'no distorsion'
 
 ### Begining of code
 print("Reading correlation function {}".format(cf_file))
@@ -96,55 +97,60 @@ for item in toplot:
     data_wedge_fit_4[item] = w4.wedge(files[item][fit_name+"/fit"][...],co)
 
 print("Plotting...")
-# Plot Xi_0
-fig, ax = plt.subplots()
-ax.errorbar(data_wedge_cf[0], data_wedge_cf[1]*data_wedge_cf[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf[2]))*data_wedge_cf[0]**2, fmt='+', color='black')
-for i, item in enumerate(toplot):
-    ax.plot(data_wedge_fit[item][0], data_wedge_fit[item][1]*data_wedge_fit[item][0]**2, label=labels[i], color=colors[i])
-ax.legend()
-ax.set_xlabel('r [Mpc/h]')
-ax.grid()
-ax.set_title(r'$0 < \mu < 1$ - '+title)
-plt.tight_layout()
+# # Plot Xi_0
+# fig, ax = plt.subplots()
+# ax.errorbar(data_wedge_cf[0], data_wedge_cf[1]*data_wedge_cf[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf[2]))*data_wedge_cf[0]**2, fmt='+', color='black')
+# for i, item in enumerate(toplot):
+#     ax.plot(data_wedge_fit[item][0], data_wedge_fit[item][1]*data_wedge_fit[item][0]**2, label=labels[i], color=colors[i])
+# ax.legend()
+# ax.set_xlabel(r'$r \;[h^{-1}\mathrm{Mpc}]$')
+# ax.set_ylabel(r'$r^{2}\xi(r) \;[(h^{-1}\mathrm{Mpc})^2]$')
+# ax.grid()
+# ax.set_title(r'$0 < \mu < 1$ - '+title)
+# plt.tight_layout()
 
 
 # Plot wedges
 fig1, ax1 = plt.subplots()
-ax1.errorbar(data_wedge_cf1[0], data_wedge_cf1[1]*data_wedge_cf1[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf1[2]))*data_wedge_cf1[0]**2, fmt='+', color='black')
+# ax1.errorbar(data_wedge_cf1[0], data_wedge_cf1[1]*data_wedge_cf1[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf1[2]))*data_wedge_cf1[0]**2, fmt='+', color='black')
 for i, item in enumerate(toplot):
     ax1.plot(data_wedge_fit_1[item][0], data_wedge_fit_1[item][1]*data_wedge_fit_1[item][0]**2, label=labels[i], color=colors[i])
-ax1.legend()
-ax1.set_xlabel('r [Mpc/h]')
+# ax1.legend()
+ax1.set_xlabel(r'$r \;[h^{-1}\mathrm{Mpc}]$')
+ax1.set_ylabel(r'$r^{2}\xi(r) \;[(h^{-1}\mathrm{Mpc})^2]$')
 ax1.grid()
 ax1.set_title(r'$0 < \mu < 0.5$ - '+title)
 plt.tight_layout()
 
 fig2, ax2 = plt.subplots()
-ax2.errorbar(data_wedge_cf2[0], data_wedge_cf2[1]*data_wedge_cf2[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf2[2]))*data_wedge_cf2[0]**2, fmt='+', color='black')
+# ax2.errorbar(data_wedge_cf2[0], data_wedge_cf2[1]*data_wedge_cf2[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf2[2]))*data_wedge_cf2[0]**2, fmt='+', color='black')
 for i, item in enumerate(toplot):
     ax2.plot(data_wedge_fit_2[item][0], data_wedge_fit_2[item][1]*data_wedge_fit_2[item][0]**2, label=labels[i], color=colors[i])
-ax2.legend()
-ax2.set_xlabel('r [Mpc/h]')
+# ax2.legend()
+ax2.set_xlabel(r'$r \;[h^{-1}\mathrm{Mpc}]$')
+ax2.set_ylabel(r'$r^{2}\xi(r) \;[(h^{-1}\mathrm{Mpc})^2]$')
 ax2.grid()
 ax2.set_title(r'$0.5 < \mu < 0.8$ - '+title)
 plt.tight_layout()
 
 fig3, ax3 = plt.subplots()
-ax3.errorbar(data_wedge_cf3[0], data_wedge_cf3[1]*data_wedge_cf3[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf3[2]))*data_wedge_cf3[0]**2, fmt='+', color='black')
+# ax3.errorbar(data_wedge_cf3[0], data_wedge_cf3[1]*data_wedge_cf3[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf3[2]))*data_wedge_cf3[0]**2, fmt='+', color='black')
 for i, item in enumerate(toplot):
     ax3.plot(data_wedge_fit_3[item][0], data_wedge_fit_3[item][1]*data_wedge_fit_3[item][0]**2, label=labels[i], color=colors[i])
-ax3.legend()
-ax3.set_xlabel('r [Mpc/h]')
+# ax3.legend()
+ax3.set_xlabel(r'$r \;[h^{-1}\mathrm{Mpc}]$')
+ax3.set_ylabel(r'$r^{2}\xi(r) \;[(h^{-1}\mathrm{Mpc})^2]$')
 ax3.grid()
 ax3.set_title(r'$0.8 < \mu < 0.95$ - '+title)
 plt.tight_layout()
 
 fig4, ax4 = plt.subplots()
-ax4.errorbar(data_wedge_cf4[0], data_wedge_cf4[1]*data_wedge_cf4[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf4[2]))*data_wedge_cf4[0]**2, fmt='+', color='black')
+# ax4.errorbar(data_wedge_cf4[0], data_wedge_cf4[1]*data_wedge_cf4[0]**2, yerr=np.sqrt(np.diag(data_wedge_cf4[2]))*data_wedge_cf4[0]**2, fmt='+', color='black')
 for i, item in enumerate(toplot):
     ax4.plot(data_wedge_fit_4[item][0], data_wedge_fit_4[item][1]*data_wedge_fit_4[item][0]**2, label=labels[i], color=colors[i])
 ax4.legend()
-ax4.set_xlabel('r [Mpc/h]')
+ax4.set_xlabel(r'$r \;[h^{-1}\mathrm{Mpc}]$')
+ax4.set_ylabel(r'$r^{2}\xi(r) \;[(h^{-1}\mathrm{Mpc})^2]$')
 ax4.grid()
 ax4.set_title(r'$0.95 < \mu < 1$ - '+title)
 plt.tight_layout()

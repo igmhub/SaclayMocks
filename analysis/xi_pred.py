@@ -20,6 +20,7 @@ parser.add_argument("--growthf", type=float, default=None)
 parser.add_argument("--sigma", type=float, default=None)
 parser.add_argument("--p1d-file", type=str, default=None)
 parser.add_argument("--no-proj", action='store_true', help='do not do the projection with the distorsion matrix')
+# parser.add_argument("--cf-1d", action='store_true', help='return the 1D correlation function')
 
 args = parser.parse_args()
 # a=args.aa
@@ -38,6 +39,7 @@ head = fitsio.read_header(infile, ext=1)
 
 filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/params.fits")
 a_of_z = util.InterpFitsTable(filename, 'z', 'a')
+b_of_z = util.InterpFitsTable(filename, 'z', 'b')
 c_of_z = util.InterpFitsTable(filename, 'z', 'c')
 
 # Read parameters
@@ -51,7 +53,7 @@ if a is None:
 
 b = args.b
 if b is None:
-    b = 1.58
+    b = b_of_z.interp(zeff)
 
 c = args.c
 if c is None:
@@ -98,6 +100,7 @@ if args.kind == 'FGPA':
 # Kaiser
 if args.kind == 'Kaiser':
     print("Computing Kaiser model...")
+    binsize = 4  # binsize of correlation function
     dx = 2.19
     k_ny = np.pi / dx
     rmax = 300
@@ -113,7 +116,9 @@ if args.kind == 'Kaiser':
     k = np.linspace(0, 10, 100000)
     filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/PlanckDR12.fits")
     pk = np.float32(powerspectrum.P_0(filename).P(k))
-    pk *= np.exp(-k*k*dx*dx/2)**2  # gaussian smoothing
+    # pk *= np.exp(-k*k*dx*dx/2)**2  # gaussian smoothing effect
+    # pk *= np.sinc(-k*dx/(2*np.pi))**2  # voxel size effect
+    pk *= np.sinc(-k*binsize/(2*np.pi))**2  # binsize of correlation function effect
     r, xi = powerspectrum.xi_from_pk(k, pk)
     xi_ham = powerspectrum.xi_Hamilton(r, xi, rmax)
 

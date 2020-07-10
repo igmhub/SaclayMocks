@@ -52,4 +52,4 @@ sigma_eta = 0.53
 sigma_g_tuning = 1.
 
 # Colors for plotting:
-colors = ['blue', 'red', 'darkgreen', 'orange', 'dodgerblue', 'hotpink', 'lime', 'saddlebrown', 'darkviolet', 'olive']
+colors = ['blue', 'red', 'darkgreen', 'orange', 'dodgerblue', 'deeppink', 'darkviolet', 'saddlebrown', 'lime', 'olive']

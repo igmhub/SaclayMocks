@@ -4,6 +4,7 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
+from SaclayMocks import util, constant
 
 
 # Plot options
@@ -35,6 +36,7 @@ parser.add_argument("--mu-max", type=float, default=1.)
 parser.add_argument("--r-pow", type=int, default=2)
 parser.add_argument("--error-bar", action='store_true')
 parser.add_argument("--sigma", action='store_true')
+parser.add_argument("--ratio", action='store_true')
 parser.add_argument("--title", default="")
 
 args = parser.parse_args()
@@ -51,12 +53,15 @@ mumin = args.mu_min
 mumax = args.mu_max
 r_pow = args.r_pow
 
-colors = ['darkblue', 'red']
-linestyles = ['-.', '--']
+# colors = ['darkblue', 'red']
+colors = constant.colors
+# linestyles = ['-.', '--']
+linestyles =['-', '-', '-', '-', '-', '-', '-', '-', '-', ]
 
 if labels is None:
     labels = np.arange(len(files))
-fmt = ['.', '.', '.', 'x', '+', 'o', '.', 'x', 'o', '-.', ':']
+# fmt = ['.', '.', '.', 'x', '+', 'o', '.', 'x', 'o', '-.', ':']
+fmt = ['.', '.', '.', '.', '.', '.', '.', '.', '.', ]
 
 mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
 w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
@@ -130,23 +135,29 @@ for da, co in zip(da2, co2):
 f, axs = plt.subplots(5, sharex=True, figsize=(12,8))
 for i in range(len(files[1:])):
     if args.sigma:
-        axs[0].plot(data_wedge01[0], (data_wedge01[1] - data_wedge02[i][1]) / np.sqrt(np.diag(data_wedge01[2])), color=colors[i], linestyle=linestyles[i], label=labels[i])
-        axs[1].plot(data_wedge11[0], (data_wedge11[1] - data_wedge12[i][1]) / np.sqrt(np.diag(data_wedge11[2])), color=colors[i], linestyle=linestyles[i])
-        axs[2].plot(data_wedge21[0], (data_wedge21[1] - data_wedge22[i][1]) / np.sqrt(np.diag(data_wedge21[2])), color=colors[i], linestyle=linestyles[i])
-        axs[3].plot(data_wedge31[0], (data_wedge31[1] - data_wedge32[i][1]) / np.sqrt(np.diag(data_wedge31[2])), color=colors[i], linestyle=linestyles[i])
-        axs[4].plot(data_wedge41[0], (data_wedge41[1] - data_wedge42[i][1]) / np.sqrt(np.diag(data_wedge41[2])), color=colors[i], linestyle=linestyles[i])
+        axs[0].plot(data_wedge01[0], (data_wedge02[i][1] - data_wedge01[1]) / np.sqrt(np.diag(data_wedge01[2])), color=colors[i], linestyle=linestyles[i], label=labels[i])
+        axs[1].plot(data_wedge11[0], (data_wedge12[i][1] - data_wedge11[1]) / np.sqrt(np.diag(data_wedge11[2])), color=colors[i], linestyle=linestyles[i])
+        axs[2].plot(data_wedge21[0], (data_wedge22[i][1] - data_wedge21[1]) / np.sqrt(np.diag(data_wedge21[2])), color=colors[i], linestyle=linestyles[i])
+        axs[3].plot(data_wedge31[0], (data_wedge32[i][1] - data_wedge31[1]) / np.sqrt(np.diag(data_wedge31[2])), color=colors[i], linestyle=linestyles[i])
+        axs[4].plot(data_wedge41[0], (data_wedge42[i][1] - data_wedge41[1]) / np.sqrt(np.diag(data_wedge41[2])), color=colors[i], linestyle=linestyles[i])
     elif args.error_bar:
-        axs[0].errorbar(data_wedge01[0], (data_wedge01[1] - data_wedge02[i][1])*coef01, yerr=np.sqrt(np.diag(data_wedge01[2]))*coef01, color=colors[i], linestyle=linestyles[i], label=labels[i])
-        axs[1].errorbar(data_wedge11[0], (data_wedge11[1] - data_wedge12[i][1])*coef11, yerr=np.sqrt(np.diag(data_wedge11[2]))*coef11, color=colors[i], linestyle=linestyles[i])
-        axs[2].errorbar(data_wedge21[0], (data_wedge21[1] - data_wedge22[i][1])*coef21, yerr=np.sqrt(np.diag(data_wedge21[2]))*coef21, color=colors[i], linestyle=linestyles[i])
-        axs[3].errorbar(data_wedge31[0], (data_wedge31[1] - data_wedge32[i][1])*coef31, yerr=np.sqrt(np.diag(data_wedge31[2]))*coef31, color=colors[i], linestyle=linestyles[i])
-        axs[4].errorbar(data_wedge41[0], (data_wedge41[1] - data_wedge42[i][1])*coef41, yerr=np.sqrt(np.diag(data_wedge41[2]))*coef41, color=colors[i], linestyle=linestyles[i])
+        axs[0].errorbar(data_wedge01[0], (data_wedge02[i][1] - data_wedge01[1])*coef01, yerr=np.sqrt(np.diag(data_wedge01[2]))*coef01, color=colors[i], linestyle=linestyles[i], label=labels[i])
+        axs[1].errorbar(data_wedge11[0], (data_wedge12[i][1] - data_wedge11[1])*coef11, yerr=np.sqrt(np.diag(data_wedge11[2]))*coef11, color=colors[i], linestyle=linestyles[i])
+        axs[2].errorbar(data_wedge21[0], (data_wedge22[i][1] - data_wedge21[1])*coef21, yerr=np.sqrt(np.diag(data_wedge21[2]))*coef21, color=colors[i], linestyle=linestyles[i])
+        axs[3].errorbar(data_wedge31[0], (data_wedge32[i][1] - data_wedge31[1])*coef31, yerr=np.sqrt(np.diag(data_wedge31[2]))*coef31, color=colors[i], linestyle=linestyles[i])
+        axs[4].errorbar(data_wedge41[0], (data_wedge42[i][1] - data_wedge41[1])*coef41, yerr=np.sqrt(np.diag(data_wedge41[2]))*coef41, color=colors[i], linestyle=linestyles[i])
+    elif args.ratio:
+        axs[0].plot(data_wedge01[0], (data_wedge02[i][1] / data_wedge01[1]), color=colors[i], linestyle=linestyles[i], label=labels[i])
+        axs[1].plot(data_wedge11[0], (data_wedge12[i][1] / data_wedge11[1]), color=colors[i], linestyle=linestyles[i])
+        axs[2].plot(data_wedge21[0], (data_wedge22[i][1] / data_wedge21[1]), color=colors[i], linestyle=linestyles[i])
+        axs[3].plot(data_wedge31[0], (data_wedge32[i][1] / data_wedge31[1]), color=colors[i], linestyle=linestyles[i])
+        axs[4].plot(data_wedge41[0], (data_wedge42[i][1] / data_wedge41[1]), color=colors[i], linestyle=linestyles[i])
     else:
-        axs[0].plot(data_wedge01[0], (data_wedge01[1] - data_wedge02[i][1])*coef01, color=colors[i], linestyle=linestyles[i], label=labels[i])
-        axs[1].plot(data_wedge11[0], (data_wedge11[1] - data_wedge12[i][1])*coef11, color=colors[i], linestyle=linestyles[i])
-        axs[2].plot(data_wedge21[0], (data_wedge21[1] - data_wedge22[i][1])*coef21, color=colors[i], linestyle=linestyles[i])
-        axs[3].plot(data_wedge31[0], (data_wedge31[1] - data_wedge32[i][1])*coef31, color=colors[i], linestyle=linestyles[i])
-        axs[4].plot(data_wedge41[0], (data_wedge41[1] - data_wedge42[i][1])*coef41, color=colors[i], linestyle=linestyles[i])
+        axs[0].plot(data_wedge01[0], (data_wedge02[i][1] - data_wedge01[1])*coef01, color=colors[i], linestyle=linestyles[i], label=labels[i])
+        axs[1].plot(data_wedge11[0], (data_wedge12[i][1] - data_wedge11[1])*coef11, color=colors[i], linestyle=linestyles[i])
+        axs[2].plot(data_wedge21[0], (data_wedge22[i][1] - data_wedge21[1])*coef21, color=colors[i], linestyle=linestyles[i])
+        axs[3].plot(data_wedge31[0], (data_wedge32[i][1] - data_wedge31[1])*coef31, color=colors[i], linestyle=linestyles[i])
+        axs[4].plot(data_wedge41[0], (data_wedge42[i][1] - data_wedge41[1])*coef41, color=colors[i], linestyle=linestyles[i])
 
 for i, ax in enumerate(axs):
     ax.axhline(0, linestyle='--', color='black')
@@ -169,4 +180,5 @@ axs[4].set_title(r'${}<\mu<{}$'.format(mu3,mu4), fontsize=TINY_SIZE, loc='right'
 axs[4].set_xlabel('r Mpc/h')
 # axs[0].set_title(args.title)
 axs[0].legend()
+# f.tight_layout()
 plt.show()

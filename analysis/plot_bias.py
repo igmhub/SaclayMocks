@@ -8,6 +8,7 @@ from iminuit import Minuit
 SMALL_SIZE = 16
 MEDIUM_SIZE = 20
 BIGGER_SIZE = 22
+markersize = 8
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
@@ -17,6 +18,7 @@ plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 plt.rc('figure', figsize=(9,7))
+
 
 ### Options
 plot_bias = True
@@ -35,7 +37,7 @@ correct_z_dep = False
 gamma = {'bias_eta':2.2, 'beta':-1.8, 'bias':3.8, 'beff':3.2}
 
 absolute_bias = True
-use_legends = False
+use_legends = True
 
 # toplot = ['v4.7.22_raw', 'v4.7.22-0.0', 'v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.2_nhi20.3', 'v4.7.22-0.2_nhi20.5', 'v4.7.22-0.2_dndz3_nhi20.3', 'v4.7.22-0.2_fvoigt_v4.7.22', 'redo_dr16', 'dr16_fvoigt_v4.7.22']
@@ -46,16 +48,21 @@ use_legends = False
 # toplot = ['redo_dr16', 'dr16_fvoigt_v4.7.22', 'dr16_mask_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.0', 'v4.7.22-0.0_bis']
 # toplot = ['redo_dr16', 'v4.7_11_20-0.0', 'v4.7_11_20-0.2', 'pred_tuning']
-toplot = ['redo_dr16']
+toplot = ['DR16', 'cf-raw', 'cf-0.0', 'cf-0.2']
+# toplot = ['DR16', 'cf-raw', 'pred_tuning'] #, 'pred_raw']
+# toplot = ['v4.7.11-0.0', 'v4.7.11-0.2', 'v4.7.11-0.2_finder']
 
 # labels = toplot
+labels = ['DR16', 'cf-raw', 'cf-0.0', 'cf-0.2', 'pred']
+# labels = ['DR16', 'cf-raw', 'prediction']
+# labels = ['cf-0.0', 'cf-0.2', 'cf-0.2_finder']
 # labels = ['mock_Rogers2018', 'mock_no_mask', 'DR16_Rogers2018', 'DR16_no_mask', 'dr16_fvoigt_v4.7.22']
 # labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', 'dr16']
 # labels = ['nhi_20.3', 'nhi_20.5', '3*dndz_nhi_20.3', '3*dndz_nhi_20.3_fixed_lya', 'dr16']
 # labels = ['raw mocks', 'mock-0.0', 'mock-0.2', 'DR16']
-labels = ['DR16', 'stack-0.0', 'stack-0.2', 'pred']
+# labels = ['DR16', 'stack-0.0', 'stack-0.2', 'pred']
 # labels = ['DR16_mask_Roger', 'DR16_Guy', 'DR16_mask_Guy']
-# labels = ['eboss-0.0', 'eboss-0.0_seed126429']
+# labels = ['cf-0.0', 'cf-0.0_seed126429']
 
 mean_items = {}  # mocks used to compute means
 mean_items['dla_mean'] = ['v4.7.22_dla', 'v4.7.27_dla']
@@ -101,12 +108,19 @@ p_beff = {}
 
 # Choose colors
 colors['data_helion'] = 'black'
-colors['redo_dr16'] = 'orangered'
+colors['DR16'] = 'black'
+colors['cf-raw'] = 'green'
+colors['cf-0.0'] = 'blue'
+colors['cf-0.2'] = 'red'
+colors['pred_tuning'] = 'magenta'
+colors['pred_raw'] = 'r'
+colors['v4.7.11-0.0'] = 'b'
+colors['v4.7.11-0.2'] = 'r'
+colors['v4.7.11-0.2_finder'] = 'g'
 colors['dr16_fvoigt_v4.7.22'] = 'darkgreen'
 colors['dr16_mask_fvoigt_v4.7.22'] = 'red'
 colors['v4.7_11_20-0.0'] = 'royalblue'
 colors['v4.7_11_20-0.2'] = 'r'
-colors['pred_tuning'] = 'green'
 colors['v4.7.22_raw'] = 'green'
 colors['v4.7.22-0.0'] = 'royalblue'
 colors['v4.7.22-0.0_bis'] = 'royalblue'
@@ -130,6 +144,61 @@ colors['v4.7.22-0.2_fvoigt_exp'] = 'magenta'
 # colors['v4.7.22_raw_coadd'] = 'green'
 
 ### Inputs .h5 files :
+# DR16 
+files['DR16'] = ["/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_0_2.35/result.h5",
+                 "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_2.35_2.65/result.h5",
+                 "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_2.65_3.05/result.h5",
+                 "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_3.05_10/result.h5"]
+
+# eboss-raw
+files['cf-raw'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_0_2.35-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_2.35_2.65-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_2.65_3.05-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_3.05_10-exp.h5"]
+
+# eboss-0.0
+files['cf-0.0'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_0_2.35-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_2.35_2.65-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_2.65_3.05-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_3.05_10-exp.h5"]
+
+# eboss-0.2
+files['cf-0.2'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_0_2.35-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_2.35_2.65-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_2.65_3.05-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_3.05_10-exp.h5"]
+
+# Prediction used for the tuning procedure
+files['pred_tuning'] = ["/global/cscratch1/sd/tetourne/Out/Fit4/z1.8/from_transmissions/Fit/result_cf_pred.h5",
+                        "/global/cscratch1/sd/tetourne/Out/Fit4/z2.2/from_transmissions/Fit/result_cf_pred.h5",
+                        "/global/cscratch1/sd/tetourne/Out/Fit4/z2.6/from_transmissions/Fit/result_cf_pred.h5",
+                        "/global/cscratch1/sd/tetourne/Out/Fit4/z3.0/from_transmissions/Fit/result_cf_pred.h5",
+                        "/global/cscratch1/sd/tetourne/Out/Fit4/z3.6/from_transmissions/Fit/result_cf_pred.h5"]
+
+# Prediction computed on raw mocks
+files['pred_raw'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_0_2.35-exp_pred.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_2.35_2.65-exp_pred.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_2.65_3.05-exp_pred.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_3.05_10-exp_pred.h5"]
+
+# v4.7.11 eboss-0.0
+files['v4.7.11-0.0'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.0/cf_z_0_2.35-exp.h5",
+                        "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.0/cf_z_2.35_2.65-exp.h5",
+                        "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.0/cf_z_2.65_3.05-exp.h5",
+                        "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.0/cf_z_3.05_10-exp.h5"]
+
+# v4.7.11 eboss-0.2
+files['v4.7.11-0.2'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.2/cf_z_0_2.35-exp.h5",
+                        "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.2/cf_z_2.35_2.65-exp.h5",
+                        "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.2/cf_z_2.65_3.05-exp.h5",
+                        "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.2/cf_z_3.05_10-exp.h5"]
+
+# v4.7.11 eboss-0.2_finder
+files['v4.7.11-0.2_finder'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.2/finder/cf_z_0_2.35-exp.h5",
+                               "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.2/finder/cf_z_2.35_2.65-exp.h5",
+                               "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.2/finder/cf_z_2.65_3.05-exp.h5",
+                               "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.2/finder/cf_z_3.05_10-exp.h5"]
+
 # coadd of v4.7 11 to 20 realisations eboss-0.0
 files['v4.7_11_20-0.0'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.0/cf_z_0_2.35-exp.h5",
                            "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.0/cf_z_2.35_2.65-exp.h5",
@@ -142,12 +211,6 @@ files['v4.7_11_20-0.2'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/sa
                            "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.2/cf_z_2.65_3.05-exp.h5",
                            "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-11_20/eboss-0.2/cf_z_3.05_10-exp.h5"]
 
-# Prediction used for the tuning procedure
-files['pred_tuning'] = ["/global/cscratch1/sd/tetourne/Out/Fit4/z1.8/from_transmissions/Fit/result_cf_pred.h5",
-                        "/global/cscratch1/sd/tetourne/Out/Fit4/z2.2/from_transmissions/Fit/result_cf_pred.h5",
-                        "/global/cscratch1/sd/tetourne/Out/Fit4/z2.6/from_transmissions/Fit/result_cf_pred.h5",
-                        "/global/cscratch1/sd/tetourne/Out/Fit4/z3.0/from_transmissions/Fit/result_cf_pred.h5",
-                        "/global/cscratch1/sd/tetourne/Out/Fit4/z3.6/from_transmissions/Fit/result_cf_pred.h5"]
 # v4.7.22 raw mocks
 files['v4.7.22_raw'] = ["/global/cscratch1/sd/tetourne/Out/v4.7.22_1/from_transmissions/Fit/result_cf.h5",
                         "/global/cscratch1/sd/tetourne/Out/v4.7.22_2/from_transmissions/Fit/result_cf.h5",
@@ -457,25 +520,25 @@ for item in toplot:
     # Fitting with iminuit
     if use_minuit:
         f1 = Fitter(redshift[item], bias[item], bias_err[item])
-        m1 = Minuit(f1.chi2)
+        m1 = Minuit(f1.chi2, a=0, error_a=1e-3, gamma=4, error_gamma=0.5)
         m1.migrad()
         # print(m1.values)
         m1.hesse()
         # print(m1.errors)
         f2 = Fitter(redshift[item], beta[item], beta_err[item])
-        m2 = Minuit(f2.chi2)
+        m2 = Minuit(f2.chi2, a=28, error_a=5, gamma=-2, error_gamma=0.5)
         m2.migrad()
         # print(m2.values)
         m2.hesse()
         # print(m2.errors)
         f3 = Fitter(redshift[item], bias_eta[item], bias_eta_err[item])
-        m3 = Minuit(f3.chi2)
+        m3 = Minuit(f3.chi2, a=0, error_a=1e-3, gamma=2, error_gamma=0.5)
         m3.migrad()
         # print(m3.values)
         m3.hesse()
         # print(m3.errors)
         f4 = Fitter(redshift[item], beff[item], beff_err[item])
-        m4 = Minuit(f4.chi2)
+        m4 = Minuit(f4.chi2, a=0, error_a=1e-3, gamma=3.4, error_gamma=0.5)
         m4.migrad()
         # print(m4.values)
         m4.hesse()
@@ -517,7 +580,10 @@ if plot_bias_eta:
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax1.errorbar(redshift[item], bias_eta[item], yerr=bias_eta_err[item], fmt=fmt, label=label, color=colors[item])
+        if 'pred' in item:
+            ax1.plot(redshift[item], bias_eta[item], fmt, markersize=markersize, label=label, color=colors[item])
+        else:
+            ax1.errorbar(redshift[item], bias_eta[item], yerr=bias_eta_err[item], fmt=fmt, markersize=markersize, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         if item in p_bias_eta.keys():
@@ -553,7 +619,10 @@ if plot_beta:
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax2.errorbar(redshift[item], beta[item], yerr=beta_err[item], fmt=fmt, label=label, color=colors[item])
+        if 'pred' in item:
+            ax2.plot(redshift[item], beta[item], fmt, markersize=markersize, label=label, color=colors[item])
+        else:
+            ax2.errorbar(redshift[item], beta[item], yerr=beta_err[item], fmt=fmt, markersize=markersize, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         if item in p_beta.keys():
@@ -584,7 +653,10 @@ if plot_bias:
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax3.errorbar(redshift[item], bias[item], yerr=bias_err[item], fmt=fmt, label=label, color=colors[item])
+        if 'pred' in item:
+            ax3.plot(redshift[item], bias[item], fmt, markersize=markersize, label=label, color=colors[item])
+        else:
+            ax3.errorbar(redshift[item], bias[item], yerr=bias_err[item], fmt=fmt, markersize=markersize, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         if item in p_bias.keys():
@@ -618,7 +690,10 @@ if plot_beff:
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax4.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt=fmt, label=label, color=colors[item])
+        if 'pred' in item:
+            ax4.plot(redshift[item], beff[item], fmt, markersize=markersize, label=label, color=colors[item])
+        else:
+            ax4.errorbar(redshift[item], beff[item], yerr=beff_err[item], fmt=fmt, markersize=markersize, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         if item in p_beff.keys():
@@ -653,7 +728,10 @@ if plot_beff_z_corrected:
         if 'coadd' in item:
             label = None
             fmt = 'x'
-        ax5.errorbar(redshift[item], beff[item]*(1+z0)/(1+redshift[item]), yerr=beff_err[item]*(1+z0)/(1+redshift[item]), fmt=fmt, label=label, color=colors[item])
+        if 'pred' in item:
+            ax5.plot(redshift[item], beff[item]*(1+z0)/(1+redshift[item]), fmt, markersize=markersize, label=label, color=colors[item])
+        else:
+            ax5.errorbar(redshift[item], beff[item]*(1+z0)/(1+redshift[item]), yerr=beff_err[item]*(1+z0)/(1+redshift[item]), fmt=fmt, markersize=markersize, label=label, color=colors[item])
         if 'coadd' in item: continue
         z = np.linspace(redshift[item].min(), redshift[item].max(), 100)
         if item in p_beff.keys():
@@ -689,7 +767,7 @@ if plot_b_hcd:
         #     label = None
         #     fmt = 'x'
         if np.array_equal(b_hcd_err[item], np.zeros(len(b_hcd[item]))): continue
-        ax6.errorbar(redshift[item], b_hcd[item], yerr=b_hcd_err[item], marker='o', label=label, color=colors[item])
+        ax6.errorbar(redshift[item], b_hcd[item], yerr=b_hcd_err[item], marker='o', markersize=markersize, label=label, color=colors[item])
     if use_legends:
         ax6.legend()
     ax6.grid()

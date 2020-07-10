@@ -110,8 +110,16 @@ if "cf" in args.to_do:
                     r, f, _ =w.wedge(ff["cf_z_0_10/fit"][...],co)
                 except KeyError:
                     print("Can't find {}".format("cf_z_0_10/fit"))
-                    print("Exit!")
-                    sys.exit(1)
+                    try:
+                        r,f,_ = w.wedge(ff['QSOxQSO/fit'][...],co)
+                    except:
+                        print("Can't find QSOxQSO/fit")
+                        try:
+                            r,f,_ = w.wedge(ff['HCDxHCD/fit'][...],co)
+                        except:
+                            print("Can't find HCDxHCD/fit")
+                            print("Exit!")
+                            sys.exit(1)
     coef = data_wedge[0]**r_pow
     if args.pred:
         data = fitsio.FITS(indir+"/Correlations/e_cf_pred.fits")
@@ -128,14 +136,14 @@ if "cf" in args.to_do:
         ax.plot(data_wedge[0],coef*data_wedge_pred[1],linestyle=':', label='pred')
     ax.grid()
     ax.legend()
-    ax.set_title("CF - {}".format(title), fontsize=20)
-    ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    ax.set_title("CF - {}".format(title))
+    ax.set_xlabel(r"$r \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 2:
-        ax.set_ylabel(r"$r^{2}\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r^{2}\xi(r) \; [(h^{-1}\mathrm{Mpc})^2]$")
     if r_pow == 1:
-        ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r\xi(r) \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 0:
-        ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$\xi(r)$")
     plt.tight_layout()
 
     # Plot wedges
@@ -203,9 +211,22 @@ if "cf" in args.to_do:
                     r3, f3, _ =w3.wedge(ff["cf_z_0_10/fit"][...],co)
                     r4, f4, _ =w4.wedge(ff["cf_z_0_10/fit"][...],co)
                 except KeyError:
-                    print("Can't find {}".format("cf_z_0_10/fit"))
-                    print("Exit!")
-                    sys.exit(1)
+                    try:
+                        r1,f1,_ = w1.wedge(ff['QSOxQSO/fit'][...],co)
+                        r2,f2,_ = w2.wedge(ff['QSOxQSO/fit'][...],co)
+                        r3,f3,_ = w3.wedge(ff['QSOxQSO/fit'][...],co)
+                        r4,f4,_ = w4.wedge(ff['QSOxQSO/fit'][...],co)
+                    except:
+                        print("Can't find QSOxQSO/fit")
+                        try:
+                            r1,f1,_ = w1.wedge(ff['HCDxHCD/fit'][...],co)
+                            r2,f2,_ = w2.wedge(ff['HCDxHCD/fit'][...],co)
+                            r3,f3,_ = w3.wedge(ff['HCDxHCD/fit'][...],co)
+                            r4,f4,_ = w4.wedge(ff['HCDxHCD/fit'][...],co)
+                        except:
+                            print("Can't find HCDxHCD/fit")
+                            print("Exit!")
+                            sys.exit(1)
 
     if args.pred:
         data_wedge1_pred = w1.wedge(da_pred,co_pred)
@@ -232,14 +253,14 @@ if "cf" in args.to_do:
         ax.plot(data_wedge4[0],coef4*data_wedge4_pred[1], linestyle=':', color='red')
         
     ax.grid()
-    ax.set_title("CF - {}".format(title), fontsize=20)
-    ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    ax.set_title("CF - {}".format(title))
+    ax.set_xlabel(r"$r \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 2:
-        ax.set_ylabel(r"$r^{2}\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r^{2}\xi(r) \; [(h^{-1}\mathrm{Mpc})^2]$")
     if r_pow == 1:
-        ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r\xi(r) \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 0:
-        ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$\xi(r)$")
 
     ax.legend()
     plt.tight_layout()
@@ -280,18 +301,22 @@ if "xcf" in args.to_do:
     except KeyError:
         print("Can't find LYA(LYA)xQSO/fit")
         try:
-            i = int(fitxcf_file.find(".h5"))
-            j = int(fitxcf_file.rfind("/"))+1
-            r,f,_ = w.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
-        except:
-            print("Can't find {}".format(fitxcf_file[j:i]+"/fit"))
+            r,f,_ = w.wedge(ff["xcf_z_0_10-exp/fit"][...],co)
+        except KeyError:
+            print("Can't find xcf_z_0_10-exp/fit")
             try:
-                i = int(xcf_file.find(".fits"))
-                j = int(xcf_file.rfind("/"))+1
-                r,f,_ = w.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                i = int(fitxcf_file.find(".h5"))
+                j = int(fitxcf_file.rfind("/"))+1
+                r,f,_ = w.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
             except:
-                print("Can't find {}".format(xcf_file[j:i]+"/fit"))
-                sys.exit(1)
+                print("Can't find {}".format(fitxcf_file[j:i]+"/fit"))
+                try:
+                    i = int(xcf_file.find(".fits"))
+                    j = int(xcf_file.rfind("/"))+1
+                    r,f,_ = w.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                except:
+                    print("Can't find {}".format(xcf_file[j:i]+"/fit"))
+                    sys.exit(1)
 
     coef = data_wedge[0]**r_pow
 
@@ -299,22 +324,22 @@ if "xcf" in args.to_do:
     ax.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])),fmt='+', label='mock')
     ax.plot(r, f*r**r_pow, label='fit')
     ax.grid()
-    ax.set_title("XCF - {}".format(title), fontsize=20)
-    ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    ax.set_title("XCF - {}".format(title))
+    ax.set_xlabel(r"$r \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 2:
-        ax.set_ylabel(r"$r^{2}\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r^{2}\xi(r) \; [(h^{-1}\mathrm{Mpc})^2]$")
     if r_pow == 1:
-        ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r\xi(r) \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 0:
-        ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$\xi(r)$")
     
     # Plot wedges
     mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
     # mu0, mu1, mu2, mu3, mu4 = -1, -0.95, -0.8, -0.5, 0
-    w1 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu0,mumax=mu1,absoluteMu=False)
-    w2 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu1,mumax=mu2,absoluteMu=False)
-    w3 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu2,mumax=mu3,absoluteMu=False)
-    w4 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu3,mumax=mu4,absoluteMu=False)
+    w1 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu0,mumax=mu1,absoluteMu=True)
+    w2 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu1,mumax=mu2,absoluteMu=True)
+    w3 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu2,mumax=mu3,absoluteMu=True)
+    w4 = picca.wedgize.wedge(rpmin=rpmin,rpmax=rpmax,nrp=nrp,rtmin=rtmin,rtmax=rtmax,nrt=nrt,mumin=mu3,mumax=mu4,absoluteMu=True)
     data_wedge1 = w1.wedge(da,co)
     coef1 = data_wedge1[0]**r_pow
     data_wedge2 = w2.wedge(da,co)
@@ -331,23 +356,30 @@ if "xcf" in args.to_do:
     except KeyError:
         print("Can't find LYA(LYA)xQSO/fit")
         try:
-            i = int(fitxcf_file.find(".h5"))
-            j = int(fitxcf_file.rfind("/"))+1
-            r1,f1,_ = w1.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
-            r2,f2,_ = w2.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
-            r3,f3,_ = w3.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
-            r4,f4,_ = w4.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
-        except:
-            print("Can't find {}".format(fitxcf_file[j:i]+"/fit"))
+            r1,f1,_ = w1.wedge(ff["xcf_z_0_10-exp/fit"][...],co)
+            r2,f2,_ = w2.wedge(ff["xcf_z_0_10-exp/fit"][...],co)
+            r3,f3,_ = w3.wedge(ff["xcf_z_0_10-exp/fit"][...],co)
+            r4,f4,_ = w4.wedge(ff["xcf_z_0_10-exp/fit"][...],co)
+        except KeyError:
+            print("Can't find xcf_z_0_10-exp/fit")
             try:
-                i = int(xcf_file.find(".fits"))
-                j = int(xcf_file.rfind("/"))+1
-                r1,f1,_ = w1.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
-                r2,f2,_ = w2.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
-                r3,f3,_ = w3.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
-                r4,f4,_ = w4.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                i = int(fitxcf_file.find(".h5"))
+                j = int(fitxcf_file.rfind("/"))+1
+                r1,f1,_ = w1.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
+                r2,f2,_ = w2.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
+                r3,f3,_ = w3.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
+                r4,f4,_ = w4.wedge(ff[fitxcf_file[j:i]+"/fit"][...],co)
             except:
-                print("Can't find {}".format(xcf_file[j:i]+"/fit"))
+                print("Can't find {}".format(fitxcf_file[j:i]+"/fit"))
+                try:
+                    i = int(xcf_file.find(".fits"))
+                    j = int(xcf_file.rfind("/"))+1
+                    r1,f1,_ = w1.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                    r2,f2,_ = w2.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                    r3,f3,_ = w3.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                    r4,f4,_ = w4.wedge(ff[xcf_file[j:i]+"/fit"][...],co)
+                except:
+                    print("Can't find {}".format(xcf_file[j:i]+"/fit"))
 
     fig, ax = plt.subplots()
     ax.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])),fmt='+', label=r"${}<\mu<{}$".format(mu0, mu1), color='b')
@@ -360,14 +392,14 @@ if "xcf" in args.to_do:
     ax.plot(r4, f4*r4**r_pow, color='r')
 
     ax.grid()
-    ax.set_title("XCF - {}".format(title), fontsize=20)
-    ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    ax.set_title("XCF - {}".format(title))
+    ax.set_xlabel(r"$r \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 2:
-        ax.set_ylabel(r"$r^{2}\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r^{2}\xi(r) \; [(h^{-1}\mathrm{Mpc})^2]$")
     if r_pow == 1:
-        ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r\xi(r) \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 0:
-        ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$\xi(r)$")
 
     ax.legend()
     plt.tight_layout()
@@ -410,11 +442,15 @@ if "co" in args.to_do:
     except KeyError:
         print("Can't find QSOxQSO/fit")
         try:
-            i = int(fitcf_file.find(".h5"))
-            j = int(fitcf_file.rfind("/"))+1
-            r_fit,cf_fit,_ = w.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
-        except:
-            print("Can't find {}".format(fitcf_file[j:i]+"/fit"))
+            r_fit,cf_fit,_ = w.wedge(ff["HCDxHCD/fit"][...],co)
+        except KeyError:
+            print("Can't find HCDxHCD/fit")
+            try:
+                i = int(fitcf_file.find(".h5"))
+                j = int(fitcf_file.rfind("/"))+1
+                r_fit,cf_fit,_ = w.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
+            except:
+                print("Can't find {}".format(fitcf_file[j:i]+"/fit"))
 
     coef = data_wedge[0]**r_pow
     # if args.pred:
@@ -476,14 +512,13 @@ if "co" in args.to_do:
     ax.legend()
     # ax.set_title("CF - {}".format(title), fontsize=20)
     ax.set_title(title)
-    ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    ax.set_xlabel(r"$r \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 2:
-        ax.set_ylabel(r"$r^{2}\xi(r)$",fontsize=20)
+        ax.set_ylabel(r"$r^{2}\xi(r) \; [(h^{-1}\mathrm{Mpc})^2]$")
     if r_pow == 1:
-        ax.set_ylabel(r"$r\xi(r)$",fontsize=20)
+        ax.set_ylabel(r"$r\xi(r) \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 0:
-        ax.set_ylabel(r"$\xi(r)$",fontsize=20)
-    plt.tight_layout()
+        ax.set_ylabel(r"$\xi(r)$")
 
     # Plot wedges
     mu0, mu1, mu2, mu3 = 0, 0.2, 0.5, 1
@@ -503,13 +538,19 @@ if "co" in args.to_do:
     except KeyError:
         print("Can't find QSOxQSO/fit")
         try:
-            i = int(fitcf_file.find(".h5"))
-            j = int(fitcf_file.rfind("/"))+1
-            r1,f1,_ = w1.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
-            r2,f2,_ = w2.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
-            r3,f3,_ = w3.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
-        except:
-            print("Can't find {}".format(fitcf_file[j:i]+"/fit"))
+            r1,f1,_ = w1.wedge(ff["HCDxHCD/fit"][...],co)
+            r2,f2,_ = w2.wedge(ff["HCDxHCD/fit"][...],co)
+            r3,f3,_ = w3.wedge(ff["HCDxHCD/fit"][...],co)
+        except KeyError:
+            print("Can't find HCDxHCD/fit")
+            try:
+                i = int(fitcf_file.find(".h5"))
+                j = int(fitcf_file.rfind("/"))+1
+                r1,f1,_ = w1.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
+                r2,f2,_ = w2.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
+                r3,f3,_ = w3.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
+            except:
+                print("Can't find {}".format(fitcf_file[j:i]+"/fit"))
 
     # if args.pred:
     #     data_wedge1_pred = w1.wedge(da_pred,co_pred)
@@ -537,13 +578,13 @@ if "co" in args.to_do:
     ax.grid()
     # ax.set_title("CF - {}".format(title), fontsize=20)
     ax.set_title(title)
-    ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    ax.set_xlabel(r"$r \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 2:
-        ax.set_ylabel(r"$r^{2}\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r^{2}\xi(r) \; [(h^{-1}\mathrm{Mpc})^2]$")
     if r_pow == 1:
-        ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r\xi(r) \; [h^{-1}\mathrm{Mpc}]$")
     if r_pow == 0:
-        ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$\xi(r)$")
 
     ax.legend()
     plt.tight_layout()

@@ -4,16 +4,24 @@ from SaclayMocks import util
 
 
 indir = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-raw/"
-# files = [indir+"/co_qso_z_0_2.35-exp.h5",
-#          indir+"/co_qso_z_2.35_2.65-exp.h5",
-#          indir+"/co_qso_z_2.65_3.05-exp.h5",
-#          indir+"/co_qso_z_3.05_10-exp.h5"]
-files = [indir+"/co_qso_z_0_2.35-exp_fixed_f.h5",
-         indir+"/co_qso_z_2.35_2.65-exp_fixed_f.h5",
-         indir+"/co_qso_z_2.65_3.05-exp_fixed_f.h5",
-         indir+"/co_qso_z_3.05_10-exp_fixed_f.h5"]
+files = [indir+"/co_qso_z_0_2.35-exp.h5",
+         indir+"/co_qso_z_2.35_2.65-exp.h5",
+         indir+"/co_qso_z_2.65_3.05-exp.h5",
+         indir+"/co_qso_z_3.05_10-exp.h5"]
+# files = [indir+"/co_qso_z_0_2.35-exp_rmin20.h5",
+#          indir+"/co_qso_z_2.35_2.65-exp_rmin20.h5",
+#          indir+"/co_qso_z_2.65_3.05-exp_rmin20.h5",
+#          indir+"/co_qso_z_3.05_10-exp_rmin20.h5"]
+# files = [indir+"/co_qso_z_0_2.35-exp_rmin20_fixed_f.h5",
+#          indir+"/co_qso_z_2.35_2.65-exp_rmin20_fixed_f.h5",
+#          indir+"/co_qso_z_2.65_3.05-exp_rmin20_fixed_f.h5",
+#          indir+"/co_qso_z_3.05_10-exp_rmin20_fixed_f.h5"]
+# files = [indir+"/co_qso_z_0_2.35-exp_fixed_f.h5",
+#          indir+"/co_qso_z_2.35_2.65-exp_fixed_f.h5",
+#          indir+"/co_qso_z_2.65_3.05-exp_fixed_f.h5",
+#          indir+"/co_qso_z_3.05_10-exp_fixed_f.h5"]
 
-fmt = '.'
+fmt = 'o'
 label = 'raw mocks'
 color = 'orangered'
 color_model = 'royalblue'

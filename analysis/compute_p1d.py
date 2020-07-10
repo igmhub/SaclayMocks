@@ -12,14 +12,14 @@ parser.add_argument("--out-dir", type=str, help="v4.7/v4.7.01/P1d/")
 parser.add_argument("--n-files", type=float, default=None)
 args = parser.parse_args()
 
-k_bins = np.linspace(0, 2, 40)
+k_bins = np.linspace(0, 4, 80)
 z_bins = [2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4]
 dz = 0.1
 pixel_size = 0.2
 # wav_max = constant.lya
 wav_max = 1200
-wav_min = constant.lylimit
-# wav_min = 1040
+# wav_min = constant.lylimit
+wav_min = 1040
 print("dz is {}".format(dz))
 print("considering pixels in {} < lambda < {}".format(wav_min, wav_max))
 

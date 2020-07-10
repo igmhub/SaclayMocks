@@ -8,6 +8,18 @@ from scipy import stats as stats
 from SaclayMocks import powerspectrum, util, constant
 
 
+SMALL_SIZE = 16
+MEDIUM_SIZE = 20
+BIGGER_SIZE = 22
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+plt.rc('figure', figsize=(9,7))
+
 class ReadTransmission(object):
     '''
     Create hdu list of transmission files and extract informations
@@ -86,7 +98,7 @@ class ReadTransmission(object):
         z = self.wavelength / constant.lya - 1  # (npix)
         t = ma.mean(self.transmission, axis=0)
         if plot:
-            zz = np.linspace(2., 3.6, 10000)
+            zz = np.linspace(1.8, 3.6, 10000)
             # tt = np.exp(-0.0051*(1+zz)**3.2)
             # tt2 = np.exp(-0.0028*(1+zz)**3.45)
             tt2 = np.exp(-0.00211*(1+zz)**3.7)
@@ -95,11 +107,11 @@ class ReadTransmission(object):
             ax.plot(z, t, label='mock')
             # ax.plot(zz, tt, label='data', linestyle='--')
             ax.plot(zz, tt2, label='data', linestyle='--')
-            ax.set_xlabel('z', fontsize=20)
-            ax.set_ylabel('<F>(z)', fontsize=20)
-            ax.set_title(title, fontsize=20)
+            ax.set_xlabel(r'$z$')
+            ax.set_ylabel(r'$<F>(z)$')
+            ax.set_title(title)
             ax.grid()
-            ax.legend()
+            # ax.legend()
             plt.show()
         else:
             return z, t

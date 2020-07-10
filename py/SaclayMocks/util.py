@@ -630,7 +630,7 @@ def print_h5file(fname, cor=False):
     return
 
 
-def h5file_to_latex(file_list, ap_digits=3, at_digits=3, b_eta_lya_digits=4, beta_lya_digits=3, b_lya_digits=4, beff_lya_digits=4, beta_qso_digits=3, b_qso_digits=3, beta_HCD_digits=3, b_HCD_digits=3, f_digits=2, b_si1190_digits=2, b_si1193_digits=2, b_si1207_digits=2, b_si1260_digits=2, b_cv_digits=2, b_hcd_digits=4, beta_hcd_digits=3, a_sky_digits=3, sigma_sky_digits=1, chi2_digits=0, zeff_digits=3, drp_digits=4, header=True):
+def h5file_to_latex(file_list, ap_digits=3, at_digits=3, b_eta_lya_digits=4, beta_lya_digits=3, b_lya_digits=4, beff_lya_digits=4, beta_qso_digits=3, b_qso_digits=3, beta_HCD_digits=3, b_HCD_digits=3, f_digits=3, b_si1190_digits=2, b_si1193_digits=2, b_si1207_digits=2, b_si1260_digits=2, b_cv_digits=2, b_hcd_digits=4, beta_hcd_digits=3, a_sky_digits=3, sigma_sky_digits=1, chi2_digits=0, zeff_digits=3, drp_digits=3, header=True):
     '''
     This function print results of picca fitter2 stored in h5 files
     in the latex table format
@@ -638,7 +638,12 @@ def h5file_to_latex(file_list, ap_digits=3, at_digits=3, b_eta_lya_digits=4, bet
     pars = extract_h5file(file_list[0])
     if header:
         print("\\toprule")
-        print("Param\\`etre  & $\\num{0} < z < \\num{2.35}$ & $\\num{2.35} < z < \\num{2.65}$ & $\\num{2.65} < z < \\num{3.05}$ & $\\num{3.05} < z < \\num{10}$ \\\\")
+        if len(file_list) == 4:
+            print("Param\\`etre  & $\\num{0} < z < \\num{2.35}$ & $\\num{2.35} < z < \\num{2.65}$ & $\\num{2.65} < z < \\num{3.05}$ & $\\num{3.05} < z < \\num{10}$ \\\\")
+        if len(file_list) == 5:
+            print("Param\\`etre  & $\\num{0} < z < \\num{2.35}$ & $\\num{2.35} < z < \\num{2.65}$ & $\\num{2.65} < z < \\num{3.05}$ & $\\num{3.05} < z < \\num{10}$  & $\\num{0} < z < \\num{10}$ \\\\")
+        if len(file_list) == 1:
+            print("Param\\`etre  & $\\num{0} < z < \\num{10}$ \\\\")
         print("\\midrule")
     if 'ap' in pars[0]:
         row = "$\\apar{} $"
