@@ -123,7 +123,7 @@ def diffmod(a,b,c) :
     return np.minimum(d,c-d)
 
 
-def fgrowth(z, Om0, unnormed=False):
+def fgrowth(z, Om0=constant.omega_M_0, unnormed=False):
     # Assume flat lambda CDM cosmo, with only Om and Ol
     # Comes from cosmolopy.perturbation
     Om = 1 / (1 + (1 - Om0)/(Om0*(1+z)**3))

@@ -7,7 +7,7 @@ from SaclayMocks import util
 
 # indir="/global/cscratch1/sd/tetourne/DesiMocks/delta_g/mock_0/output/eboss-raw"
 indir="/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0"
-filenames="cf_z_0_10-exp_rmin*.h5"
+filenames="xcf_z_0_10-exp_rmin*.h5"
 cf_file = indir+"/"+"cf_z_0_10-exp.fits"
 fits = fitsio.FITS(cf_file)
 r = np.sqrt(fits[1].read()['RP']**2 + fits[1].read()['RT']**2)

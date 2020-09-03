@@ -54,6 +54,10 @@ mumin = args.mu_min
 mumax = args.mu_max
 r_pow = args.r_pow
 title=args.title
+if 'xcf' in args.to_do:
+    rpmin = -200
+    nrp = 100
+
 if dir_option:
     print("Indir is :{}".format(indir))
 
