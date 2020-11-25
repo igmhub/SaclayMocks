@@ -19,16 +19,18 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 plt.rc('figure', figsize=(11,8))
 
 # indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2"
-indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw"
-# indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-raw"
+# indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw"
+indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-0.3"
 # indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.30/eboss-raw"
 # indir_cor = "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Correlations/"
 
+patern_cf = "cf_z_{zmin}_{zmax}-exp.fits"
+# patern_cf = "co_qso_z_{zmin}_{zmax}-exp.fits"
+
+
+
 indir_fit = indir_cor
 # indir_fit = "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/"
-
-patern_cf = "xcf_z_{zmin}_{zmax}-exp.fits"
-# patern_cf = "co_qso_z_{zmin}_{zmax}-exp.fits"
 
 patern_fit = patern_cf.replace('.fits', '.h5')
 # patern_fit = "z_{zmin}_{zmax}/result.h5"
@@ -124,13 +126,13 @@ for i in range(len(z_bins)-1):
             wedge_pred = w.wedge(da_pred, co_pred)
             axs[i//2, i%2].plot(wedge_pred[0],coef*wedge_pred[1], linestyle='--', color=colors[j])
     axs[i//2, i%2].grid()
-    if i == 0:
-        axs[i//2, i%2].legend()
+    # if i == 0:
+        # axs[i//2, i%2].legend()
     if i%2 == 0:
         axs[i//2, i%2].set_ylabel(ylabel)
     if i//2 == 1:
         axs[i//2, i%2].set_xlabel(r"$r \, [h^{-1} \mathrm{Mpc}]$")
     # axs[i//2, i%2].text(0.85, 0.95, r'{} < z < {}'.format(z_bins[i], z_bins[i+1]))
-    axs[i//2, i%2].set_title(r'{} < z < {}'.format(z_bins[i], z_bins[i+1]))
+    # axs[i//2, i%2].set_title(r'{} < z < {}'.format(z_bins[i], z_bins[i+1]))
     plt.tight_layout()
 plt.show()

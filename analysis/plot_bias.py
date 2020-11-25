@@ -48,7 +48,8 @@ use_legends = True
 # toplot = ['redo_dr16', 'dr16_fvoigt_v4.7.22', 'dr16_mask_fvoigt_v4.7.22']
 # toplot = ['v4.7.22-0.0', 'v4.7.22-0.0_bis']
 # toplot = ['redo_dr16', 'v4.7_11_20-0.0', 'v4.7_11_20-0.2', 'pred_tuning']
-toplot = ['DR16', 'cf-raw', 'cf-0.0', 'cf-0.2']
+# toplot = ['DR16', 'cf-raw', 'cf-0.0', 'cf-0.2']
+toplot = ['DR16']
 # toplot = ['DR16', 'cf-raw', 'pred_tuning'] #, 'pred_raw']
 # toplot = ['v4.7.11-0.0', 'v4.7.11-0.2', 'v4.7.11-0.2_finder']
 

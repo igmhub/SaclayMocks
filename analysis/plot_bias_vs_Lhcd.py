@@ -21,16 +21,21 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 plt.rc('figure', figsize=(16,7))
 
 
-files = np.sort(glob.glob("/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_0_10-exp_L*.h5"))
-files = files[[0,2,4,5,6,7,8,9]]
+# files = np.sort(glob.glob("/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_0_10-exp_L*.h5"))
+files = np.sort(glob.glob("/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_0_10/result_L*.h5"))
+# files = files[[0,2,4,5,6,7,8,9]]
+files = files[:-2]
+print(files)
+
 f1, ax1 = plt.subplots(ncols=2)
 f2, ax2 = plt.subplots(ncols=2)
+# Plot
 for f in files:
     pars = util.extract_h5file(f)
     if pars[2]['L0_hcd'] == 10:
-        color = 'r'
+        color = 'tab:red'
     else:
-        color = 'b'
+        color = 'tab:blue'
     ax1[0].errorbar(pars[2]['L0_hcd'], np.abs(pars[2]['beff_LYA']), yerr=pars[3]['beff_LYA'], fmt='o', color=color)
     ax1[1].errorbar(pars[2]['L0_hcd'], np.abs(pars[2]['beta_LYA']), yerr=pars[3]['beta_LYA'], fmt='o', color=color)
     ax2[0].errorbar(pars[2]['L0_hcd'], np.abs(pars[2]['bias_hcd']), yerr=pars[3]['bias_hcd'], fmt='o', color=color)

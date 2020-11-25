@@ -864,7 +864,7 @@ def beff_err(bias_eta, bias_eta_err, beta, beta_err, cov, f=0.97):
     return beff_err
 
 
-def plot_wedge(da_list, co_list, label_list=None, title=None, mumin=0, mumax=1, rtmin=0, rtmax=200, rpmin=0, rpmax=200, nrt=50, nrp=50, absoluteMu=True, rpow=2):
+def plot_wedge(da_list, co_list, label_list=None, color_list=constant.colors, title='', marker_list=['.','.','.','.'],mumin=0, mumax=1, rtmin=0, rtmax=200, rpmin=0, rpmax=200, nrt=50, nrp=50, absoluteMu=True, rpow=2):
     """
     da_list is a list of 1D array that contains correlation funtions
     co_list is a list of 2D array that contains covariance matrices
@@ -877,22 +877,22 @@ def plot_wedge(da_list, co_list, label_list=None, title=None, mumin=0, mumax=1, 
 
     fig, ax = plt.subplots(figsize=(12,8))
     w = picca.wedgize.wedge(mumin=mumin,mumax=mumax, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=absoluteMu)
-    for da, co, lab in zip(da_list, co_list, label_list):
+    for da, co, lab, col, mrk in zip(da_list, co_list, label_list, color_list, marker_list):
         data_wedge = w.wedge(da,co)
         coef = data_wedge[0]**rpow
         # ax.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])),fmt='+', label=lab)
-        ax.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])), label=lab)
+        ax.errorbar(data_wedge[0],coef*data_wedge[1],yerr=coef*np.sqrt(np.diag(data_wedge[2])), label=lab, color=col, marker=mrk)
 
     ax.grid()
     ax.legend()
-    ax.set_title("CF - {}".format(title), fontsize=20)
-    ax.set_xlabel(r"$r \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+    ax.set_title(title, fontsize=20)
+    ax.set_xlabel(r"$r \, [h^{-1}\mathrm{Mpc}]$",fontsize=20)
     if rpow == 2:
-        ax.set_ylabel(r"$r^{2}\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r^{2}\xi(r) \, [(h^{-1}\mathrm{Mpc})^2]$",fontsize=20)
     if rpow == 1:
-        ax.set_ylabel(r"$r\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$r\xi(r) \, [h^{-1}\mathrm{Mpc}]$",fontsize=20)
     if rpow == 0:
-        ax.set_ylabel(r"$\xi(r) \, [\mathrm{Mpc \, h^{-1}}]$",fontsize=20)
+        ax.set_ylabel(r"$\xi(r)$",fontsize=20)
     plt.show()
     return
 

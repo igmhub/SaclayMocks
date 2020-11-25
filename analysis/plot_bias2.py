@@ -21,15 +21,15 @@ plt.rc('figure', figsize=(11,8))
 
 toplot = [
     "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_{zmin}_{zmax}/result.h5"
-    # "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_{zmin}_{zmax}/result_Rogers2.8_rmin10.h5"
+    # ,"/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_{zmin}_{zmax}/result_Rogers2.8_rmin10.h5"
     # ,"/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_{zmin}_{zmax}/result_Rogers2.8_rmin20.h5"
-    ,"/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_{zmin}_{zmax}/result_C-G.h5"
+    # ,"/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_{zmin}_{zmax}/result_C-G.h5"
     # ,"/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_{zmin}_{zmax}/result_C-G_rmin20.h5"
-    ,"/global/cscratch1/sd/tetourne/Analysis/dr16_no_dla_masking/Fits/cf/Kaiser_sky_met_hcd/z_{zmin}_{zmax}/result.h5"
+    # ,"/global/cscratch1/sd/tetourne/Analysis/dr16_no_dla_masking/Fits/cf/Kaiser_sky_met_hcd/z_{zmin}_{zmax}/result.h5"
 
     # "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_{zmin}_{zmax}-exp.h5"
 
-    # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_{zmin}_{zmax}-exp.h5"
+    # "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_{zmin}_{zmax}-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_{zmin}_{zmax}-exp_distorsion_corrected.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/xcf_z_{zmin}_{zmax}-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/xcf_z_{zmin}_{zmax}-exp_fixed_drp.h5"
@@ -42,9 +42,8 @@ toplot = [
 
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_{zmin}_{zmax}-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/xcf_z_{zmin}_{zmax}-exp.h5"
-
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_{zmin}_{zmax}-exp_Rogers2.8.h5"
-    # "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_{zmin}_{zmax}-exp_C-G.h5"
+    #,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_{zmin}_{zmax}-exp_C-G.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/xcf_z_{zmin}_{zmax}-exp_C-G.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/xcf_z_{zmin}_{zmax}-exp_C-G_rmin10.h5"
     #,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/xcf_z_{zmin}_{zmax}-exp_C-G_rmin40.h5"
@@ -57,14 +56,22 @@ toplot = [
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-0.2_no_hcd_masking/xcf_z_{zmin}_{zmax}-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-0.2_no_hcd_masking/xcf_z_{zmin}_{zmax}-exp_rmin10.h5"
 
-    #,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2_no_hcd_masking/cf_z_{zmin}_{zmax}-exp.h5"
+    # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2_no_hcd_masking/cf_z_{zmin}_{zmax}-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2_no_hcd_masking/xcf_z_{zmin}_{zmax}-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2_no_hcd_masking/xcf_z_{zmin}_{zmax}-exp_fixed_drp.h5"
     #,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2_no_hcd_masking/xcf_z_{zmin}_{zmax}-exp_rmin40.h5"
+
+    # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-0.2_no_hcd_masking/cf_z_{zmin}_{zmax}-exp_Rogers_2.8.h5"
+
+    # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-0.3/Fits/cf_z_{zmin}_{zmax}-exp_C-G.h5"
+    # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-0.3/Fits/cf_z_{zmin}_{zmax}-exp_Rogers_2.8.h5"
+    # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-0.3/Fits/cf_z_{zmin}_{zmax}-exp_Rogers_10.h5"
     ]
 
 refs = [
     # "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_0_10/result.h5"
+    # "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_0_10/result_C-G.h5"
+    # ,"/global/cscratch1/sd/tetourne/Analysis/dr16_no_dla_masking/Fits/cf/Kaiser_sky_met_hcd/z_0_10/result.h5"
     # "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_0_10-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_0_2.65-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_2.35_3.05-exp.h5"
@@ -76,8 +83,9 @@ refs = [
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/xcf_z_0_10-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/xcf_z_0_10-exp_fixed_drp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/xcf_z_0_10-exp_rmin40.h5"
+    # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_0_10-exp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_0_10-exp_Rogers2.8.h5"
-    # "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_0_10-exp_C-G.h5"
+    # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_0_10-exp_C-G.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_0_2.65-exp_C-G.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_2.35_3.05-exp_C-G.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_2.65_10-exp_C-G.h5"
@@ -88,38 +96,33 @@ refs = [
     #,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2_no_hcd_masking/xcf_z_0_10-exp.h5"
     #,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2_no_hcd_masking/xcf_z_0_10-exp_fixed_drp.h5"
     # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2_no_hcd_masking/xcf_z_0_10-exp_rmin40.h5"
+    # ,"/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-0.3/Fits/cf_z_0_10-exp_Rogers_10.h5"
 ]
 
-# labels = ['DR16', 'auto-raw', 'auto-0.0', 'cross-0.0', 'auto-0.2', 'cross-0.2']
-# labels = ['DR16', 'auto-0.0_rmin20', 'cross-0.0_rmin20','auto-0.0_rmin10', 'cross-0.0_rmin10']
-# labels = ['DR16', 'auto-0.0', 'cross-0.0', 'cross-0.2_rmin30']
-# labels = ['DR16_Rogers', 'DR16_C-G', 'eboss-0.2_Rogers', 'eboss-0.2_C-G']
-# labels = ['DR16_Rogers', 'DR16_C-G', 'eboss-0.0', 'eboss-0.2_Rogers', 'eboss-0.2_C-G']
-# labels = ['Rogers_rmin10', 'Rogers_rmin20', 'CG_rmin_10(nhi<20.3)', 'CG_rmin20(nhi<20.3)', 'CG_rmin10']
-# labels = ['eboss-0.0', 'Rogers', 'C-G(nhi<20.3)', 'C-G']
-# labels = ['DR16', 'raw mocks', 'eboss-0.0', 'eboss-0.2']
-# labels = ['eboss-raw', 'eboss-0-0', 'eboss-0.2 (mask)', 'eboss-0.2 (no mask)']
-# labels = ['eboss-0-0', 'eboss-0.2 (mask)', 'eboss-0.2 (no mask)']
-# labels = ['cf_rmin20', 'xcf_rmin20', 'xcf_rmin40']
-# labels = ['raw mocks', 'cf-0.0', 'xcf-0.0', 'cf-0.2(mask)', 'xcf-0.2(mask)', 'cf-0.2', 'xcf-0.2']
-# labels = ['Rogers', 'CG(nhi<20.3)', 'CG']
-# labels = ['DR16', 'auto-0.2', 'cross-0.2', 'auto-0.2_C-G_nhi<20.3', 'cross-0.2_C-G_nhi<20.3', 'auto-0.2_C-G', 'cross-0.2_C-G']
-# labels = ['DR16_Rogers', 'DR16_C-G', 'eboss-0.0', 'eboss-0.2_Rogers', 'eboss-0.2_C-G', 'eboss-0.2_C-G']
-# labels = ['DR16', 'cross-0.2', 'cross-0.2_C-G_nhi<20.3', 'cross-0.2_C-G_nhi<20.3_rmin10', 'cross-0.2_C-G', 'cross-0.2_C-G_rmin10']
-# labels = ['DR16', 'cross-0.2_Rogers', 'cross-0.2_C-G_nhi<20.3', 'cross-0.2_C-G']
-labels = ['eboss-raw', 'eboss-0.0', 'eboss-0.0_corrected']
+# labels = ['eboss-raw', 'eboss-0-0', 'eboss-0.2 (mask)', 'eboss-0.2 (no mask)', 'eboss-0.3 (mask)']
+# labels = ['eboss-raw', 'eboss-0-0', 'eboss-0.2', 'eboss-0.3']
+# labels = ['raw', 'continuum', 'continuum+hcd', 'continuum+hcd+met']
+# labels = ['continuum', 'Rogers (Lhcd=10)', 'continuum+hcd (mask)', 'continuum+hcd (no mask)']
+# labels = ['continuum+hcd (mask)', 'continuum+hcd (no mask)']
+labels = ['DR16_Rogers (Lhcd=10)', 'DR16_Rogers (Lhcd=2.8)', 'DR16_C-G', 'DR16_C-G (no mask)', 'eboss-raw', 'eboss-0-0', 'eboss-0.2 (mask)', 'eboss-0.2 (no mask)', 'eboss-0.3 (mask)']
+# labels = ['eBOSS DR16 (mask)', 'eBOSS DR16 (no mask)', 'eboss-0.2 (mask)', 'eboss-0.2 (no mask)']
+# labels = ['Rogers L_hcd=10', 'Rogers L_hcd=2.8', 'C-G (mask)', 'C-G (no mask)']
+# labels = ['eboss-0.0', 'eboss-0.2_Rogers', 'eboss-0.2_C-G', 'eboss-0.2_C-G (no mask)']
 
-colors = ['b', 'green', 'orange', 'r']
-# colors = ['green', 'orange', 'r']
-# colors = ['b', 'green', 'green', 'orange', 'orange', 'r', 'r']
-# colors = ['b', 'green', 'red']
-# colors = ['b', 'green', 'grey', 'orange', 'r']
-# colors = ['b', 'green', 'orange', 'red', 'deeppink']
-# colors = ['black', 'b', 'green', 'r', 'r',  'g', 'r']
-# fmts = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
-fmts = ['o', 'o', 'x', 'o', 'x', 'o', 'x']
-# colors_ref = colors
-colors_ref = ['r', 'green', 'green', 'green']
+# colors = ['green', 'b', 'orange', 'r', 'darkmagenta']
+# colors = ['b', 'magenta', 'orange', 'r']
+# colors = ['b', 'magenta', 'orange', 'r']
+# colors = ['tab:orange']
+colors = ['black', 'tab:blue', 'tab:orange', 'tab:green', 'tab:red']
+# colors = ['grey', 'black', 'orange', 'r']
+# colors = ['grey', 'black', 'green', 'b', 'orange', 'r', 'darkmagenta']
+
+fmts = ['o', 'o', 'o', 'o', 'o', 'o', 'o', 'o']
+linestyles = ['--', '--', '--', '--', '--', '--', '--', '--', '--', '--']
+# linestyles = [':', ':', '--', '--', '--', '--', '--', '--', '--', '--']
+
+colors_ref = colors
+# colors_ref = ['tab:blue', 'green', 'green', 'green']
 fmts_ref = ['x', 'x', 'x', 'x', 'x', 'x', 'x']
 
 z_bins = np.array(['0', '2.35', '2.65', '3.05', '10'])
@@ -134,12 +137,12 @@ plot_4_panels = True
 legends = True
 plot_refs = False
 correct_z_dep = False
-xmin=2.05
-xmax=3.1
+xmin=2.1
+xmax=2.95
 z_plot = np.linspace(xmin-0.05,xmax+0.05,1000)
 delta_z = np.zeros(10)
 # delta_z = np.array([-0.01, 0, 0.01])
-# delta_z = np.array([-0.02, -0.01, 0.0, 0.01, 0.02, 0, 0, 0, 0, 0, 0, 0])  # small shift to better see the errorbars when the z_eff is the same
+delta_z = np.array([0,0,0.005,0, 0.0, 0.005, 0.01, 0, 0, 0, 0, 0, 0, 0])  # small shift to better see the errorbars when the z_eff is the same
 gamma_beff = 3.55
 gamma_beta = -2.5
 zeff = 2.4
@@ -241,24 +244,24 @@ for i, item in enumerate(toplot):
     # Plots
     if plot_4_panels:
         ax7[0,0].errorbar(redshift, beff, yerr=beff_err, fmt=fmts[i], color=colors[i], label=labels[i])
-        ax7[0,0].plot(z_plot, func(z_plot, m_beff.values[0], m_beff.values[1]), linestyle='--', color=colors[i])
+        ax7[0,0].plot(z_plot, func(z_plot, m_beff.values[0], m_beff.values[1]), linestyle=linestyles[i], color=colors[i])
         ax7[0,1].errorbar(redshift, beta, yerr=beta_err, fmt=fmts[i], color=colors[i], label=labels[i])
-        ax7[0,1].plot(z_plot, func(z_plot, m_beta.values[0], m_beta.values[1]), linestyle='--', color=colors[i])
+        ax7[0,1].plot(z_plot, func(z_plot, m_beta.values[0], m_beta.values[1]), linestyle=linestyles[i], color=colors[i])
         if 0 not in b_hcd:
             ax7[1,0].errorbar(redshift, b_hcd, yerr=b_hcd_err, fmt=fmts[i], color=colors[i], label=labels[i])
             # ax7[1,1].errorbar(redshift, bias_sum, yerr=bias_sum_err, fmt=fmts[i], color=colors[i], label=labels[i])
             ax7[1,1].errorbar(redshift, beta_hcd, yerr=beta_hcd_err, fmt=fmts[i], color=colors[i], label=labels[i])
     else:
         ax1.errorbar(redshift, beff, yerr=beff_err, fmt=fmts[i], color=colors[i], label=labels[i])
-        ax1.plot(z_plot, func(z_plot, m_beff.values[0], m_beff.values[1]), linestyle='--', color=colors[i])
+        ax1.plot(z_plot, func(z_plot, m_beff.values[0], m_beff.values[1]), linestyle=linestyles[i], color=colors[i])
         ax2.errorbar(redshift, beta, yerr=beta_err, fmt=fmts[i], color=colors[i], label=labels[i])
-        ax2.plot(z_plot, func(z_plot, m_beta.values[0], m_beta.values[1]), linestyle='--', color=colors[i])
+        ax2.plot(z_plot, func(z_plot, m_beta.values[0], m_beta.values[1]), linestyle=linestyles[i], color=colors[i])
         ax3.errorbar(redshift, bias, yerr=bias_err, fmt=fmts[i], color=colors[i], label=labels[i])
-        ax3.plot(z_plot, func(z_plot, m_bias.values[0], m_bias.values[1]), linestyle='--', color=colors[i])
+        ax3.plot(z_plot, func(z_plot, m_bias.values[0], m_bias.values[1]), linestyle=linestyles[i], color=colors[i])
         if 0 not in b_hcd:
             ax4.errorbar(redshift, b_hcd, yerr=b_hcd_err, fmt=fmts[i], color=colors[i], label=labels[i])
             ax5.errorbar(redshift, bias_sum, yerr=bias_sum_err, fmt=fmts[i], color=colors[i], label=labels[i])
-            # ax5.plot(z_plot, func(z_plot, m_bias_sum.values[0], m_bias_sum.values[1]), linestyle='--', color=colors[i])
+            # ax5.plot(z_plot, func(z_plot, m_bias_sum.values[0], m_bias_sum.values[1]), linestyle=linestyles[i], color=colors[i])
             ax6.errorbar(redshift, bias_prod, yerr=bias_prod_err, fmt=fmts[i], color=colors[i], label=labels[i])
 
 ### Plots refs
@@ -325,6 +328,8 @@ if plot_4_panels:
     ax7[1,0].set_ylabel(r'$|b_{\mathrm{HCD}}|$')
     # ax7[1,1].set_ylabel(r'$|b_{\mathrm{Ly}\alpha} + b_{\mathrm{HCD}}|$')
     ax7[1,1].set_ylabel(r'$\beta_{\mathrm{HCD}}$')
+    # ax7[0,0].set_ylim(0.08,0.38)
+    # ax7[0,1].set_ylim(0.9,5)
     f7.tight_layout()
 else:
     for ax in [ax1, ax2, ax3, ax4, ax5, ax6]:

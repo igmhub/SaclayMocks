@@ -164,7 +164,7 @@ for i, f in enumerate(files):
 
 for ax in [ax1, ax2]:
     ax.grid()
-    ax.legend()
+    # ax.legend()
     if args.title:
         ax.set_title(title, fontsize=20)
     ax.set_xlabel(r"$r \; [h^{-1}\mathrm{Mpc}]$")

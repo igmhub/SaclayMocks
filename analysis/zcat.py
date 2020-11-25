@@ -1,4 +1,4 @@
-import picca.utils
+import picca.converters
 import argparse
 
 
@@ -15,4 +15,4 @@ print("Reading from {}".format(path_in))
 print("Writting in {}".format(path_out))
 print("downsampling_z_cut : {}".format(args.downsampling_z_cut))
 print("downsampling_nb : {}".format(args.downsampling_nb))
-picca.utils.desi_from_ztarget_to_drq(ztarget=path_in,drq=path_out,spectype="QSO", downsampling_z_cut=args.downsampling_z_cut, downsampling_nb=args.downsampling_nb)
+picca.converters.desi_from_ztarget_to_drq(path_in,path_out,spec_type="QSO", downsampling_z_cut=args.downsampling_z_cut, downsampling_num=args.downsampling_nb)
