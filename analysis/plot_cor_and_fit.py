@@ -18,13 +18,15 @@ plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 plt.rc('figure', figsize=(11,8))
 
-# indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2"
-# indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw"
-indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_10/eboss-0.3"
+# indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-raw"
+indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.0"
+# indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.2"
+# indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_10/eboss-0.3"
 # indir_cor = "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.30/eboss-raw"
 # indir_cor = "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Correlations/"
 
-patern_cf = "cf_z_{zmin}_{zmax}-exp.fits"
+# patern_cf = "cf_z_{zmin}_{zmax}-exp.fits"
+patern_cf = "xcf_z_{zmin}_{zmax}-exp.fits"
 # patern_cf = "co_qso_z_{zmin}_{zmax}-exp.fits"
 
 

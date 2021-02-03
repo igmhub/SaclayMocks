@@ -21,13 +21,13 @@ plt.rc('figure', figsize=(9,7))
 
 
 ### Options
-plot_bias = True
+plot_bias = False
 plot_beta = True
-plot_bias_eta = True
+plot_bias_eta = False
 plot_beff = True
 plot_beff_z_corrected = False
-plot_b_hcd = True
-use_minuit = True
+plot_b_hcd = False
+use_minuit = False
 
 plot_pred1 = False
 plot_pred2 = False
@@ -49,8 +49,9 @@ use_legends = True
 # toplot = ['v4.7.22-0.0', 'v4.7.22-0.0_bis']
 # toplot = ['redo_dr16', 'v4.7_11_20-0.0', 'v4.7_11_20-0.2', 'pred_tuning']
 # toplot = ['DR16', 'cf-raw', 'cf-0.0', 'cf-0.2']
-toplot = ['DR16']
+# toplot = ['DR16']
 # toplot = ['DR16', 'cf-raw', 'pred_tuning'] #, 'pred_raw']
+toplot = ['DR16', 'cf-raw']
 # toplot = ['v4.7.11-0.0', 'v4.7.11-0.2', 'v4.7.11-0.2_finder']
 
 # labels = toplot
@@ -152,22 +153,22 @@ files['DR16'] = ["/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins
                  "/global/project/projectdirs/eboss/lya_forest/dr16/redo_4_zbins/Fits/cf/Kaiser_sky_met_hcd/z_3.05_10/result.h5"]
 
 # eboss-raw
-files['cf-raw'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_0_2.35-exp.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_2.35_2.65-exp.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_2.65_3.05-exp.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_3.05_10-exp.h5"]
+files['cf-raw'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-raw/cf_z_0_2.35-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-raw/cf_z_2.35_2.65-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-raw/cf_z_2.65_3.05-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-raw/cf_z_3.05_10-exp.h5"]
 
 # eboss-0.0
-files['cf-0.0'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_0_2.35-exp.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_2.35_2.65-exp.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_2.65_3.05-exp.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.0/cf_z_3.05_10-exp.h5"]
+files['cf-0.0'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.0/cf_z_0_2.35-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.0/cf_z_2.35_2.65-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.0/cf_z_2.65_3.05-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.0/cf_z_3.05_10-exp.h5"]
 
 # eboss-0.2
-files['cf-0.2'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_0_2.35-exp.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_2.35_2.65-exp.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_2.65_3.05-exp.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-0.2/cf_z_3.05_10-exp.h5"]
+files['cf-0.2'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.2/cf_z_0_2.35-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.2/cf_z_2.35_2.65-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.2/cf_z_2.65_3.05-exp.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-0.2/cf_z_3.05_10-exp.h5"]
 
 # Prediction used for the tuning procedure
 files['pred_tuning'] = ["/global/cscratch1/sd/tetourne/Out/Fit4/z1.8/from_transmissions/Fit/result_cf_pred.h5",
@@ -177,10 +178,10 @@ files['pred_tuning'] = ["/global/cscratch1/sd/tetourne/Out/Fit4/z1.8/from_transm
                         "/global/cscratch1/sd/tetourne/Out/Fit4/z3.6/from_transmissions/Fit/result_cf_pred.h5"]
 
 # Prediction computed on raw mocks
-files['pred_raw'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_0_2.35-exp_pred.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_2.35_2.65-exp_pred.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_2.65_3.05-exp_pred.h5",
-                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global-01_30/eboss-raw/cf_z_3.05_10-exp_pred.h5"]
+files['pred_raw'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-raw/cf_z_0_2.35-exp_pred.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-raw/cf_z_2.35_2.65-exp_pred.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-raw/cf_z_2.65_3.05-exp_pred.h5",
+                      "/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/global/01_30/eboss-raw/cf_z_3.05_10-exp_pred.h5"]
 
 # v4.7.11 eboss-0.0
 files['v4.7.11-0.0'] = ["/global/cfs/cdirs/desi/science/lya/picca_on_mocks/saclay/v4.7/v4.7.11/eboss-0.0/cf_z_0_2.35-exp.h5",
@@ -517,6 +518,9 @@ for item in toplot:
     print("bias_eta(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_bias_eta[item][0][0], p_bias_eta[item][1][0,0], p_bias_eta[item][0][1], p_bias_eta[item][1][1,1]))
     p_beff[item] = sp.optimize.curve_fit(func, redshift[item], beff[item], sigma=beff_err[item])
     print("beff(z) = ({:.4} +/- {:.4})*(1+z)^[{:.4} +/- {:.4}]".format(p_beff[item][0][0], p_beff[item][1][0,0], p_beff[item][0][1], p_beff[item][1][1,1]))
+    print('z=',redshift[item]) #prov
+    print('beff=',beff[item],'err=',beff_err[item]) # prov
+    print('beta=',beta[item],'err=',beta_err[item]) # prov
 
     # Fitting with iminuit
     if use_minuit:

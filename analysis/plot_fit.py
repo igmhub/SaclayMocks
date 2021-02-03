@@ -7,6 +7,7 @@ import picca.wedgize
 import argparse
 from SaclayMocks import powerspectrum
 
+lya = False	# False for QSO CF only 3 bins in mu
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", type=str, nargs="*", help="ex: Out/v2.7.1/from_transmission")
@@ -150,20 +151,22 @@ if "cf" in args.to_do:
         ax.set_ylabel(r"$\xi(r)$")
     plt.tight_layout()
 
-    # Plot wedges
-    mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
+    if (lya==True): # Plot wedges Lya
+        mu0, mu1, mu2, mu3, mu4 = 0, 0.5, 0.8, 0.95, 1
+    else:	# Plot wedges QSO
+        mu0, mu1, mu2, mu3 = 0, 0.2, 0.5, 1
     w1 = picca.wedgize.wedge(mumin=mu0,mumax=mu1, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
     w2 = picca.wedgize.wedge(mumin=mu1,mumax=mu2, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
     w3 = picca.wedgize.wedge(mumin=mu2,mumax=mu3, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
-    w4 = picca.wedgize.wedge(mumin=mu3,mumax=mu4, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
+    if (lya==True):     w4 = picca.wedgize.wedge(mumin=mu3,mumax=mu4, rtmax=rtmax, rpmax=rpmax, rtmin=rtmin, rpmin=rpmin, nrt=nrt, nrp=nrp,absoluteMu=True)
     data_wedge1 = w1.wedge(da,co)
     coef1 = data_wedge1[0]**r_pow
     data_wedge2 = w2.wedge(da,co)
     coef2 = data_wedge2[0]**r_pow
     data_wedge3 = w3.wedge(da,co)
     coef3 = data_wedge3[0]**r_pow
-    data_wedge4 = w4.wedge(da,co)
-    coef4 = data_wedge4[0]**r_pow
+    if (lya==True): data_wedge4 = w4.wedge(da,co)
+    if (lya==True): coef4 = data_wedge4[0]**r_pow
 
     if args.save_cf:
         print("Saving cf in txt file...")
@@ -171,24 +174,24 @@ if "cf" in args.to_do:
         table1 = [data_wedge1[0], data_wedge1[1], np.sqrt(np.diag(data_wedge1[2]))]
         table2 = [data_wedge2[0], data_wedge2[1], np.sqrt(np.diag(data_wedge2[2]))]
         table3 = [data_wedge3[0], data_wedge3[1], np.sqrt(np.diag(data_wedge3[2]))]
-        table4 = [data_wedge4[0], data_wedge4[1], np.sqrt(np.diag(data_wedge4[2]))]
+        if (lya==True): table4 = [data_wedge4[0], data_wedge4[1], np.sqrt(np.diag(data_wedge4[2]))]
         table0 = np.array(table0).T
         table1 = np.array(table1).T
         table2 = np.array(table2).T
         table3 = np.array(table3).T
-        table4 = np.array(table4).T
+        if (lya==True): table4 = np.array(table4).T
         np.savetxt(indir+"/Correlations/cf.txt", table0)
         np.savetxt(indir+"/Correlations/cf_{}_{}.txt".format(mu0, mu1), table1)
         np.savetxt(indir+"/Correlations/cf_{}_{}.txt".format(mu1, mu2), table2)
         np.savetxt(indir+"/Correlations/cf_{}_{}.txt".format(mu2, mu3), table3)
-        np.savetxt(indir+"/Correlations/cf_{}_{}.txt".format(mu3, mu4), table4)
+        if (lya==True): np.savetxt(indir+"/Correlations/cf_{}_{}.txt".format(mu3, mu4), table4)
         print("Done.")
 
     try:
         r1,f1,_ = w1.wedge(ff["LYA(LYA)xLYA(LYA)/fit"][...],co)
         r2,f2,_ = w2.wedge(ff["LYA(LYA)xLYA(LYA)/fit"][...],co)
         r3,f3,_ = w3.wedge(ff["LYA(LYA)xLYA(LYA)/fit"][...],co)
-        r4,f4,_ = w4.wedge(ff["LYA(LYA)xLYA(LYA)/fit"][...],co)
+        if (lya==True): r4,f4,_ = w4.wedge(ff["LYA(LYA)xLYA(LYA)/fit"][...],co)
     except KeyError:
         print("Can't find LYA(LYA)xLYA(LYA)/fit")
         try:
@@ -197,7 +200,7 @@ if "cf" in args.to_do:
             r1,f1,_ = w1.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
             r2,f2,_ = w2.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
             r3,f3,_ = w3.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
-            r4,f4,_ = w4.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
+            if (lya==True): r4,f4,_ = w4.wedge(ff[fitcf_file[j:i]+"/fit"][...],co)
         except:
             print("Can't find {}".format(fitcf_file[j:i]+"/fit"))
             try:
@@ -206,27 +209,27 @@ if "cf" in args.to_do:
                 r1,f1,_ = w1.wedge(ff[cf_file[j:i]+"/fit"][...],co)
                 r2,f2,_ = w2.wedge(ff[cf_file[j:i]+"/fit"][...],co)
                 r3,f3,_ = w3.wedge(ff[cf_file[j:i]+"/fit"][...],co)
-                r4,f4,_ = w4.wedge(ff[cf_file[j:i]+"/fit"][...],co)
+                if (lya==True): r4,f4,_ = w4.wedge(ff[cf_file[j:i]+"/fit"][...],co)
             except:
                 print("Can't find {}".format(cf_file[j:i]+"/fit"))
                 try:
                     r1, f1, _ =w1.wedge(ff["cf_z_0_10/fit"][...],co)
                     r2, f2, _ =w2.wedge(ff["cf_z_0_10/fit"][...],co)
                     r3, f3, _ =w3.wedge(ff["cf_z_0_10/fit"][...],co)
-                    r4, f4, _ =w4.wedge(ff["cf_z_0_10/fit"][...],co)
+                    if (lya==True): r4, f4, _ =w4.wedge(ff["cf_z_0_10/fit"][...],co)
                 except KeyError:
                     try:
                         r1,f1,_ = w1.wedge(ff['QSOxQSO/fit'][...],co)
                         r2,f2,_ = w2.wedge(ff['QSOxQSO/fit'][...],co)
                         r3,f3,_ = w3.wedge(ff['QSOxQSO/fit'][...],co)
-                        r4,f4,_ = w4.wedge(ff['QSOxQSO/fit'][...],co)
+                        if (lya==True): r4,f4,_ = w4.wedge(ff['QSOxQSO/fit'][...],co)
                     except:
                         print("Can't find QSOxQSO/fit")
                         try:
                             r1,f1,_ = w1.wedge(ff['HCDxHCD/fit'][...],co)
                             r2,f2,_ = w2.wedge(ff['HCDxHCD/fit'][...],co)
                             r3,f3,_ = w3.wedge(ff['HCDxHCD/fit'][...],co)
-                            r4,f4,_ = w4.wedge(ff['HCDxHCD/fit'][...],co)
+                            if (lya==True): r4,f4,_ = w4.wedge(ff['HCDxHCD/fit'][...],co)
                         except:
                             print("Can't find HCDxHCD/fit")
                             print("Exit!")
@@ -236,17 +239,20 @@ if "cf" in args.to_do:
         data_wedge1_pred = w1.wedge(da_pred,co_pred)
         data_wedge2_pred = w2.wedge(da_pred,co_pred)
         data_wedge3_pred = w3.wedge(da_pred,co_pred)
-        data_wedge4_pred = w4.wedge(da_pred,co_pred)
+        if (lya==True): data_wedge4_pred = w4.wedge(da_pred,co_pred)
     
     fig, ax = plt.subplots()
     ax.errorbar(data_wedge1[0],coef1*data_wedge1[1],yerr=coef1*np.sqrt(np.diag(data_wedge1[2])),fmt='+', label=r"${}<\mu<{}$".format(mu0, mu1), color='b')
     ax.errorbar(data_wedge2[0],coef2*data_wedge2[1],yerr=coef2*np.sqrt(np.diag(data_wedge2[2])),fmt='+', label=r"${}<\mu<{}$".format(mu1, mu2), color='g')
     ax.errorbar(data_wedge3[0],coef3*data_wedge3[1],yerr=coef3*np.sqrt(np.diag(data_wedge3[2])),fmt='+', label=r"${}<\mu<{}$".format(mu2, mu3), color='orange')
-    ax.errorbar(data_wedge4[0],coef4*data_wedge4[1],yerr=coef4*np.sqrt(np.diag(data_wedge4[2])),fmt='+', label=r"${}<\mu<{}$".format(mu3, mu4), color='red')
+    if (lya==True): ax.errorbar(data_wedge4[0],coef4*data_wedge4[1],yerr=coef4*np.sqrt(np.diag(data_wedge4[2])),fmt='+', label=r"${}<\mu<{}$".format(mu3, mu4), color='red')
     ax.plot(r1, f1*r1**r_pow, color='b')
     ax.plot(r2, f2*r2**r_pow, color='g')
-    ax.plot(r3, f3*r3**r_pow, color='orange')
-    ax.plot(r4, f4*r4**r_pow, color='red')
+    if (lya==True): 
+        ax.plot(r3, f3*r3**r_pow, color='orange')
+        ax.plot(r4, f4*r4**r_pow, color='red')
+    else:
+        ax.plot(r3, f3*r3**r_pow, color='red')
     if args.pred:
         # ax.plot(r_pred, data_pred[:,2]*r_pred**r_pow, color='b', linestyle=':')
         # ax.plot(r_pred, data_pred[:,3]*r_pred**r_pow, color='g', linestyle=':')
@@ -254,7 +260,7 @@ if "cf" in args.to_do:
         ax.plot(data_wedge1[0],coef1*data_wedge1_pred[1], linestyle=':', color='b')
         ax.plot(data_wedge2[0],coef2*data_wedge2_pred[1], linestyle=':', color='g')
         ax.plot(data_wedge3[0],coef3*data_wedge3_pred[1], linestyle=':', color='orange')
-        ax.plot(data_wedge4[0],coef4*data_wedge4_pred[1], linestyle=':', color='red')
+        if (lya==True): ax.plot(data_wedge4[0],coef4*data_wedge4_pred[1], linestyle=':', color='red')
         
     ax.grid()
     ax.set_title("CF - {}".format(title))

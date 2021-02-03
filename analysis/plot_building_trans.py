@@ -89,6 +89,6 @@ for ax in axs:
 
 
 f.tight_layout()
-f.savefig("/global/u1/t/tetourne/building_trans.pdf")
-print("{} saved.".format("/global/u1/t/tetourne/building_trans.pdf"))
+f.savefig("building_trans.pdf")
+print("{} saved.".format("building_trans.pdf"))
 # plt.show()
