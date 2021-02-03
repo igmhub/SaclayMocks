@@ -28,10 +28,11 @@ class ReadTransmission(object):
     to instance the class : the method will read directly the info,
     store them in attributes and close de fits files.
     '''
-    def __init__(self, inDir, read_metadata=True, read_dla=True, nfiles=None):
+    def __init__(self, inDir, read_metadata=True, read_dla=True, nfiles=None, lmin=constant.lylimit, lmax=constant.lya):
         metadata = []
         transmission = []
         dla = []
+        #print(constant.lylimit,lmin,lmax)
         files = glob.glob(inDir+"/*/*/transmission*")
         if nfiles is not None and nfiles < len(files):
             files = files[:np.int32(nfiles)]
@@ -41,7 +42,7 @@ class ReadTransmission(object):
             data = fitsio.read(f, ext='METADATA')
             spec = fitsio.read(f, ext='TRANSMISSION')
             msk = wav/(1+data['Z']).reshape(-1,1)
-            msk = ((msk <= constant.lylimit) | (msk >= constant.lya))
+            msk = ((msk <= lmin) | (msk >= lmax))
             transmission.append(ma.array(spec, mask=msk))
             if read_metadata:
                 metadata.append(data)
@@ -63,7 +64,7 @@ class ReadTransmission(object):
     def comp_wav_rf(self):
         print("Computing wavelength in rest frame")
         wav_rf = self.wavelength / (self.metadata['Z'].reshape(-1,1) + 1)  # (nspec, npix)
-        msk = ((wav_rf >= constant.lya) | (wav_rf <= constant.lylimit))
+        msk = ((wav_rf >= lmax) | (wav_rf <= lmin))
         self.wav_rf = ma.array(wav_rf, mask=msk)
         print("Done.")
 
