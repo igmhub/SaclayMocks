@@ -16,7 +16,7 @@ from SaclayMocks import constant
 from SaclayMocks import util
 import argparse
 from time import time
-from memory_profiler import profile
+# from memory_profiler import profile
 import gc
 PI = np.pi
 

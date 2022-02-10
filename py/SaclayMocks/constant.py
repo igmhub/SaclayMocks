@@ -9,10 +9,11 @@ n_qso_exp = 100.  # expected number of qso per square degrees
 qso_nz_adhoc = 0.213  # adhoc factor to have the right number of QSO per square degrees
 rand_qso_nb = 0.006
 
-lya = 1215.67 ## angstrom https://en.wikipedia.org/wiki/Lyman-alpha_line  1215.668 and 1215.674
+lya = 1215.67  # angstrom https://en.wikipedia.org/wiki/Lyman-alpha_line  1215.668 and 1215.674
 # lylimit = lya * 3 /4. # 911.75  ok with https://en.wikipedia.org/wiki/Hydrogen_spectral_series
 lylimit = 0.  # do not cut pixels bellow lylimit
-lyb = lylimit * 9./8. # 1025.72  https://en.wikipedia.org/wiki/Hydrogen_spectral_series : 1025.7
+# lyb = lylimit * 9./8.  # 1025.72  https://en.wikipedia.org/wiki/Hydrogen_spectral_series : 1025.7
+lyb = 1025.72
 # lambda_min = 3530.  # Lambda min in A (given by Stephen Bailey - 04/05/2018)
 lambda_min = 3476.
 
@@ -38,5 +39,17 @@ deg2rad = sp.pi/180.
 rad2deg = 180/sp.pi
 
 # Hardcoded params:
-sigma_g = 1.19
 rho_sum = 16452460
+
+# Variance of the different fields
+# measurement was done the 25/10/2019 on (97541,6524) absorption pixels
+mean_delta_l = 0.031
+mean_eta = 0.004
+mean_delta_l_eta = 0.47
+sigma_l = 1.189
+sigma_eta = 0.53
+# sigma_g_tuning = 1.01  # 1% extra factor on sigma_g
+sigma_g_tuning = 1.
+
+# Colors for plotting:
+colors = ['blue', 'red', 'darkgreen', 'orange', 'dodgerblue', 'deeppink', 'darkviolet', 'saddlebrown', 'lime', 'olive']

@@ -25,9 +25,16 @@ Here is a list of needed packages:
 - pyfftw
 - numba
 - iminuit
-- memory_profiler
 - linetools
 - pyigm
+
+
+The pyigm package can not be directly installed by setup.py. Please install the git version of pyigm, by typing, in a separate folder:
+
+git clone https://github.com/pyigm/pyigm.git
+cd pyigm/
+python setup.py install --user
+
 
 ## Running
 The code runs as follow:

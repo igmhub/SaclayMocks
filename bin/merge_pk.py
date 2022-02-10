@@ -3,7 +3,6 @@ from fitsio import FITS
 import numpy as np
 import argparse
 import time
-from memory_profiler import profile
 
 
 # @profile

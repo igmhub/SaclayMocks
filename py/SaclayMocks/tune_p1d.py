@@ -51,7 +51,7 @@ class P1dmiss(object):
         data = fitsio.read(filename, ext=1)
         kk = data['k']
         pk = data['P1D']
-        msk = kk >= 0.1
+        msk = kk >= 0.1  # prov
         self.k = kk[msk]
         self.pkmiss = pk[msk]
         print("Done.")

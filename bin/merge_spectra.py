@@ -5,7 +5,6 @@ import numpy as np
 import scipy as sp
 import argparse
 import time
-from memory_profiler import profile
 from SaclayMocks import util, constant
 import pyfftw
 import pyfftw.interfaces.numpy_fft as fft
@@ -27,7 +26,7 @@ def main():
     parser.add_argument("-bb", type=float, help="b param in FGPA. Default 1.58", default=1.58)
     parser.add_argument("-cc", type=float, help="c param in FGPA. Default is to read c(z) from etc/params.fits.", default=-1)
     parser.add_argument("-paramfile", help="fits file for parameters, default is etc/params.fits", default=None)
-    parser.add_argument("-p1dfile", help="P1Dmissing fits file, default is etc/pkmiss_interp.fits", default=None)
+    parser.add_argument("-p1dfile", help="P1Dmissing fits file, default is etc/pkmiss_interp.fits.gz", default=None)
     parser.add_argument("-pixsize", type=float, help="spectrum pixsize in Mpc/h, default 0.2", default=0.2)
     parser.add_argument("-nside", type=int, help="nside for healpix. Default 16", default=16)
     parser.add_argument("-nest", help="If True, healpix scheme is nest. Default True", default='True')
@@ -35,7 +34,8 @@ def main():
     parser.add_argument("-addnoise", help="If True, small scales are added, default True", default='True')
     parser.add_argument("-dla", help="If True, store delta and growth skewers, default False", default='False')
     parser.add_argument("-zfix", type=float, help="Specify a redshift to evaluate parameters in FGPA, if None parameter are taken at the absorber redshift", default=None)
-    parser.add_argument("--fit-p1d", help="If True, store delta_l, delta_s and eta_par. Default False", default='False')
+    parser.add_argument("--fit-p1d", help="If True, do the fitting procedure. Default False", default='False')
+    parser.add_argument("--store-g", help="If True, store delta_l, delta_s and eta_par. Default False", default='False')
     parser.add_argument("-seed", type=int, help="specify a seed", default=None)
     parser.add_argument("--check-id", help="If True, check if the spectra ID matches the QSO ID by looking at (ra,dec), default True", default='True')
     parser.add_argument("-ncpu", type=int, help="number of cpu, default = 2", default=2)
@@ -51,10 +51,10 @@ def main():
     add_noise = util.str2bool(args.addnoise)
     dla = util.str2bool(args.dla)
     fit_p1d = util.str2bool(args.fit_p1d)
+    store_g = util.str2bool(args.store_g)
     check_id = util.str2bool(args.check_id)
     pixsize = args.pixsize
     k_ny = np.pi / pixsize
-    bb = args.bb
     if args.paramfile is None:
         filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/params.fits")
 
@@ -63,6 +63,11 @@ def main():
         print("a  parameter has been fixed to {}".format(aa))
     else:
         a_of_z = util.InterpFitsTable(filename, 'z', 'a')
+    if args.bb > 0:
+        bb = args.bb
+        print("b  parameter has been fixed to {}".format(bb))
+    else:
+        b_of_z = util.InterpFitsTable(filename, 'z', 'b')
     if args.cc > 0:
         cc = args.cc
         print("c  parameter has been fixed to {}".format(cc))
@@ -100,16 +105,17 @@ def main():
     # .......... Load P1D missing
     filename = args.p1dfile
     if filename is None:
-        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits")
+        filename = os.path.expandvars("$SACLAYMOCKS_BASE/etc/pkmiss_interp.fits.gz")
     print("Reading P1D file {}".format(filename))
-    p1d_data = fitsio.read(filename, ext=1)
     if fit_p1d:
+        store_g = True
+        p1d_data = fitsio.read(filename, ext=1)
         field = 'P1Dmiss'
         if rsd: field += 'RSD'
         p1dmiss = sp.interpolate.InterpolatedUnivariateSpline(p1d_data['k'], p1d_data[field])
     else:
         p1dmiss = util.InterpP1Dmissing(filename)
-        sigma_s_interp = sp.interpolate.interp1d(p1d_data['z'], p1d_data['sigma'])
+        sigma_s_interp = sp.interpolate.interp1d(fitsio.read(filename, ext='z'), fitsio.read(filename, ext='sigma'))
 
     # ........... Open fits files
     print("Opening fits files...")
@@ -231,7 +237,6 @@ def main():
     hlist = [{'name':"z0", 'value':z0, 'comment':"redshift of box center"},
              {'name':"NX", 'value':NX},
              {'name':"dmax", 'value':dmax},
-             {'name':"b", 'value':bb},
              {'name':"ra0", 'value':ra0, 'comment':"right ascension of box center"},
              {'name':"dec0", 'value':dec0, 'comment':"declination of box center"}]
     cpt2 = 0
@@ -254,8 +259,9 @@ def main():
         if dla:
             delta_list = []
             velo_list = []
-        if fit_p1d:
+        if store_g:
             delta_list = []
+            velo_list = []
             eta_list = []
             noise_list = []
         for ID in np.unique(IDs[cut]):
@@ -283,10 +289,10 @@ def main():
                     z_0 = np.ones_like(z) * 2.2466318099484273  # prov
                 if args.aa <= 0:
                     aa = a_of_z.interp(z)
-                    # aa = a_of_z.interp(z_0)  # prov
+                if args.bb <= 0:
+                    bb = b_of_z.interp(z)
                 if args.cc <= 0:
                     cc = c_of_z.interp(z)
-                    # cc = c_of_z.interp(z_0)  # prov
                 growthf_tmp = growthf_24*(1+2.4) / (1+z)
                 # growthf_tmp = growthf_24*(1+2.4) / (1+z_0)  # prov
                 if rsd:
@@ -300,7 +306,7 @@ def main():
                     mmm = np.where((wav_rf<constant.lya) & (wav_rf>constant.lylimit))[0]
                     if len(mmm) > 0:
                         nz = 256
-                        while (nz < len(wav_tmp)) : nz *= 2
+                        while (nz < len(wav_tmp)+50) : nz *= 2  # +50 pixels (10 Mpc/h) is to avoid correlations from edge to edge of the forest
                         delta_s = np.random.normal(size=nz)   # latter, produce directly in k space
                         delta_sk = fft.rfftn(delta_s, threads=ncpu)
                         k = np.fft.rfftfreq(nz) * 2 * k_ny
@@ -320,35 +326,15 @@ def main():
                         # delta = delta_l_tmp  # prov
                     else:
                         delta = delta_l_tmp
+                        if store_g:
+                            delta_s = np.zeros_like(delta_l_tmp)
                     timer += time.time() - timer_init
                 else:
                     delta = delta_l_tmp
 
                 # Apply FGPA:
                 if rsd:
-                    # f, ax = plt.subplots()
-                    # ax.plot(delta_l_tmp)
-                    # ax.set_title('delta_l')
-                    # plt.grid()
-                    # f, ax = plt.subplots()
-                    # ax.plot(delta_s)
-                    # ax.set_title('delta_s')
-                    # plt.grid()
-                    # f, ax = plt.subplots()
-                    # ax.plot(eta_par_tmp)
-                    # ax.set_title('eta_par')
-                    # plt.grid()
-                    # f, ax = plt.subplots()
-                    # ax.plot(growthf_tmp)
-                    # ax.set_title('growthf')
-                    # plt.grid()
                     spec = util.fgpa(delta, eta_par_tmp, growthf_tmp, aa, bb, cc)
-                    # spec = 1 + delta + cc*eta_par_tmp
-                    # f, ax = plt.subplots()
-                    # ax.plot(spec)
-                    # ax.set_title('spec {}'.format(ID))
-                    # plt.grid()
-                    # plt.show()
                 else:
                     spec = np.exp(-aa * np.exp(bb * growthf_tmp * delta))
 
@@ -372,8 +358,14 @@ def main():
                     else:
                         vpar = np.zeros_like(delta_l_tmp)
                     velo_list.append(vpar)
-                if fit_p1d:
-                    delta_list.append(delta_l_tmp)
+                if store_g:
+                    if not dla:
+                        delta_list.append(delta_l_tmp)
+                        if rsd:
+                            vpar = np.concatenate(velo_par[cut][msk])[arg_wav_sorted]
+                        else:
+                            vpar = np.zeros_like(delta_l_tmp)
+                        velo_list.append(vpar)
                     eta_list.append(eta_par_tmp)
                     noise_list.append(delta_s)
 
@@ -400,13 +392,15 @@ def main():
         outfits.write(np.float32(wav), extname='LAMBDA')
         outfits.write(np.float32(spectra_list), extname='FLUX')
         if dla:
-            outfits.write(np.float32(delta_list), extname='DELTA')
+            outfits.write(np.float32(delta_list), extname='DELTA_L')
             outfits.write(np.float32(growthf), extname='GROWTHF')
             outfits.write(np.float32(velo_list), extname='VELO_PAR')
-        if fit_p1d:
-            outfits.write(np.float32(delta_list), extname='DELTA_L')
+        if store_g:
+            if not dla:
+                outfits.write(np.float32(delta_list), extname='DELTA_L')
+                outfits.write(np.float32(growthf), extname='GROWTHF')
+                outfits.write(np.float32(velo_list), extname='VELO_PAR')
             outfits.write(np.float32(eta_list), extname='ETA_PAR')
-            outfits.write(np.float32(growthf), extname='GROWTHF')
             outfits.write(np.float32(z), extname='Z')
             outfits.write(np.float32(noise_list), extname='DELTA_S')
         outfits.close()

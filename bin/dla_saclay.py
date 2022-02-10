@@ -12,18 +12,13 @@ import glob
 import argparse
 from SaclayMocks import constant, util
 # import cosmolopy.distance as dist
-from memory_profiler import profile
+# from memory_profiler import profile
+from pyigm.fN.fnmodel import FNModel
 
 
-try:
-    from pyigm.fN.fnmodel import FNModel
-    fN_default = FNModel.default_model()
-    fN_default.zmnx = (0.,4)
-    fN_cosmo = fN_default.cosmo
-    use_pyigm = True
-    print("Using pyigm")
-except:
-    use_pyigm = False
+fN_default = FNModel.default_model()
+fN_default.zmnx = (0.,4)
+fN_cosmo = fN_default.cosmo
 
 
 def dz_of_z_func(cell_size=2.19, zmin=1.3, zmax=4., nbin=500):
@@ -72,26 +67,6 @@ def nu_of_bD(b):
     y = interp1d(b_nu,nu)
     return y(b)
 
-# # Not used
-# def get_bias_z(fname,dla_bias):
-#     """ Given a path, read the z array there and return a bias inversely
-#     proportional to the growth"""
-#     colore_cosmo = fits.open(fname)[4].data
-#     z = colore_cosmo['Z']
-#     D = colore_cosmo['D']
-#     y = interp1d(z,D)
-#     bias = dla_bias/D*y(2.25)
-#     return z, bias, D
-
-# # Not used
-# def get_sigma_g(fname, mode='SG'):
-#     if mode=='SG':
-#         # Biased as well
-#         return fits.open(fname)[4].header['SIGMA_G']
-#     if mode=='SKW':
-#         # Approximation 2: Take the skewers (biased when QSOs are present)
-#         skewers = fits.open(fname)[2].data
-#         return np.std(skewers,axis=0)
 
 def flag_DLA(zq,z_cells,deltas,nu_arr,sigma_g,zlow,dz_of_z, rand=False):
     """ Flag the pixels in a skewer where DLAs are possible"""
@@ -111,63 +86,17 @@ def flag_DLA(zq,z_cells,deltas,nu_arr,sigma_g,zlow,dz_of_z, rand=False):
 #number per unit redshift from minimum lg(N) in file (17.2) to argument
 # Reading file from https://arxiv.org/pdf/astro-ph/0407378.pdf
 
-def dnHD_dz_cumlgN(z,logN):
-    tab = astropy.table.Table.read(os.path.abspath('LyaCoLoRe/example_data/zheng_cumulative.overz'),format='ascii')
-    y = interp2d(tab['col1'],tab['col2'],tab['col3'],fill_value=None)
-    return y(z,logN)
-
 
 def dNdz(z, Nmin=20.0, Nmax=22.5):
     """ Get the column density distribution as a function of z,
     for a given range in N"""
-    if use_pyigm:
-        print("Use pyigm to compute dNdz.")
-        # get incidence rate per path length dX (in comoving coordinates)
-        dNdX = fN_default.calculate_lox(z,Nmin,Nmax)
-        # convert dX to dz
-        dXdz = fN_cosmo.abs_distance_integrand(z)
-        dndz = dNdX * dXdz
-        return dndz
-    else:
-        return dnHD_dz_cumlgN(z,Nmax)-dnHD_dz_cumlgN(z,Nmin)
-
-
-# def dNdz(z, Nmin=20.0, Nmax=22.5, nsamp=100):
-#     """ Get the column density distribution as a function of z,
-#     for a given range in N"""
-#     # get incidence rate per path length dX (in comoving coordinates)
-#     nn = np.linspace(Nmin,Nmax,nsamp)
-#     aux = fN_default.evaluate(nn, z)
-#     dNdz = np.sum(np.exp(aux)*(nn[1]-nn[0]))
-#     return dNdz
-
-
-def get_N(z, Nmin=20.0, Nmax=22.5, nsamp=100):
-    """ Get random column densities for a given z
-    """
-
-    # number of DLAs we want to generate
-    Nz = len(z)
-    nn = np.linspace(Nmin,Nmax,nsamp)
-    probs = np.zeros([Nz,nsamp])
-    if use_pyigm:
-        auxfN = fN_default.evaluate(nn,z)
-        #auxfN = (np.cumsum(10**auxfN, axis=0)/np.sum(10**auxfN, axis=0)).T
-        probs = (np.exp(auxfN)/np.sum(np.exp(auxfN), axis=0)).T
-        #plt.plot(nn,auxfN.T)
-    else:
-        probs_low = dnHD_dz_cumlgN(z,nn[:-1]).T
-        probs_high = dnHD_dz_cumlgN(z,nn[1:]).T
-        probs[:,1:] = probs_high-probs_low
-    NHI = np.zeros(Nz)
-    for i in range(Nz):
-        #if use_pyigm:
-        #    nfunc = interp1d(auxfN[i],nn,fill_value='extrapolate')
-        #    NHI[i] = nfunc(np.random.uniform())
-        #else:
-        #    NHI[i] = np.random.choice(nn,size=1,p=probs[i]/np.sum(probs[i]))+(nn[1]-nn[0])*np.random.random(size=1)
-        NHI[i] = np.random.choice(nn,size=1,p=probs[i]/np.sum(probs[i]))+(nn[1]-nn[0])*np.random.random(size=1)
-    return NHI
+    print("Use pyigm to compute dNdz.")
+    # get incidence rate per path length dX (in comoving coordinates)
+    dNdX = fN_default.calculate_lox(z,Nmin,Nmax)
+    # convert dX to dz
+    dXdz = fN_cosmo.abs_distance_integrand(z)
+    dndz = dNdX * dXdz
+    return dndz
 
 
 def get_NHI(z, NHI_min=17.2, NHI_max=22.5, NHI_nsamp=100):
@@ -195,31 +124,19 @@ def get_NHI(z, NHI_min=17.2, NHI_max=22.5, NHI_nsamp=100):
 
     probs = np.zeros([Nz,NHI_nsamp])
 
-    if use_pyigm:
+    #Evaluate f at the points of the NHI grid and each redshift.
+    f = 10**fN_default.evaluate(log_NHI,z)
 
-        #Evaluate f at the points of the NHI grid and each redshift.
-        f = 10**fN_default.evaluate(log_NHI,z)
-
-        times += [time.time()-t]
-        t = time.time()
-        
-        #Calculate the probaility of each NHI bin.
-        aux = f*np.outer(NHI_widths,np.ones(z.shape))
-        
-        times += [time.time()-t]
-        t = time.time()
+    times += [time.time()-t]
+    t = time.time()
     
-        probs = (aux/np.sum(aux,axis=0)).T
+    #Calculate the probaility of each NHI bin.
+    aux = f*np.outer(NHI_widths,np.ones(z.shape))
+    
+    times += [time.time()-t]
+    t = time.time()
 
-        times += [time.time()-t]
-        t = time.time()
-
-    else:
-
-        # TODO: test this
-        probs_low = dnHD_dz_cumlgN(z,nn[:-1]).T
-        probs_high = dnHD_dz_cumlgN(z,nn[1:]).T
-        probs[:,1:] = probs_high-probs_low
+    probs = (aux/np.sum(aux,axis=0)).T
 
     times += [time.time()-t]
     t = time.time()
@@ -265,10 +182,10 @@ def get_NHI(z, NHI_min=17.2, NHI_max=22.5, NHI_nsamp=100):
 
 
 # @profile
-def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8, rand=False):
+def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapolate_z_down=None,Nmin=20.0,Nmax=22.5,zlow=1.8, rand=False, nhi_low_cut=None, nhi_high_cut=None):
     qso = hdulist['METADATA'].read() # Read the QSO table
     lam = hdulist['LAMBDA'].read() # Read the vector with the wavelenghts corresponding to each cell
-    deltas = hdulist['DELTA'].read()  # (nspec, npix)
+    deltas = hdulist['DELTA_L'].read()  # (nspec, npix)
     velocity = hdulist['VELO_PAR'].read()  # (nspec, npix)
     #Linear growth rate of each cell in the skewer
     D_cell = hdulist['GROWTHF'].read()  # (npix)
@@ -288,7 +205,7 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     # y = interp1d(z_cell,D_cell)
     # bias = dla_bias/(D_cell)*y(2.25)  # (npix)
     # sigma_g = fitsio.FITS(fname_sigma)[0].read_header()['SIGMA']
-    sigma_g = constant.sigma_g
+    sigma_g = constant.sigma_l
     # Gaussian field threshold:
     nu_arr = nu_of_bD(dla_bias*sigma_g*D_cell)  # (npix)
     #Figure out cells that could host a DLA, based on Gaussian fluctuation
@@ -327,7 +244,6 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     dla_rsd_dz = np.zeros(ndlas)
     dla_count = 0
     dla_z, dla_skw_id, dla_rsd_dz, dla_count = doloop(dlas_in_cell, velocity, zedges, dla_z, dla_skw_id, dla_rsd_dz, dla_count)
-    # dla_NHI = get_N(dla_z,Nmin=Nmin,Nmax=Nmax)
     dla_NHI = get_NHI(dla_z,NHI_min=Nmin,NHI_max=Nmax)
 
     #global id for the skewers
@@ -339,6 +255,18 @@ def add_DLA_table_to_object_Saclay(hdulist,dNdz_arr,dz_of_z,dla_bias=2.0,extrapo
     #Make the data into a table HDU
     # dla_table = astropy.table.Table([MOCKIDs,dla_z,dla_rsd_dz,dla_NHI,ZQSO, z_norsd, ra, dec],names=('MOCKID','Z_DLA','DZ_DLA','N_HI_DLA','Z_QSO', 'Z_QSO_NO_RSD', 'RA', 'DEC'))
     # return dla_table, ndlas
+
+    if nhi_low_cut is not None and nhi_high_cut is not None:
+        msk = (dla_NHI > nhi_low_cut) & (dla_NHI < nhi_high_cut)
+        MOCKIDs = MOCKIDs[msk]
+        dla_z = dla_z[msk]
+        dla_rsd_dz = dla_rsd_dz[msk]
+        dla_NHI = np.ones(len(dla_z))*np.mean([nhi_low_cut, nhi_high_cut])
+        ZQSO = ZQSO[msk]
+        z_norsd = z_norsd[msk]
+        ra = ra[msk]
+        dec = dec[msk]
+
     return [MOCKIDs, dla_z, dla_rsd_dz, dla_NHI, ZQSO, z_norsd, ra, dec], ndlas
 
 ######
@@ -358,6 +286,10 @@ def main():
                         help='Minimum value of log(NHI) to consider')
     parser.add_argument('--nmax', type = float, default=22.5,
                         help='Maximum value of log(NHI) to consider')
+    parser.add_argument('--nhi-low-cut', type = float, default=None,
+                        help='cut HCDs with log(n_HI) < nhi-low_cut')
+    parser.add_argument('--nhi-high-cut', type = float, default=None,
+                        help='cut HCDs with log(n_HI) > nhi-high_cut')
     parser.add_argument('--dla_bias', type = float, default=2.,
                         help='DLA bias at z=2.25')
     parser.add_argument('--cell_size', type = float, default=2.19,
@@ -386,9 +318,12 @@ def main():
     print("Files will be read from {}".format(args.input_path))
     if os.path.isdir(args.output_path):
         if not random_cond:
-            filename = args.output_path + "/dla.fits"
+            filename = args.output_path + "/dla"
         else:
-            filename = args.output_path + "/dla_randoms.fits"
+            filename = args.output_path + "/dla_randoms"
+        if args.nhi_low_cut is not None and args.nhi_high_cut is not None:
+            filename += "_nhi_{}_{}".format(args.nhi_low_cut, args.nhi_high_cut)
+        filename += ".fits"
     else:
         filename = args.output_path
     try:
@@ -401,10 +336,12 @@ def main():
     flist = glob.glob(args.input_path+"/*")
     print('Will read', len(flist),' files')
     hdulist = fitsio.FITS(flist[0])
-    lam = hdulist[2].read()
+    lam = hdulist['LAMBDA'].read()
     # cosmo_hdu = fitsio.FITS(args.fname_cosmo)[1].read_header()
     z_cell = lam / constant.lya - 1.
     dNdz_arr = dNdz(z_cell, Nmin=args.nmin, Nmax=args.nmax)
+    # dNdz_arr *= 3.06  # prov: increase number of DLAs to match observed b_hcd
+    # dNdz_arr *= 3.
     # dNdz_arr *= 20000.
     # dNdz_arr *= 6.4
     # dNdz_arr *= 5.9
@@ -428,7 +365,7 @@ def main():
     for i, fname in enumerate(flist):
         try:
             hdulist = fitsio.FITS(fname)
-            table, n = add_DLA_table_to_object_Saclay(hdulist, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax, rand=random_cond)
+            table, n = add_DLA_table_to_object_Saclay(hdulist, dNdz_arr,dz_of_z, args.dla_bias, Nmin=args.nmin, Nmax=args.nmax, rand=random_cond, nhi_low_cut=args.nhi_low_cut, nhi_high_cut=args.nhi_high_cut)
             hdulist.close()
         except IOError:
             print("WARNING: can't read {}".format(fname))

@@ -71,10 +71,7 @@ def create_reservation(mock_args):
     script += "#SBATCH -N 1\n"
     script += "#SBATCH -C haswell\n"
     script += "#SBATCH -J create_saclay_{}\n".format(mock_args['imock'])
-    if len(mock_args['chunkid']) < 2:
-        script += "#SBATCH -q debug\n"
-    else:
-        script += "#SBATCH -q regular\n"
+    script += "#SBATCH -q regular\n"
     script += "#SBATCH -t 00:05:00\n"
     script += "#BB create_persistent name={name} capacity={size} access_mode=striped type=scratch\n".format(name=mock_args['bb_name'], size=mock_args['bb_size'])
     # script += "#DW persistentdw name={}\n".format(mock_args['bb_name'])
@@ -478,6 +475,8 @@ fi
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
             script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
+                script += " --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
             script += "&> {path}/dla-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids_dla+=" $!"\n"""
 
@@ -488,6 +487,8 @@ fi
             if mock_args['use_time']:
                 script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
             script += "dla_saclay.py --input_path {base}/chunk_{i}/spectra_merged/ --output_path {base}/chunk_{i} --cell_size {pixel} --nmin {nmin} --nmax {nmax} {seed} -random True ".format(base=mock_args['base_dir'], i=cid, pixel=mock_args['pixel_size'], nmin=mock_args['nmin'], nmax=mock_args['nmax'], seed=mock_args['seed'])
+            if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
+                script += " --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
             script += "&> {path}/dla_rand-{i}.log &\n".format(path=mock_args['logs_dir_mergechunks'], i=cid)
             script += """pids_rand+=" $!"\n"""
 
@@ -503,6 +504,8 @@ fi
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
         script += "merge_dla.py -indir {base} -outdir {outpath} ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
+        if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
+            script += " --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
         script += "&> {path}/merge_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
         script += "pid_dla=$!\n"
 
@@ -511,6 +514,8 @@ fi
         if mock_args['use_time']:
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
         script += "merge_dla.py -indir {base} -outdir {outpath} -random True ".format(base=mock_args['base_dir'], outpath=mock_args['out_dir'])
+        if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
+            script += " --nhi-low-cut {cut1} --nhi-high-cut {cut2} ".format(cut1=mock_args['nhi_low_cut'], cut2=mock_args['nhi_high_cut'])
         script += "&> {path}/merge_rand_dla.log &\n".format(path=mock_args['logs_dir_mergechunks'])
         script += "pid_dla_rand=$!\n"
 
@@ -564,7 +569,7 @@ def run_python_script(i_node, i_chunk, codename, mock_args, sbatch_args, name=No
     if name is None:
         name = codename
     imin = i_node*sbatch_args['threads_chunk']
-    imax = (i_node+1)*sbatch_args['threads_chunk'] + 1
+    imax = (i_node+1)*sbatch_args['threads_chunk']
     if imax >= mock_args['nslice']: imax=mock_args['nslice']
     script = "#!/bin/bash -l\n"
     script += """pids=""\n"""
@@ -603,12 +608,13 @@ def do_dir_tree(outdir, nside):
     print("Directory tree created.")
 
 
-def chunk_parameters(cells):
+def chunk_parameters(cells,stripe_footprint=False):
     '''
     Returns the parameters (ra, dec, ...) of the different chunks according
     to the box size.
     The nominal size is 2560 with 7 chunks. Other size are for debugging.
     '''
+
     if cells == 2560:
         ra0=['125.5', '189.982649735', '254.46529947', '140', '245.305821271', '-24', '40.4826497351']
         dra=['32.2413248675', '32.2413248675', '32.2413248675', '52.6529106357', '52.6529106357', '32.2413248675', '32.2413248675']
@@ -631,7 +637,7 @@ def chunk_parameters(cells):
         dec0=['0', '0', '0', '0', '12.8', '12.8', '12.8', '12.8']
         ddec=['6.4', '6.4', '6.4', '6.4', '6.4', '6.4', '6.4', '6.4']
         chunkid=['1', '2', '3', '4', '5', '6', '7', '8']
-        nslice = 16
+        nslice = 8
 
     if cells == 1024:
         ra0=['190']
@@ -656,6 +662,14 @@ def chunk_parameters(cells):
         ddec=['1.6']
         chunkid=['1']
         nslice = 2
+
+    if stripe_footprint :
+        ra0=['-25','25']
+        dra=['25','25']
+        dec0=['0','0']
+        ddec=['2','2']
+        chunkid=['1', '2']
+        nslice = 512
 
     return np.array(ra0), np.array(dra), np.array(dec0), np.array(ddec), np.array(chunkid), np.array(nslice)
 
@@ -707,14 +721,17 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
     ### Define output directories
     if 'special_out' in mock_args.keys():
         if 'out_version' in mock_args.keys():
-            out_dir = mock_args['special_out']+'/'+mock_args['out_version']+'.'+str(imock)
+            out_dir = mock_args['special_out']+'/'+mock_args['out_version']+'.'+imock
         else:
-            out_dir = mock_args['special_out']+'/'+str(imock)
+            out_dir = mock_args['special_out']+'/'+imock
         if mock_args['burst_buffer']:
             mock_args['out_dir_no_bb'] = out_dir  # path where the output is copied out of burst buffer
             out_dir = mock_args['base_dir']+"/output"
     else:
-        out_dir = mock_args['base_dir']+"/output"
+        if mock_args['nhi_low_cut'] is not None and mock_args['nhi_high_cut'] is not None:
+            out_dir = mock_args['base_dir']+"/output_nhi_{}_{}".format(mock_args['nhi_low_cut'], mock_args['nhi_high_cut'])
+        else:
+            out_dir = mock_args['base_dir']+"/output"
     try:
         os.makedirs(out_dir)
     except OSError:
@@ -812,17 +829,17 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
     if mock_args['burst_buffer']:
         i = mock_args['bb_name'].rfind('_')
         if i > 0:
-            mock_args['bb_name'] = mock_args['bb_name'][:i]+"_"+str(imock)
+            mock_args['bb_name'] = mock_args['bb_name'][:i]+"_"+imock
         else:
-            mock_args['bb_name'] = mock_args['bb_name']+"_"+str(imock)
-        if run_args['run_create']:
-            create_reservation(mock_args)
-        if run_args['run_stagein']:
-            stage_in(mock_args)
-        if run_args['run_stageout']:
-            stage_out(mock_args)
-        if run_args['run_delete']:
-            delete_reservation(mock_args)
+            mock_args['bb_name'] = mock_args['bb_name']+"_"+imock
+        # if run_args['run_create']:
+        create_reservation(mock_args)
+        # if run_args['run_stagein']:
+        stage_in(mock_args)
+        # if run_args['run_stageout']:
+        stage_out(mock_args)
+        # if run_args['run_delete']:
+        delete_reservation(mock_args)
         # Change the base directory to burst buffer directory:
         for k in mock_args.keys():
             # this dir is not included in the next replace, so we do it by hand
@@ -854,7 +871,8 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_draw_qso'] += " -zmax "+str(mock_args['zmax'])
                         mock_args['args_draw_qso'] += " -desi "+str(mock_args['desifootprint'])
                         mock_args['args_draw_qso'] += " -rsd "+str(mock_args['rsd'])
-                        mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
+                        # mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
+                        mock_args['args_draw_qso'] += " "+mock_args['seed']
                         run_python_script(node, cid, "draw_qso", mock_args, sbatch_args)
                     if run_args['randoms']:
                         mock_args['args_draw_qso'] = "-Nslice "+str(mock_args['nslice'])
@@ -869,7 +887,8 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_draw_qso'] += " -zmax "+str(mock_args['zmax'])
                         mock_args['args_draw_qso'] += " -desi "+str(mock_args['desifootprint'])
                         mock_args['args_draw_qso'] += " -rsd "+str(mock_args['rsd'])
-                        mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
+                        # mock_args['args_draw_qso'] += " "+mock_args['seed']+" "+mock_args['zfix']
+                        mock_args['args_draw_qso'] += " "+mock_args['seed']
                         mock_args['args_draw_qso'] += " -random True "
                         run_python_script(node, cid, "draw_qso", mock_args, sbatch_args, "randoms")
                     if run_args['make_spectra']:
@@ -893,6 +912,10 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
                         mock_args['args_merge_spectra'] += " -rsd "+str(mock_args['rsd'])
                         mock_args['args_merge_spectra'] += " -addnoise "+str(mock_args['small_scales'])
                         mock_args['args_merge_spectra'] += " -dla "+str(mock_args['dla'])
+                        mock_args['args_merge_spectra'] += " --store-g "+str(mock_args['store_g'])
+                        if mock_args['p1dfile'] is not None:
+                            mock_args['args_merge_spectra'] += " --fit-p1d True "  # in order to read the p1dfile format
+                            mock_args['args_merge_spectra'] += " -p1dfile "+mock_args['p1dfile']                            
                         if mock_args['fit_p1d']:
                             mock_args['args_merge_spectra'] += " --fit-p1d True "
                             mock_args['args_merge_spectra'] += " -p1dfile "+mock_args['chunk_dir-'+cid]+"/p1dmiss.fits"
@@ -1073,7 +1096,7 @@ def main():
     parser.add_argument("--realisation-number", type=int, default=1, required=False,
         help="The number of realisation to be produced (optional)")
 
-    parser.add_argument("--realisation-id", type=int, nargs="*", default=None, required=False,
+    parser.add_argument("--realisation-id", nargs="*", default=None, required=False,
         help="Specify particular realisations to be produced (optional)")
 
     parser.add_argument("--stage-out", type=str, nargs="*", default='all', required=False,
@@ -1090,17 +1113,23 @@ def main():
         help="Set up parameters for the 1D power spectrum fitting procedure:\n"
             +"give in order: z, a, b, c, seed")
 
+    parser.add_argument("--p1d-file", type=str, default=None, required=False,
+        help="p1dfile to generate small scales. Default is to read from etc/pkmiss_interp.fits.gz")
+
     parser.add_argument("--seed", type=int, default=None, required=False,
         help="Specify a particular seed (optional)")
 
     parser.add_argument("--time", type=str, default="True", required=False,
         help="If True, use /usr/bin/time to time the jobs (optional)")
 
-    parser.add_argument("--account", type=str, default="eboss", required=False,
+    parser.add_argument("--account", type=str, default="desi", required=False,
         help="account to be used on cori nodes (optional)")
 
     parser.add_argument("--email", type=str, default=None, required=False,
         help="Your email address (optional)")
+
+    parser.add_argument("--stripe82", action='store_true', required=False,
+        help="Create the box limits adapted to the Stripe 82 footprint")
 
     args = parser.parse_args()
 
@@ -1116,7 +1145,7 @@ def main():
     sbatch_args['threads_pk'] = 16  # default 16
     sbatch_args['nodes_pk'] = 1  # default 1
     # Parameters for box jobs:
-    sbatch_args['time_boxes'] = "04:00:00"  # default "01:30:00"
+    sbatch_args['time_boxes'] = "02:00:00"  # default "01:30:00"
     sbatch_args['queue_boxes'] = "regular"  # default "regular"
     sbatch_args['name_boxes'] = "boxes_saclay"
     sbatch_args['threads_boxes'] = 64  # default 64
@@ -1145,11 +1174,12 @@ def main():
     mock_args['nz'] = 1536  # This one is fixed to get the whole redshift range
     mock_args['pixel_size'] = 2.19  # pixel size in Mpc/h
     mock_args['a'] = -1  # a parameter in FGPA; -1 is to read a(z) from etc/params.fits
-    mock_args['b'] = 1.58  # b parameter in FGPA; a(z) and c(z) are tuned for b=1.58
+    mock_args['b'] = -1  # b parameter in FGPA; -1 is to read b(z) from etc/params.fits
     mock_args['c'] = -1  # c paramter in FGPA; -1 is to read c(z) from etc/params.fits
     mock_args['zmin'] = 1.8  # minimal redshift to draw QSO
     mock_args['zmax'] = 3.6  # maximal redshift to draw QSO
-    mock_args['zfix'] = ""  # "-zfix 2.6" to fix the redshift to a special value
+    mock_args['zfix'] = "-zfix 2.4"  # "-zfix 2.6" to fix the redshift to a special value; and "" for none
+    mock_args['store_g'] = False  # If true, store delta_l, delta_s and eta_par fields
     # mock options:
     mock_args['seed'] = ""  # "-seed 10" to specify a seed, "" to specify nothing
     mock_args['desifootprint'] = True  # If True, cut QSO outside desi footprint
@@ -1159,6 +1189,8 @@ def main():
     mock_args['dla'] = True  # If True, add DLA
     mock_args['nmin'] = 17.2  # log(N_HI) min for DLA
     mock_args['nmax'] = 22.5  # log(N_HI) max for DLA
+    mock_args['nhi_low_cut'] = None  # cut DLAs with log(n_HI) < cut
+    mock_args['nhi_high_cut'] = None  # cut DLAs with log(n_HI) > cut
     # Run options:
     mock_args['use_time'] = util.str2bool(args.time)  # If True, use /usr/bin/time/ to time jobs
     mock_args['verbosity'] = None  # Set it to "-v -v -v -v" if you want info from sbatch jobs
@@ -1171,27 +1203,27 @@ def main():
     ### Code to runs:
     run_args = {}
     # pk:
-    run_args['run_pk'] = True  # Produce Pk
+    run_args['run_pk'] = False  # Produce Pk
     # boxes:
-    run_args['run_boxes'] = True  # Produce GRF boxes
+    run_args['run_boxes'] = False  # Produce GRF boxes
     # chunks:
-    run_args['run_chunks'] = True  # produce chunks
-    run_args['draw_qso'] = True  # run draw_qso.py
-    run_args['randoms'] = True  # run draw_qso.py for randoms
-    run_args['make_spectra'] = True  # run make_spectra.py
+    run_args['run_chunks'] = False  # produce chunks
+    run_args['draw_qso'] = False  # run draw_qso.py
+    run_args['randoms'] = False  # run draw_qso.py for randoms
+    run_args['make_spectra'] = False  # run make_spectra.py
     run_args['merge_spectra'] = True  # run merge_spectra.py
     # merge chunks:
     run_args['run_mergechunks'] = True  # Gather outputs from all chunks and write in desi format
     run_args['merge_qso'] = True  # Compute master.fits file
     run_args['merge_randoms'] = False  # Compute master_randoms.fits file
     run_args['compute_dla'] = True  # Compute dla catalog of each chunks
-    run_args['dla_randoms'] = True  # Compute dla randoms catalogs of each chunks
+    run_args['dla_randoms'] = False  # Compute dla randoms catalogs of each chunks
     run_args['merge_dla'] = True  # Compute master_DLA.fits file
-    run_args['merge_rand_dla'] = True  # Compute master_DLA_randoms.fits file
+    run_args['merge_rand_dla'] = False  # Compute master_DLA_randoms.fits file
     run_args['transmissions'] = True  # Write transmissions files
     # burst buffer
-    run_args['run_create'] = False  # Create persistent reservation
-    run_args['run_stagein'] = False  # Stage in the init files (pk, directories, ...) (from scratch to BB)
+    run_args['run_create'] = True  # Create persistent reservation
+    run_args['run_stagein'] = True  # Stage in the init files (pk, directories, ...) (from scratch to BB)
     run_args['run_stageout'] = True  # Stage out the produced files (from BB to scratch)
     run_args['run_delete'] = False  # delete the persistent reservation
 
@@ -1211,7 +1243,7 @@ def main():
         mock_args['seed'] = "-seed "+str(args.seed)
     if args.box_size < 2560:
         mock_args['desifootprint'] = False
-    ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size)
+    ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(args.box_size,stripe_footprint=args.stripe82)
     if args.chunk_id is not None:
         m = np.array(args.chunk_id) - 1
         ra0 = ra0[m]
@@ -1221,6 +1253,7 @@ def main():
         chunkid = chunkid[m]
 
     ### 1D power spectrum fitting procedure
+    mock_args['p1dfile'] = args.p1d_file
     mock_args['fit_p1d'] = False
     if args.fit_p1d:
         if len(args.fit_p1d) != 5:
@@ -1228,8 +1261,8 @@ def main():
         print("P1D fitting procedure")
         print("zfix, a, b, c, seed = {}".format(args.fit_p1d))
         mock_args['fit_p1d'] = True
-        mock_args['nx'] = 128
-        mock_args['ny'] = 128
+        mock_args['nx'] = 256
+        mock_args['ny'] = 256
         mock_args['nz'] = 1536
         mock_args['zfix'] = "-zfix {}".format(args.fit_p1d[0])
         mock_args['a'] = args.fit_p1d[1]
@@ -1238,7 +1271,13 @@ def main():
         mock_args['seed'] = '-seed {}'.format(args.fit_p1d[4])
         mock_args['desifootprint'] = False
         mock_args['dla'] = False
-        ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(128)
+        mock_args['use_time'] = False
+        ra0, dra, dec0, ddec, chunkid, nslice = chunk_parameters(mock_args['nx'])
+        ra0 = ra0[[0]]
+        dra = dra[[0]]
+        dec0 = dec0[[0]]
+        ddec = ddec[[0]]
+        chunkid = chunkid[[0]]
         mock_args['sbatch'] = False
         run_args['run_pk'] = True
         run_args['run_boxes'] = True
@@ -1293,10 +1332,10 @@ def main():
     run_args['todo_mergechunks'] = ""
     if run_args['merge_qso']: run_args['todo_mergechunks'] += "merge_qso "
     if run_args['merge_randoms']: run_args['todo_mergechunks'] += "merge_randoms "
-    if run_args['compute_dla']: run_args['todo_mergechunks'] += "compute_dla "
-    if run_args['dla_randoms']: run_args['todo_mergechunks'] += "dla_randoms "
-    if run_args['merge_dla']: run_args['todo_mergechunks'] += "merge_dla "
-    if run_args['merge_rand_dla']: run_args['todo_mergechunks'] += "merge_rand_dla "
+    if run_args['compute_dla'] and mock_args['dla']: run_args['todo_mergechunks'] += "compute_dla "
+    if run_args['dla_randoms'] and mock_args['dla']: run_args['todo_mergechunks'] += "dla_randoms "
+    if run_args['merge_dla'] and mock_args['dla']: run_args['todo_mergechunks'] += "merge_dla "
+    if run_args['merge_rand_dla'] and mock_args['dla']: run_args['todo_mergechunks'] += "merge_rand_dla "
     if run_args['transmissions']: run_args['todo_mergechunks'] += "transmissions "
 
     print("Writting scripts for {} realisations".format(nmocks))

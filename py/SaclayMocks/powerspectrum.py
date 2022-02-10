@@ -314,19 +314,29 @@ class xi_prediction() :
         self.sigma_g = sigma_g
         self.c = c
         self.DX = DX
-            #...........................       P(k)
+        #...........................       P(k)
         k = np.linspace(0,10,10000)
         Pcamb = P_0()
         P = Pcamb.P(k)
+        # Gaussian smoothing
         W = np.exp(-k*k*self.DX*self.DX/2)
         P *= W*W
-            #...........................       xi_g(r)
+        # voxcel size in mocks
+        G1 = np.sinc(-k*self.DX/(2*np.pi))  # np.sinc(x) is sinc(pi*x)
+        P *= G1*G1
+        # bining of CF
+        binsize = 4
+        G2 = np.sinc(-k*binsize/(2*np.pi))
+        P *= G2*G2
+        #...........................       xi_g(r)
         r,xi = xi_from_pk(k,P)
         rmax=300
         cut=np.where(r<rmax)
         self.r=r[cut]
         self.xi=xi[cut]
         self.xi_Ham = xi_Hamilton(r,xi,rmax)
+        # Call xig_xiF in order to define xig2xiF function
+        _, _ = self.xig_xiF()
 
     def xig_xiF(self,nbin=41):      # computes xi_g -> xi_F
         Fmean = self.ComputeFmean()
@@ -346,14 +356,14 @@ class xi_prediction() :
         return self.xi_Ham.xi(self.c,r,mu)
 
 
-#................. main function, returns the predicted xi_F
+    #................. main function, returns the predicted xi_F
     def xi_F(self,r,mu):
         xi_g = self.xi_Ham.xi(self.c,r,mu) / self.sigma_g**2
         return self.xig2xiF( xi_g )
 
-#.... BEWARE:  the next three functions return xig2xiF applied
-# to the multipoles of xi_g. But since F(g) is non linear, these
-# are not exactly the multipoles of xi_F.
+    #.... BEWARE:  the next three functions return xig2xiF applied
+    # to the multipoles of xi_g. But since F(g) is non linear, these
+    # are not exactly the multipoles of xi_F.
     def xi0_F(self,r):
         xi_g = self.xi_Ham.xi0(self.c,r) / self.sigma_g**2
         return self.xig2xiF( xi_g )
@@ -425,6 +435,7 @@ def IntegratePKaiser(P,beta,k_max):
         return k*k*P(k)
     intk2P , error = integrate.quad(k2P,0,k_max,limit=100)
     return 4*np.pi*(1+2*beta/3.+beta*beta/5.) * intk2P
+
 
 #********************************************************************
 def xi_from_pk_1D(k,P1): # k should go from 0 to kmax with constant steps

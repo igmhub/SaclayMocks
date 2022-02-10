@@ -10,8 +10,7 @@ import argparse
 from SaclayMocks import powerspectrum
 from SaclayMocks import constant
 from SaclayMocks import util
-from multiprocessing import Pool
-from memory_profiler import profile
+# from memory_profiler import profile
 
 
 #********************************************************************
