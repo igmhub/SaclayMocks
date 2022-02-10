@@ -579,11 +579,11 @@ def run_python_script(i_node, i_chunk, codename, mock_args, sbatch_args, name=No
             script += """/usr/bin/time -f "%eReal %Uuser %Ssystem %PCPU %M " """
         script += "{codename}.py -i {job} ".format(codename=codename, job=job)
         script += mock_args['args_{}'.format(codename)]
-        script += " &> {path}/{name}-{job}.log &\n".format(path=mock_args['logs_dir_chunk-'+i_chunk], name=name, job=job)
+        script += " &> {path}/{name}-{job}.log &\n".format(path=mock_args['logs_dir_chunk-'+str(i_chunk)], name=name, job=job)
         script += """pids+=" $!"\n"""
     script += get_errors(codename, imin, threads_num=sbatch_args['threads_chunk'])
 
-    filename = mock_args['run_dir_chunk-'+i_chunk]+'/run_{name}-{i_chunk}-{i_node}.sh'.format(
+    filename = mock_args['run_dir_chunk-'+str(i_chunk)]+'/run_{name}-{i_chunk}-{i_node}.sh'.format(
         name=name, i_chunk=i_chunk, i_node=i_node)
     fout = open(filename, 'w')
     fout.write(script)
@@ -721,9 +721,9 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
     ### Define output directories
     if 'special_out' in mock_args.keys():
         if 'out_version' in mock_args.keys():
-            out_dir = mock_args['special_out']+'/'+mock_args['out_version']+'.'+imock
+            out_dir = mock_args['special_out']+'/'+mock_args['out_version']+'.'+str(imock)
         else:
-            out_dir = mock_args['special_out']+'/'+imock
+            out_dir = mock_args['special_out']+'/'+str(imock)
         if mock_args['burst_buffer']:
             mock_args['out_dir_no_bb'] = out_dir  # path where the output is copied out of burst buffer
             out_dir = mock_args['base_dir']+"/output"
@@ -829,9 +829,9 @@ def make_realisation(imock, mock_args, run_args, sbatch_args):
     if mock_args['burst_buffer']:
         i = mock_args['bb_name'].rfind('_')
         if i > 0:
-            mock_args['bb_name'] = mock_args['bb_name'][:i]+"_"+imock
+            mock_args['bb_name'] = mock_args['bb_name'][:i]+"_"+str(imock)
         else:
-            mock_args['bb_name'] = mock_args['bb_name']+"_"+imock
+            mock_args['bb_name'] = mock_args['bb_name']+"_"+str(imock)
         # if run_args['run_create']:
         create_reservation(mock_args)
         # if run_args['run_stagein']:
@@ -1198,7 +1198,7 @@ def main():
     # Burst buffer options:
     mock_args['burst_buffer'] = args.bb_nodes  # If True, use the burst buffer on cori nodes. /!\ only if sbatch is True
     mock_args['bb_size'] = "5TB"  # A mock realisation at nominal size is 4Tb, so ask for 5
-    mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+i_realisation
+    mock_args['bb_name'] = "saclaymock"  # Each realisation has a reservation named 'bb_name-'+str(i_realisation)
 
     ### Code to runs:
     run_args = {}
