@@ -131,12 +131,14 @@ if args.kind == 'Kaiser':
 z = np.ones_like(ecf['Z'])*zeff
 table = [ecf['RP'], ecf['RT'], z, xi, ecf['CO'], ecf['DM'], ecf['NB']]
 names = ['RP', 'RT', 'Z', 'DA', 'CO', 'DM', 'NB']
+#table = [ecf['RP'], ecf['RT'], z, xi, ecf['NB']]
+#names = ['RP', 'RT', 'Z', 'DA', 'NB']
 outfits = fitsio.FITS(outfile, 'rw', clobber=True)
 outfits.write(table, names=names, header=head)
-outfits[1].write_key('a', a)
-outfits[1].write_key('b', b)
-outfits[1].write_key('c', c)
-outfits[1].write_key('G', G)
-outfits[1].write_key('sigma_g', sigma_g)
+outfits[1].write_key('a', str(a))
+outfits[1].write_key('b', str(b))
+outfits[1].write_key('c', str(c))
+outfits[1].write_key('G', str(G))
+outfits[1].write_key('sigma_g', str(sigma_g))
 outfits.close()
 print("File {} written.".format(outfile))
