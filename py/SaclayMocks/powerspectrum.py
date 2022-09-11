@@ -47,6 +47,21 @@ class P_1D_RSD() :
         return np.maximum(self.pk1DInter(k),0)
             # to avoid P(0) = -1.38775417635e-17
 
+#********************************************************************
+class P_1D_RSDW() :		# to be implemented
+    '''Computes P^1D(k_z) for mocks including W_voxel '''
+    
+    def __init__(self,k_par,k_perp,P):  # P(k_par,k_perp) 2D array
+        P1D=np.zeros(len(k_par))
+		#(1/4PI^2) int_0^\infty P^3D(k_par,k_perp)sinc^2(k_1*D/2)sinc^2(k_2*D/2) dk_1 dk_2
+		# P^3D() = P_L(k) (1+beta mu_k^2)^2 exp(kD)
+        for i in np.arange(len(k_par)) :
+            P1D[i] = np.trapz(k_perp*P[i,:],k_perp) /2/np.pi
+        self.pk1DInter=interpolate.InterpolatedUnivariateSpline(k_par,P1D)
+
+    def P1D(self,k):
+        return np.maximum(self.pk1DInter(k),0)
+            # to avoid P(0) = -1.38775417635e-17
 
 
 #********************************************************************
@@ -448,8 +463,19 @@ def xi_from_pk_1D(k,P1): # k should go from 0 to kmax with constant steps
     xi=np.real( np.fft.rfft(P) )
     xi *= kmax/N
     rmax = np.pi * N / 2 / kmax
+    # rmax = np.pi * N / kmax
     r=np.linspace(0,rmax,N)
     return r,xi
+
+
+#********************************************************************
+def pk_from_xi_1D(r,xi):
+    k, Pk = xi_from_pk_1D(r,xi)
+    N = len(r)
+    Pk /= np.pi 	# due to np.fft normalization 
+    Pk *= N/(N-1)	# required so that Pk -> xi -> Pk gives initial Pk ???
+    return k, Pk
+
 
 #********************************************************************
 class GenerateData() :
